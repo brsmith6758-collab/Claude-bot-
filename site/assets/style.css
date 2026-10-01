@@ -32,64 +32,8 @@
   --radius-sm: 8px;
   --maxw: 1160px;
   --gutter: clamp(16px, 4vw, 40px);
+  color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0F1829;
-    --bg-soft: #141F33;
-    --bg-warm: #1B2234;
-    --surface: #172338;
-    --ink: #E8EEF7;
-    --ink-2: #A9B6C9;
-    --line: #28364D;
-    --brand: #7FAEF5;
-    --brand-dark: #0A1220;
-    --brand-deep: #060C17;
-    --brand-soft: #1B2A47;
-    --brand-soft-2: #24385C;
-    --cta: #FBBF24;
-    --cta-hover: #FCCB4D;
-    --cta-ink: #1B1200;
-    --cta-soft: rgba(251, 191, 36, 0.18);
-    --ok: #4ADE80;
-    --err: #F87171;
-    --focus: #7FAEF5;
-    --on-dark: #FFFFFF;
-    --on-dark-2: #B8C7DE;
-    --dark-line: rgba(255, 255, 255, 0.12);
-    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0F1829;
-  --bg-soft: #141F33;
-  --bg-warm: #1B2234;
-  --surface: #172338;
-  --ink: #E8EEF7;
-  --ink-2: #A9B6C9;
-  --line: #28364D;
-  --brand: #7FAEF5;
-  --brand-dark: #0A1220;
-  --brand-deep: #060C17;
-  --brand-soft: #1B2A47;
-  --brand-soft-2: #24385C;
-  --cta: #FBBF24;
-  --cta-hover: #FCCB4D;
-  --cta-ink: #1B1200;
-  --cta-soft: rgba(251, 191, 36, 0.18);
-  --ok: #4ADE80;
-  --err: #F87171;
-  --focus: #7FAEF5;
-  --on-dark: #FFFFFF;
-  --on-dark-2: #B8C7DE;
-  --dark-line: rgba(255, 255, 255, 0.12);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
-  color-scheme: dark;
-}
-
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
@@ -503,3 +447,7 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
   .sticky-cta .btn-outline { font-size: 0; gap: 0; padding-inline: 0.85rem; }
   .sticky-cta .btn-outline svg { width: 20px; height: 20px; }
 }
+
+/* ---------- header button text (beats the .nav a color rule) ---------- */
+.nav a.btn-cta { color: var(--cta-ink); }
+.nav a.btn-outline { color: var(--ink); }
