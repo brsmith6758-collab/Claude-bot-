@@ -55,6 +55,35 @@ for a real photo in the "who you're dealing with" section, then rebuild.
 
 Spanish: `es.html` is a full Spanish landing page, linked from the top bar.
 
+## Connecting your own domain (10 minutes)
+
+1. **Buy the domain.** Cheapest reliable registrars: Porkbun (porkbun.com) or
+   Cloudflare Registrar (cloudflare.com). A `.com` runs about $10 to $12 a year.
+   Register it under your own account so you own it, not a developer.
+2. **Point it at the site.** In the registrar's DNS panel add:
+
+   | Type | Host | Value |
+   | --- | --- | --- |
+   | A | @ | 185.199.108.153 |
+   | A | @ | 185.199.109.153 |
+   | A | @ | 185.199.110.153 |
+   | A | @ | 185.199.111.153 |
+   | CNAME | www | brsmith6758-collab.github.io |
+
+   Delete any parking A record or URL-forwarding rule the registrar added.
+   On Cloudflare set the records to "DNS only" (grey cloud).
+3. **Tell the site its name:**
+
+   ```
+   python3 tools/domain.py yourdomain.com
+   git add -A && git commit -m "Connect yourdomain.com" && git push
+   ```
+
+   The script writes `site/CNAME`, updates `siteUrl`, and rebuilds every page so
+   search engines see the real domain. GitHub issues the HTTPS certificate on its
+   own once the DNS records resolve; then tick **Enforce HTTPS** under
+   Settings → Pages. `www.yourdomain.com` redirects to the bare domain automatically.
+
 ## Getting found on Google (what actually moves the needle)
 
 A brand-new site does not rank #1 for "sell my house fast Phoenix" overnight. Those
