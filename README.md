@@ -31,8 +31,9 @@ Zapier/Make webhook or your CRM's JSON endpoint in `leadEndpoint`.
 
 ## Deployment (live)
 
-The site is served by GitHub Pages from the `gh-pages` branch:
-**https://brsmith6758-collab.github.io/Claude-bot-/**
+The site is served by GitHub Pages from the `gh-pages` branch at
+**https://primeacrehomebuyers.com/** (DNS on Cloudflare, registered at Porkbun).
+The old address https://brsmith6758-collab.github.io/Claude-bot-/ redirects there.
 
 Every push to `main` or to this branch that touches `site/` republishes it
 automatically (`.github/workflows/pages.yml` copies `site/` to `gh-pages`).
