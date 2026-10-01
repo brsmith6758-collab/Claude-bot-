@@ -1,71 +1,68 @@
 # Prime Acre Capital — seller lead site
 
-Static website for **Prime Acre Capital LLC**: cash home buyers in Arizona, Florida,
-Tennessee, North Carolina and nationwide. Built to turn visitors into seller leads:
-an address search at the top of every page feeds a three-step cash-offer form.
+Website for **Prime Acre Capital LLC**, cash home buyers in Arizona, Florida, Tennessee,
+North Carolina and nationwide. Built to turn visitors into seller leads: a short
+address-phone-email form sits in the hero of every page and a fuller three-step form
+sits at the bottom. Both deliver to the inbox set in `site/config.js`.
 
 ```
-site/                  the deployable website (point any static host at this folder)
-  index.html           home page
-  arizona.html         state landing pages (also florida, tennessee, north-carolina)
-  privacy.html         privacy policy (needed for Google/Meta lead ads)
-  config.js            YOUR SETTINGS: phone, email, lead endpoint, site URL
-  assets/style.css     styles
-  assets/app.js        address search, multi-step form, lead delivery
+site/                          the deployable website (point any static host at this folder)
+  index.html                   home page
+  arizona.html, florida.html, tennessee.html, north-carolina.html   state pages
+  sell-my-house-fast-<city>-<st>.html                               16 city pages
+  privacy.html                 privacy policy (required for Google / Meta lead ads)
+  config.js                    YOUR SETTINGS: phone, email, lead endpoint, site URL
+  assets/style.css, assets/app.js
+  assets/img/hero.jpg          (optional) add a real photo and the hero uses it
   sitemap.xml, robots.txt
-tools/build.py         generates the HTML pages from the copy in this file
-.github/workflows/pages.yml   deploys site/ to GitHub Pages
+tools/build.py                 generates every HTML page from the copy in this file
+.github/workflows/pages.yml    deploys site/ to GitHub Pages
 ```
 
-## 1. Put in your contact details and lead delivery (2 minutes)
+## Lead delivery (already wired)
 
-Edit `site/config.js`:
+`site/config.js` points the forms at FormSubmit using brsmith6758@gmail.com.
+**The very first submission sends an activation email to that inbox. Click the link
+once.** Every lead after that arrives by email with the property, phone, email and
+details the seller entered. No account needed.
 
-| Setting | What to put |
-| --- | --- |
-| `phone` | The number sellers should call or text. Shows in the header, offer section and footer. |
-| `email` | Business email. Shows in the offer section and footer. |
-| `leadEndpoint` | Where form submissions go. See below. |
-| `siteUrl` | The public address of the site, with a trailing slash. |
+Prefer something else? Put a Formspree URL (`https://formspree.io/f/XXXXXXXX`), a
+Zapier/Make webhook or your CRM's JSON endpoint in `leadEndpoint`.
 
-**Lead delivery options** (pick one, paste the URL into `leadEndpoint`):
+## Deploy to GitHub Pages (one click, then a merge)
 
-- **FormSubmit (no account):** `https://formsubmit.co/ajax/you@yourdomain.com`.
-  The first submission emails you an activation link. Click it once and every lead
-  after that lands in your inbox.
-- **Formspree:** create a form at formspree.io and use `https://formspree.io/f/XXXXXXXX`.
-- Any CRM or Zapier/Make webhook that accepts a JSON POST also works.
+1. **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
+   (https://github.com/brsmith6758-collab/Claude-bot-/settings/pages).
+   The workflow cannot flip this switch itself; GitHub only lets a repo admin do it.
+2. Merge this branch into `main`. Every later push to `main` that touches `site/`
+   redeploys automatically.
+3. The site appears at `https://brsmith6758-collab.github.io/Claude-bot-/`.
 
-Until an endpoint is set, the form shows the seller their details with a copy
-button and asks them to text or email you.
+## Getting found on Google (what actually moves the needle)
 
-## 2. Deploy to GitHub Pages
+A brand-new site does not rank #1 for "sell my house fast Phoenix" overnight. Those
+results are held by national buyers with years of links and reviews. This is the
+order that works:
 
-1. Merge this branch into `main`.
-2. In the repository, open **Settings → Pages** and set **Source** to **GitHub Actions**
-   (the workflow also tries to enable this itself on its first run).
-3. Every push to `main` that touches `site/` redeploys. The site appears at
-   `https://brsmith6758-collab.github.io/Claude-bot-/`.
+1. **Buy a real domain** (e.g. `primeacrecapital.com`). Add `site/CNAME` containing
+   the domain, point DNS at GitHub Pages, set `siteUrl` in `config.js`, rebuild.
+   A github.io sub-path will not rank for competitive terms.
+2. **Google Business Profile** at business.google.com. Use the exact name
+   "Prime Acre Capital LLC", the phone number and the website. This is what puts
+   you in the map pack, where most "we buy houses near me" clicks go.
+3. **Google Search Console**: add the domain, submit `sitemap.xml`. Indexing then
+   takes days instead of weeks.
+4. **Google Ads** (search campaigns on "sell my house fast [city]", "cash home
+   buyers [city]", "we buy houses [city]") are the only way to be at the top of
+   the page in week one. The city pages in this repo are built as landing pages for
+   exactly those campaigns.
+5. **Reviews.** Ask every closed seller for a Google review, then paste real quotes
+   into `TESTIMONIALS` in `tools/build.py`. The site renders the section only when
+   real quotes exist.
+6. **Facebook / Instagram lead ads** aimed at homeowners in your target counties
+   convert well for this business; the privacy page is already in place for them.
 
-**Custom domain** (recommended, e.g. `primeacrecapital.com`): add a file
-`site/CNAME` containing the domain, point the domain's DNS at GitHub Pages
-(an `A`/`ALIAS` record to GitHub's Pages IPs or a `CNAME` to
-`brsmith6758-collab.github.io`), then update `siteUrl` in `config.js` and rebuild.
+## Editing
 
-## 3. Editing copy
-
-All wording, the city lists, FAQ answers and state-specific sections live in
-`tools/build.py`. Change them there and run:
-
-```
-python3 tools/build.py
-```
-
-This rewrites every page in `site/`. Commit the result.
-
-## What the form captures
-
-Address, city, state, ZIP, property type, beds, baths, condition, occupancy,
-timeline, reason for selling, asking price, name, phone, email, notes, SMS
-consent, the page it came from and a timestamp. Spam is filtered with a hidden
-honeypot field.
+All wording, cities, neighborhoods and FAQ answers live in `tools/build.py`. Edit,
+run `python3 tools/build.py`, commit. Adding a city is one line in `CITIES`.

@@ -7,9 +7,11 @@
                                         # config and JS inlined (for a hosted preview)
 
 All copy and page data live in this file; styles in site/assets/style.css and
-behavior in site/assets/app.js. Edit, re-run, commit.
+behavior in site/assets/app.js. Contact details come from site/config.js.
+Drop a photo at site/assets/img/hero.jpg and the hero switches to it.
 """
 import argparse
+import base64
 import html
 import json
 import os
@@ -23,22 +25,34 @@ BRAND = "Prime Acre Capital"
 LEGAL_NAME = "Prime Acre Capital LLC"
 
 
-def site_url():
+def read_config():
     with open(os.path.join(SITE, "config.js"), encoding="utf-8") as f:
-        m = re.search(r'siteUrl:\s*"([^"]+)"', f.read())
-    url = m.group(1) if m else "https://example.com/"
-    return url if url.endswith("/") else url + "/"
+        src = f.read()
+    def get(key, default=""):
+        m = re.search(r'\b%s:\s*"([^"]*)"' % key, src)
+        return m.group(1) if m else default
+    url = get("siteUrl", "https://example.com/")
+    return {
+        "siteUrl": url if url.endswith("/") else url + "/",
+        "phone": get("phone"),
+        "email": get("email"),
+    }
 
 
-SITE_URL = site_url()
+CFG = read_config()
+SITE_URL = CFG["siteUrl"]
+PHONE = CFG["phone"]
+PHONE_TEL = "+1" + re.sub(r"\D", "", PHONE)[-10:] if PHONE else ""
+EMAIL = CFG["email"]
+HERO_PHOTO = os.path.join(SITE, "assets", "img", "hero.jpg")
 
-FONTS = ("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800"
-         "&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap")
+FONTS = ("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800"
+         "&family=Figtree:wght@400;500;600;700&display=swap")
 
-FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E"
-           "%3Crect width='34' height='34' rx='6' fill='%2316302A'/%3E"
-           "%3Cpath d='M8 17h18M17 8v18' stroke='%23EEF3EF' stroke-width='1.5' opacity='.6'/%3E"
-           "%3Crect x='17' y='8' width='9' height='9' fill='%23B9841F'/%3E%3C/svg%3E")
+FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E"
+           "%3Crect width='40' height='40' rx='9' fill='%231E4FA3'/%3E"
+           "%3Cpath d='M8 21l12-10 12 10v11H8z' fill='%23fff'/%3E"
+           "%3Crect x='17' y='24' width='6' height='8' fill='%23F59E0B'/%3E%3C/svg%3E")
 
 US_STATES = [
     ("AL", "Alabama"), ("AK", "Alaska"), ("AZ", "Arizona"), ("AR", "Arkansas"), ("CA", "California"),
@@ -63,7 +77,7 @@ MARKETS = [
                    "Tucson", "Yuma", "Flagstaff", "Prescott", "Casa Grande", "Goodyear", "Buckeye", "Queen Creek", "Maricopa"],
         "counties": ["Maricopa", "Pima", "Pinal", "Yavapai", "Yuma", "Coconino", "Mohave"],
         "points": [
-            ("Sun-worn roofs and tired HVAC",
+            ("Sun-worn roofs and tired AC units",
              "Arizona heat is hard on roofs, air conditioners and pool equipment. We buy with all of it as-is, so you never pay for a replacement just to sell."),
             ("Out-of-state owners and inherited homes",
              "Managing a Phoenix or Tucson property from another state is a job. We handle the sale with you remotely, and the title company can close you wherever you live."),
@@ -123,6 +137,59 @@ MARKETS = [
         ],
     },
 ]
+MARKET_BY_ABBR = {m["abbr"]: m for m in MARKETS}
+
+# City landing pages: (city, state abbr, county, nearby areas, intro)
+CITIES = [
+    ("Phoenix", "AZ", "Maricopa", ["Maryvale", "Laveen", "Sunnyslope", "Arcadia", "Ahwatukee", "South Mountain"],
+     "Across the Valley, from older block homes in Maryvale and Sunnyslope to rentals near the light rail and inherited houses in Arcadia, we buy Phoenix properties as-is for cash."),
+    ("Mesa", "AZ", "Maricopa", ["Dobson Ranch", "West Mesa", "Eastmark", "Red Mountain Ranch", "Falcon Field", "Superstition Springs"],
+     "From west Mesa near the US-60 to the newer subdivisions out east, we buy Mesa houses in any condition, including rentals, inherited homes and properties behind on HOA dues."),
+    ("Tucson", "AZ", "Pima", ["Midtown", "South Tucson", "Catalina Foothills", "Marana", "Oro Valley", "Rita Ranch"],
+     "Older ranch homes in Midtown, rentals near the University, and family houses on the south and east sides. We buy Tucson properties as-is and close through local title companies."),
+    ("Scottsdale", "AZ", "Maricopa", ["Old Town", "McCormick Ranch", "North Scottsdale", "South Scottsdale", "Gainey Ranch", "DC Ranch"],
+     "Condos in Old Town, dated homes in McCormick Ranch, and inherited properties in North Scottsdale. We buy as-is, including HOA properties and homes that need updates."),
+    ("Jacksonville", "FL", "Duval", ["Arlington", "Westside", "Northside", "Mandarin", "Orange Park", "the Beaches"],
+     "From Arlington and the Westside to Mandarin and the Beaches, we buy Jacksonville houses with old roofs, open insurance claims, inherited titles and tenants in place."),
+    ("Tampa", "FL", "Hillsborough", ["Seminole Heights", "Town 'n' Country", "Brandon", "Riverview", "Carrollwood", "Temple Terrace"],
+     "Bungalows in Seminole Heights, block homes in Town 'n' Country, and rentals in Brandon and Riverview. Storm damage and flood-zone issues included: we buy Tampa houses as-is."),
+    ("Orlando", "FL", "Orange", ["Pine Hills", "Azalea Park", "Kissimmee", "Sanford", "Apopka", "Conway"],
+     "Older homes in Pine Hills and Azalea Park, former short-term rentals near Kissimmee, and inherited houses across Orange County. We buy Orlando properties for cash, HOA fees and all."),
+    ("Miami", "FL", "Miami-Dade", ["Hialeah", "Kendall", "Homestead", "North Miami", "Little Havana", "Cutler Bay"],
+     "Single-family homes in Hialeah and Kendall, condos facing recertification or special assessments, and inherited properties in Homestead. We buy Miami real estate as-is for cash."),
+    ("Nashville", "TN", "Davidson", ["Antioch", "Madison", "East Nashville", "Donelson", "Bellevue", "Hermitage"],
+     "From Antioch and Madison to Donelson and Hermitage, we buy Nashville houses that need work, rentals you're done managing, and family homes you've inherited."),
+    ("Memphis", "TN", "Shelby", ["Whitehaven", "Frayser", "Raleigh", "Cordova", "Berclair", "Hickory Hill"],
+     "Tired rentals in Whitehaven and Frayser, inherited homes in Raleigh and Berclair, and houses in Cordova that need more than a weekend of repairs. We buy Memphis properties as-is."),
+    ("Knoxville", "TN", "Knox", ["Fountain City", "South Knoxville", "Powell", "Halls", "Bearden", "Karns"],
+     "Older homes in Fountain City and South Knoxville, rentals near campus, and family property out toward Powell and Halls. We buy Knoxville houses for cash in any condition."),
+    ("Chattanooga", "TN", "Hamilton", ["East Ridge", "Hixson", "Brainerd", "Red Bank", "East Lake", "Soddy-Daisy"],
+     "From East Ridge and Brainerd to Hixson and Red Bank, we buy Chattanooga houses with foundation issues, deferred repairs, tenants in place or probate in progress."),
+    ("Charlotte", "NC", "Mecklenburg", ["West Charlotte", "University City", "Steele Creek", "Matthews", "Hidden Valley", "Mint Hill"],
+     "Across Mecklenburg County, from West Charlotte and Hidden Valley to University City and Steele Creek, we buy Charlotte houses as-is so you can move on your timeline."),
+    ("Raleigh", "NC", "Wake", ["Southeast Raleigh", "Garner", "Knightdale", "Wake Forest", "North Raleigh", "Cary"],
+     "Older homes in Southeast Raleigh, rentals in Garner and Knightdale, and inherited houses across Wake County. We buy Raleigh properties for cash with no repairs and no fees."),
+    ("Greensboro", "NC", "Guilford", ["High Point", "Jamestown", "Glenwood", "Lindley Park", "Summerfield", "East Greensboro"],
+     "Mill-era homes in Glenwood and East Greensboro, rentals in High Point, and family property out toward Summerfield. We buy Greensboro houses in any condition."),
+    ("Durham", "NC", "Durham", ["East Durham", "North Durham", "Southpoint", "Hillsborough", "Chapel Hill", "Braggtown"],
+     "From East Durham and Braggtown to Southpoint and Chapel Hill, we buy Durham houses that need updates, rentals with tenants, and homes tied up in probate."),
+]
+
+
+def slugify(s):
+    return re.sub(r"[^a-z0-9]+", "-", s.lower()).strip("-")
+
+
+def city_slug(city, st):
+    return "sell-my-house-fast-%s-%s.html" % (slugify(city), st.lower())
+
+
+CITY_PAGES = [dict(city=c, st=st, county=county, areas=areas, intro=intro, file=city_slug(c, st),
+                   market=MARKET_BY_ABBR[st]) for c, st, county, areas, intro in CITIES]
+
+# Real seller quotes only. Leave empty and the section is not rendered.
+# Example: {"quote": "They closed in nine days and I didn't fix a thing.", "name": "D. Alvarez", "where": "Mesa, AZ"}
+TESTIMONIALS = []
 
 ICON = {
     "clock": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -137,27 +204,110 @@ ICON = {
     "check-circle": '<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>',
     "calendar": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     "shield": '<path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    "phone": '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',
+    "mail": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    "pen": '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 7l4 4"/>',
+    "lock": '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
 }
-
-# Real seller quotes only. Leave empty and the section is not rendered.
-# Example: {"quote": "They closed in nine days and I didn't fix a thing.", "name": "D. Alvarez", "where": "Mesa, AZ"}
-TESTIMONIALS = []
 
 
 def icon(name, cls=""):
     c = ' class="%s"' % cls if cls else ""
-    return ('<svg%s viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+    return ('<svg%s viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
             'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%s</svg>' % (c, ICON[name]))
 
 
 def esc(s):
-    return html.escape(s, quote=True)
+    return html.escape(str(s), quote=True)
 
 
-BRAND_MARK = ('<svg class="brand-mark" viewBox="0 0 34 34" fill="none" aria-hidden="true">'
-              '<rect x="2" y="2" width="30" height="30" rx="5" stroke="currentColor" stroke-width="2"/>'
-              '<path d="M2 17h30M17 2v30" stroke="currentColor" stroke-width="1.5" opacity=".55"/>'
-              '<rect x="17" y="2" width="15" height="15" fill="var(--accent)"/></svg>')
+BRAND_MARK = ('<svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">'
+              '<rect width="40" height="40" rx="9" fill="var(--brand)"/>'
+              '<path d="M8 21l12-10 12 10v11H8z" fill="#fff"/>'
+              '<rect x="17" y="24" width="6" height="8" fill="var(--cta)"/></svg>')
+
+STREET_ART = """<svg viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+  <circle cx="1400" cy="70" r="46" fill="#FBBF24" opacity=".85"/>
+  <g fill="#FFFFFF" opacity=".9">
+    <ellipse cx="300" cy="80" rx="70" ry="22"/><ellipse cx="330" cy="66" rx="40" ry="24"/><ellipse cx="270" cy="70" rx="34" ry="20"/>
+    <ellipse cx="1000" cy="60" rx="60" ry="18"/><ellipse cx="1025" cy="48" rx="34" ry="20"/>
+  </g>
+  <rect x="0" y="262" width="1600" height="58" fill="#86C58A"/>
+  <rect x="0" y="262" width="1600" height="8" fill="#A4D7A6"/>
+  <rect x="0" y="298" width="1600" height="22" fill="#D9E2EC"/>
+  <g>
+    <rect x="110" y="170" width="210" height="92" fill="#E3EEF9"/>
+    <polygon points="90,175 215,100 340,175" fill="#5B7B9C"/>
+    <rect x="200" y="128" width="30" height="26" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="100" y="206" width="230" height="8" fill="#5B7B9C"/>
+    <rect x="112" y="214" width="6" height="48" fill="#F8FAFC"/><rect x="312" y="214" width="6" height="48" fill="#F8FAFC"/>
+    <rect x="196" y="214" width="38" height="48" rx="2" fill="#F59E0B"/>
+    <rect x="134" y="218" width="36" height="30" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="260" y="218" width="36" height="30" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+  </g>
+  <g>
+    <rect x="420" y="140" width="230" height="122" fill="#FFFFFF"/>
+    <rect x="600" y="70" width="22" height="50" fill="#9AA8B8"/>
+    <polygon points="400,145 535,55 670,145" fill="#2F4A6B"/>
+    <rect x="513" y="198" width="44" height="64" rx="2" fill="#F59E0B"/>
+    <circle cx="548" cy="232" r="2.5" fill="#1B1200"/>
+    <rect x="445" y="160" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="585" y="160" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="445" y="212" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="585" y="212" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="505" y="262" width="60" height="6" fill="#C9D4E0"/>
+    <rect x="520" y="268" width="30" height="30" fill="#D9E2EC"/>
+  </g>
+  <g>
+    <rect x="712" y="226" width="5" height="40" fill="#8B5A2B"/>
+    <rect x="684" y="202" width="62" height="30" rx="4" fill="#FFFFFF" stroke="#2F4A6B" stroke-width="2"/>
+    <text x="715" y="223" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="800" font-size="15" fill="#2F4A6B">SOLD</text>
+  </g>
+  <g><rect x="790" y="222" width="14" height="42" fill="#8B5A2B"/><circle cx="797" cy="196" r="46" fill="#4E9A5A"/><circle cx="772" cy="212" r="26" fill="#5DAA69"/><circle cx="822" cy="214" r="24" fill="#5DAA69"/></g>
+  <g fill="#5E9F6E"><rect x="880" y="186" width="20" height="78" rx="10"/><rect x="862" y="206" width="12" height="36" rx="6"/><rect x="862" y="230" width="20" height="10" rx="5"/><rect x="906" y="196" width="12" height="40" rx="6"/><rect x="896" y="224" width="20" height="10" rx="5"/></g>
+  <g>
+    <rect x="980" y="178" width="250" height="84" fill="#F6E7D3"/>
+    <polygon points="960,182 1105,108 1250,182" fill="#C96A3B"/>
+    <rect x="1230" y="206" width="110" height="56" fill="#F6E7D3"/>
+    <polygon points="1222,208 1285,166 1348,208" fill="#C96A3B"/>
+    <rect x="1246" y="222" width="78" height="40" rx="2" fill="#E3E8EE" stroke="#C9D4E0" stroke-width="2"/>
+    <rect x="1088" y="206" width="36" height="56" rx="2" fill="#2F4A6B"/>
+    <rect x="1010" y="200" width="40" height="34" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="1160" y="200" width="40" height="34" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
+    <rect x="1250" y="262" width="70" height="36" fill="#D9E2EC"/>
+  </g>
+  <g fill="#6FB36F"><ellipse cx="380" cy="258" rx="26" ry="12"/><ellipse cx="950" cy="258" rx="22" ry="11"/><ellipse cx="1400" cy="256" rx="30" ry="13"/><ellipse cx="60" cy="258" rx="28" ry="12"/></g>
+  <g><path d="M1480 264 C1478 230 1486 200 1500 172" stroke="#8B5A2B" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <g fill="#3F8F5A"><ellipse cx="1480" cy="168" rx="34" ry="11" transform="rotate(-30 1480 168)"/><ellipse cx="1520" cy="166" rx="34" ry="11" transform="rotate(25 1520 166)"/><ellipse cx="1500" cy="150" rx="12" ry="30"/><ellipse cx="1470" cy="186" rx="30" ry="10" transform="rotate(10 1470 186)"/><ellipse cx="1530" cy="186" rx="30" ry="10" transform="rotate(-15 1530 186)"/></g></g>
+</svg>"""
+
+ABOUT_ART = """<svg viewBox="0 0 360 300" aria-hidden="true" focusable="false">
+  <circle cx="180" cy="150" r="128" fill="var(--surface)" opacity=".8"/>
+  <rect x="110" y="140" width="140" height="100" rx="6" fill="var(--surface)" stroke="var(--brand)" stroke-width="4"/>
+  <polygon points="94,146 180,82 266,146" fill="var(--brand)"/>
+  <rect x="164" y="186" width="32" height="54" rx="3" fill="#F59E0B"/>
+  <rect x="128" y="160" width="26" height="24" rx="2" fill="#BFDBF7" stroke="var(--brand)" stroke-width="3"/>
+  <rect x="206" y="160" width="26" height="24" rx="2" fill="#BFDBF7" stroke="var(--brand)" stroke-width="3"/>
+  <circle cx="264" cy="96" r="30" fill="#1E9E5A" stroke="#FFFFFF" stroke-width="5"/>
+  <path d="M250 96l10 10 18-20" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(62 224) rotate(-30)"><circle cx="0" cy="0" r="16" fill="none" stroke="#F59E0B" stroke-width="7"/><rect x="14" y="-4" width="60" height="8" rx="4" fill="#F59E0B"/><rect x="56" y="-4" width="8" height="18" rx="2" fill="#F59E0B"/><rect x="42" y="-4" width="8" height="14" rx="2" fill="#F59E0B"/></g>
+  <g transform="translate(286 226) rotate(12)"><rect x="-40" y="-22" width="80" height="44" rx="6" fill="#86C58A" stroke="#1E9E5A" stroke-width="3"/><circle cx="0" cy="0" r="12" fill="none" stroke="#1E9E5A" stroke-width="3"/><text x="0" y="5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="14" fill="#1E9E5A">$</text></g>
+</svg>"""
+
+
+def phone_link(cls=""):
+    if not PHONE:
+        return ""
+    c = ' class="%s"' % cls if cls else ""
+    return '<a%s href="tel:%s" data-phone>%s</a>' % (c, PHONE_TEL, esc(PHONE))
+
+
+def email_link(cls=""):
+    if not EMAIL:
+        return ""
+    c = ' class="%s"' % cls if cls else ""
+    return '<a%s href="mailto:%s" data-email>%s</a>' % (c, esc(EMAIL), esc(EMAIL))
+
 
 # ---------------------------------------------------------------- partials
 
@@ -178,7 +328,7 @@ def head(title, desc, path, jsonld):
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#16302A">
+<meta name="theme-color" content="#10233F">
 <link rel="icon" href="%(favicon)s">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -191,87 +341,118 @@ def head(title, desc, path, jsonld):
            fonts=esc(FONTS), jsonld=json.dumps(jsonld, ensure_ascii=False))
 
 
+def topbar():
+    contact = ""
+    if PHONE:
+        contact += '<span>%sCall or text %s</span>' % (icon("phone"), phone_link())
+    if EMAIL:
+        contact += '<span>%s%s</span>' % (icon("mail"), email_link())
+    return """<div class="topbar">
+  <div class="wrap">
+    <span class="serving">We buy houses in Arizona, Florida, Tennessee, North Carolina and nationwide</span>
+    <div class="contact">%s</div>
+  </div>
+</div>
+""" % contact
+
+
 def header():
+    phone_btn = ('<a class="btn btn-outline" href="tel:%s">%s<span data-phone>%s</span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))) if PHONE else ""
     return """<a class="sr-only" href="#offer">Skip to the cash offer form</a>
-<header class="site-header" id="top">
+%(topbar)s<header class="site-header" id="top">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="%(brand)s home">
       %(mark)s
-      <span>%(brand)s<small>Cash home buyers</small></span>
+      <span>%(brand)s<small>We buy houses for cash</small></span>
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
     <nav class="nav" id="nav" aria-label="Main">
       <a href="index.html#how">How it works</a>
       <a href="index.html#markets">Where we buy</a>
       <a href="index.html#faq">FAQ</a>
-      <a class="phone" data-phone hidden href="#offer"></a>
-      <a class="btn btn-accent" href="#offer">Get my cash offer</a>
+      <a href="index.html#about">Contact</a>
+      %(phone_btn)s
+      <a class="btn btn-cta" href="#offer">Get My Cash Offer</a>
     </nav>
   </div>
 </header>
-""" % dict(brand=esc(BRAND), mark=BRAND_MARK)
+""" % dict(topbar=topbar(), brand=esc(BRAND), mark=BRAND_MARK, phone_btn=phone_btn)
 
 
-def search_form(input_id, label="Property address", placeholder="Enter your property address"):
-    return """<div class="search-wrap">
-        <span class="search-step">Step 1 of 3 · Your address</span>
-        <form class="search" role="search" aria-label="Start your cash offer">
-          <label class="sr-only" for="%s">%s</label>
-          <input id="%s" type="text" name="address" placeholder="%s" autocomplete="street-address" required>
-          <button class="btn btn-accent" type="submit">Get my cash offer</button>
-        </form>
-      </div>""" % (input_id, esc(label), input_id, esc(placeholder))
+def lead_card(state="", city="", title="Get Your Fair Cash Offer"):
+    hidden = ""
+    if state:
+        hidden += '<input type="hidden" name="state" value="%s">' % esc(state)
+    if city:
+        hidden += '<input type="hidden" name="city" value="%s">' % esc(city)
+    placeholder = "123 Main St, %s" % (city + ", " + state if city else (MARKET_BY_ABBR[state]["name"] if state else "Phoenix, AZ"))
+    done_phone = (' from <b data-phone>%s</b>' % esc(PHONE)) if PHONE else ""
+    alt = ""
+    if PHONE or EMAIL:
+        alt = '<p class="alt">Or call or text %s%s</p>' % (phone_link() if PHONE else "", (" · " + email_link()) if (PHONE and EMAIL) else (email_link() if EMAIL else ""))
+    return """<div class="lead-card" id="lead-card">
+      <h2>%(title)s</h2>
+      <p class="sub">Start below. It takes about 30 seconds and there's no obligation.</p>
+      <form class="hero-form" novalidate autocomplete="on">
+        <div class="field">
+          <label for="h-address">Property address</label>
+          <input id="h-address" name="address" type="text" required autocomplete="street-address" placeholder="%(ph)s">
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="h-phone">Phone</label>
+            <input id="h-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555">
+          </div>
+          <div class="field">
+            <label for="h-email">Email <span class="opt">(optional)</span></label>
+            <input id="h-email" name="email" type="email" autocomplete="email" placeholder="you@email.com">
+          </div>
+        </div>
+        %(hidden)s
+        <div class="hp" aria-hidden="true"><label for="h-company">Company</label><input id="h-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
+        <p class="error-msg" data-form-error hidden></p>
+        <button class="btn btn-cta btn-lg" type="submit">Get My Cash Offer →</button>
+        <p class="fine">%(lock)sNo obligation. We never sell or share your information.</p>
+      </form>
+      <div class="lead-done" hidden>
+        %(okmark)s
+        <h3>You're all set!</h3>
+        <p>We're pulling up the property now. Expect a call or text%(done_phone)s within 24 hours with your cash offer. Save the number so you don't miss us.</p>
+        <a class="btn btn-outline" href="#offer" data-add-details>Add details to speed up my offer</a>
+        %(alt)s
+      </div>
+    </div>""" % dict(title=esc(title), ph=esc(placeholder), hidden=hidden, lock=icon("lock"), okmark=icon("check-circle", "mark"),
+                     done_phone=done_phone, alt=alt)
 
 
-def sheet(property_label="Your address"):
-    return """<aside class="sheet" aria-label="What a cash offer from us includes">
-      <span class="stamp">As-is · Cash</span>
-      <div class="sheet-head"><span>Offer worksheet</span><span>%(brand)s</span></div>
-      <div class="sheet-row"><span>Property</span><span>%(prop)s</span></div>
-      <div class="sheet-row"><span>Condition</span><span>Any, as-is</span></div>
-      <div class="sheet-row"><span>Repairs you pay for</span><span>$0</span></div>
-      <div class="sheet-row"><span>Agent commission</span><span>$0</span></div>
-      <div class="sheet-row"><span>Closing costs</span><span>We pay</span></div>
-      <div class="sheet-row"><span>Closing date</span><span>You choose</span></div>
-      <div class="sheet-total"><span>Cash offer</span><span>Within 24 hrs</span></div>
-    </aside>""" % dict(brand=esc(BRAND), prop=esc(property_label))
-
-
-def hero_index():
-    return """<section class="hero">
+def hero(eyebrow, h1, lede, state="", city=""):
+    has_photo = os.path.exists(HERO_PHOTO)
+    photo = '<div class="hero-photo" style="background-image:url(assets/img/hero.jpg)"></div>' if has_photo else ""
+    street = "" if has_photo else '<div class="street">%s</div>' % STREET_ART
+    talk = ('<p class="talk">Prefer to talk? Call or text %s</p>' % phone_link()) if PHONE else ""
+    return """<section class="hero%(cls)s">
+  %(photo)s
   <div class="wrap">
     <div>
-      <p class="eyebrow">Cash home buyers · Arizona · Florida · Tennessee · North Carolina · Nationwide</p>
-      <h1>Sell your house as-is. Get a <span class="hl">fair cash offer</span> in 24 hours.</h1>
-      <p class="lede">No repairs, no showings, no agent fees, and no waiting on a buyer's bank. Close in as little as 7 days, or on the date you choose.</p>
-      %(search)s
-      <p class="hero-sub"><b>Free and no obligation.</b> Takes about 60 seconds. Your information is never sold.</p>
-    </div>
-    %(sheet)s
-  </div>
-</section>
-""" % dict(search=search_form("hero-address"), sheet=sheet())
-
-
-def hero_state(m):
-    return """<section class="hero">
-  <div class="wrap">
-    <div>
-      <p class="eyebrow">Cash home buyers in %(name)s</p>
-      <h1>Sell your %(name)s house as-is for a <span class="hl">fair cash offer</span>.</h1>
+      <span class="eyebrow-pill">%(eyebrow)s</span>
+      <h1>%(h1)s</h1>
       <p class="lede">%(lede)s</p>
-      %(search)s
-      <p class="hero-sub"><b>Free and no obligation.</b> Written offer within 24 hours. Close in as little as 7 days.</p>
+      <ul class="bullets">
+        <li>%(check)s<span>Fair, written cash offer within 24 hours</span></li>
+        <li>%(check)s<span>No fees, no commissions, no closing costs</span></li>
+        <li>%(check)s<span>Close in as little as 7 days, or on your date</span></li>
+      </ul>
+      %(talk)s
     </div>
-    %(sheet)s
+    %(card)s
   </div>
+  %(street)s
 </section>
-""" % dict(name=esc(m["name"]), lede=esc(m["lede"]),
-           search=search_form("hero-address", placeholder="Enter your %s property address" % m["name"]),
-           sheet=sheet("Anywhere in %s" % m["name"]))
+""" % dict(cls=" has-photo" if has_photo else "", photo=photo, eyebrow=esc(eyebrow), h1=h1, lede=esc(lede),
+           check=icon("check"), talk=talk, card=lead_card(state, city), street=street)
 
 
-def trustbar():
+def trust_strip():
     items = [
         ("clock", "Offer in 24 hours", "In writing, with the math behind it"),
         ("dollar", "$0 fees or commissions", "We pay the closing costs too"),
@@ -280,45 +461,39 @@ def trustbar():
     ]
     cards = "".join("""
     <div class="trust">%s<div><b>%s</b><span>%s</span></div></div>""" % (icon(k), esc(t), esc(d)) for k, t, d in items)
-    return """<div class="trustbar" aria-label="What you get">
+    return """<div class="trust-strip" aria-label="What you get">
   <div class="wrap">%s
   </div>
 </div>
 """ % cards
 
 
-def strip_state(m):
-    chips = "".join('<span class="chip">%s County</span>' % esc(c) for c in m["counties"])
-    return """<div class="strip">
-  <div class="wrap">
-    <span>Buying across %s</span>
-    <div class="states">%s</div>
-  </div>
-</div>
-""" % (esc(m["name"]), chips)
-
-
 def how():
     steps = [
-        ("Today", "Tell us about the house", "Sixty seconds online, or one phone call. No cleaning up first, no paperwork to dig out.", False),
-        ("Within 24 hours", "Get your written cash offer", "A real number with the math behind it: nearby sales, the repairs we'd take on, and what you walk away with.", False),
-        ("Day 2 to 3", "A quick walkthrough", "One short visit, or photos from your phone. Nothing to stage, nothing to fix.", False),
-        ("Day 7, or your date", "Sign and get paid", "Close at a licensed title company or attorney's office. Funds are wired to you at closing.", True),
+        ("phone", "Tell us about your house", "Fill out the short form or give us a call. It takes about a minute, and nobody will pressure you.", "Takes 60 seconds"),
+        ("pen", "Get your cash offer", "We look at the property, nearby sales and the repairs it needs, then send you a written offer with the numbers behind it.", "Within 24 hours"),
+        ("calendar", "Pick your closing day", "Accept when you're ready. Close in as little as 7 days through a licensed title company, or take the time you need.", "7 days or your date"),
     ]
     cards = "".join("""
-    <div class="tl%s">
-      <span class="day">%s</span>
+    <div class="card step">
+      <span class="num">%d</span>
+      %s
       <h3>%s</h3>
       <p>%s</p>
-    </div>""" % (" final" if final else "", esc(d), esc(t), esc(b)) for d, t, b, final in steps)
+      <span class="when">%s</span>
+    </div>""" % (i + 1, icon(k, "ico"), esc(t), esc(d), esc(w)) for i, (k, t, d, w) in enumerate(steps))
     return """<section class="section" id="how">
   <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">How it works</p>
-      <h2>Your next seven days, if you want them to be.</h2>
-      <p>No listing, no lender, no waiting on someone else's approval. You deal directly with the buyer, and you set the pace.</p>
+    <div class="section-head center">
+      <span class="eyebrow">How it works</span>
+      <h2>Selling your house for cash is as easy as 1, 2, 3</h2>
+      <p>No listing, no lender, no waiting on someone else's approval. You deal directly with the buyer.</p>
     </div>
-    <div class="timeline">%s
+    <div class="grid-3">%s
+    </div>
+    <div class="steps-cta">
+      <a class="btn btn-cta btn-lg" href="#offer">Get My Cash Offer</a>
+      <small>Free, no obligation, and you can say no at any point.</small>
     </div>
   </div>
 </section>
@@ -327,31 +502,23 @@ def how():
 
 def situations():
     items = [
-        ("clock", "Facing foreclosure",
-         "Behind on payments or already have a sale date? A cash sale before the auction can pay off the lender and help you avoid a foreclosure on your record."),
-        ("doc", "Inherited a house",
-         "Probate, out-of-state heirs, a house full of belongings. Take what you want and leave the rest to us."),
-        ("key", "Tired of being a landlord",
-         "Problem tenants, late rent, constant repairs. We buy with tenants in place and honor the lease."),
-        ("users", "Divorce or separation",
-         "A clean, fast sale with one number everyone can agree on, and a closing date that works for both of you."),
-        ("arrow", "Relocating or job change",
-         "Close before you leave town, with a date that matches your move instead of a listing calendar."),
-        ("tool", "Major repairs or code violations",
-         "Roof, foundation, mold, fire or water damage, open permits. We buy it exactly as it is."),
-        ("dollar", "Behind on taxes or liens",
-         "Back taxes, HOA liens and judgments are paid off from the sale at closing. You don't bring money to the table."),
-        ("house", "Vacant or unwanted property",
-         "A second home, a lot, or a house that's been sitting for years. Turn it into cash without a renovation first."),
+        ("clock", "Facing foreclosure", "Behind on payments or already have a sale date? A cash sale before the auction can pay off the lender and help you avoid a foreclosure on your record."),
+        ("doc", "Inherited a house", "Probate, out-of-state heirs, a house full of belongings. Take what you want and leave the rest to us."),
+        ("key", "Tired of being a landlord", "Problem tenants, late rent, constant repairs. We buy with tenants in place and honor the lease."),
+        ("users", "Divorce or separation", "A clean, fast sale with one number everyone can agree on, and a closing date that works for both of you."),
+        ("arrow", "Relocating or job change", "Close before you leave town, with a date that matches your move instead of a listing calendar."),
+        ("tool", "Major repairs or code violations", "Roof, foundation, mold, fire or water damage, open permits. We buy it exactly as it is."),
+        ("dollar", "Behind on taxes or liens", "Back taxes, HOA liens and judgments are paid off from the sale at closing. You don't bring money to the table."),
+        ("house", "Vacant or unwanted property", "A second home, a lot, or a house that's been sitting for years. Turn it into cash without a renovation first."),
     ]
     cards = "".join("""
-    <div class="sit">%s<div><h3>%s</h3><p>%s</p></div></div>""" % (icon(k), esc(t), esc(d)) for k, t, d in items)
-    return """<section class="section section-alt" id="situations">
+    <div class="card sit">%s<div><h3>%s</h3><p>%s</p></div></div>""" % (icon(k), esc(t), esc(d)) for k, t, d in items)
+    return """<section class="section section-soft" id="situations">
   <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Any situation</p>
-      <h2>Whatever the reason, we can work with it.</h2>
-      <p>We buy houses from people in every kind of circumstance. Here are the ones we see most.</p>
+    <div class="section-head center">
+      <span class="eyebrow">Any situation</span>
+      <h2>We buy houses in any situation</h2>
+      <p>Whatever is going on, you're not the first person to bring it to us. Here are the situations we help with most.</p>
     </div>
     <div class="grid-4">%s
     </div>
@@ -360,13 +527,64 @@ def situations():
 """ % cards
 
 
-def calculator():
-    return """<section class="section calc-section" id="cost">
+def about():
+    lines = ""
+    if PHONE:
+        lines += '<a href="tel:%s">%s<span><span data-phone>%s</span><small>Call or text, 7 days a week</small></span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))
+    if EMAIL:
+        lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>We reply within 24 hours</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
+    return """<section class="section about" id="about">
   <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">What waiting costs</p>
+    <div class="about-art">%(art)s</div>
+    <div>
+      <span class="eyebrow">Who you're dealing with</span>
+      <h2>A direct buyer. Not a middleman, not a call center.</h2>
+      <p class="lede">%(legal)s buys houses directly from owners across Arizona, Florida, Tennessee and North Carolina, and nationwide through local buying partners. When you reach out, you talk to the people making the offer.</p>
+      <p>We're not agents, and we're not going to list your house or shop your information around. We make you a real offer, show you how we got there, and close through a licensed title company so your money is protected from start to finish.</p>
+      <div class="contact-card">%(lines)s</div>
+    </div>
+  </div>
+</section>
+""" % dict(art=ABOUT_ART, legal=esc(LEGAL_NAME), lines=lines)
+
+
+def compare():
+    rows = [
+        ("Commissions and fees", "$0", "Typically 5–6% of the sale price"),
+        ("Repairs", "None. We buy as-is.", "Usually required after inspection"),
+        ("Closing costs", "We pay them", "Seller typically pays a share"),
+        ("Showings and open houses", "None", "Weeks of showings and cleaning"),
+        ("Time to close", "7–30 days, your choice", "60–90+ days if financing holds"),
+        ("Certainty", "Cash, no financing contingency", "Deals fall through when a loan fails"),
+    ]
+    trs = "".join('<tr><td>%s</td><td class="us"><span class="yes" aria-hidden="true">✓</span>%s</td><td><span class="no" aria-hidden="true">✕</span>%s</td></tr>'
+                  % (esc(a), esc(b), esc(c)) for a, b, c in rows)
+    return """<section class="section" id="compare">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Compare your options</span>
+      <h2>Selling to us vs. listing with an agent</h2>
+      <p>A listing can get a higher price on paper. After repairs, commissions, carrying costs and months of waiting, the gap is often smaller than it looks.</p>
+    </div>
+    <div class="compare">
+      <table>
+        <thead><tr><th scope="col">What it costs you</th><th scope="col" class="us">Selling to %s</th><th scope="col">Listing with an agent</th></tr></thead>
+        <tbody>%s</tbody>
+      </table>
+    </div>
+    <p class="compare-note">Listing figures are general market ranges, not a quote for your property. Every offer we make is itemized so you can compare for yourself.</p>
+  </div>
+</section>
+""" % (esc(BRAND), trs)
+
+
+def calculator():
+    return """<section class="section section-soft" id="cost">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">What waiting costs</span>
       <h2>Every month on the market has a price. See yours.</h2>
-      <p>Most sellers compare the sale price and stop there. Put in your own numbers and see what a typical listing costs before you see a dollar.</p>
+      <p>Put in your own numbers and see what a typical listing costs before you see a dollar.</p>
     </div>
     <div class="calc" id="calc">
       <div class="calc-inputs">
@@ -413,73 +631,13 @@ def calculator():
           <div><span class="label">Listing</span><strong data-out="total2">$0</strong></div>
           <div class="us"><span class="label">Selling to us</span><strong data-out="us">$0</strong></div>
         </div>
-        <p class="calc-note">Estimates based on the numbers you enter. Commission and closing-cost rates are typical national figures and vary by market. A cash offer is usually below a retail listing price. The gap is often smaller than the costs above, and you decide once you see our number.</p>
-        <a class="btn btn-accent" href="#offer">Skip the wait. Get my cash offer</a>
+        <p class="calc-note">Estimates based on the numbers you enter. Commission and closing-cost rates are typical national figures and vary by market. A cash offer is usually below a retail listing price; the gap is often smaller than the costs above, and you decide once you see our number.</p>
+        <a class="btn btn-cta" href="#offer">Skip the wait. Get my cash offer</a>
       </div>
     </div>
   </div>
 </section>
 """
-
-
-def compare():
-    rows = [
-        ("Commissions and fees", "$0", "Typically 5–6% of the sale price"),
-        ("Repairs", "None. We buy as-is.", "Usually required after inspection"),
-        ("Closing costs", "We pay them", "Seller typically pays a share"),
-        ("Showings and open houses", "None", "Weeks of showings and cleaning"),
-        ("Time to close", "7–30 days, your choice", "60–90+ days if financing holds"),
-        ("Certainty", "Cash, no financing contingency", "Deals fall through when a loan fails"),
-    ]
-    trs = "".join("<tr><td>%s</td><td class=\"us\"><span class=\"yes\" aria-hidden=\"true\">✓</span>%s</td><td><span class=\"no\" aria-hidden=\"true\">✕</span>%s</td></tr>" % (esc(a), esc(b), esc(c)) for a, b, c in rows)
-    return """<section class="section" id="compare">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Compare</p>
-      <h2>Selling to us versus listing with an agent.</h2>
-      <p>A listing can get a higher price on paper. After repairs, commissions, carrying costs and months of waiting, the gap is often smaller than it looks.</p>
-    </div>
-    <div class="compare">
-      <table>
-        <thead><tr><th scope="col">What it costs you</th><th scope="col" class="us">%s</th><th scope="col">Listing with an agent</th></tr></thead>
-        <tbody>%s</tbody>
-      </table>
-    </div>
-    <p class="compare-note">Listing figures are general market ranges, not a quote for your property. Every offer we make is itemized so you can compare for yourself.</p>
-  </div>
-</section>
-""" % (esc(BRAND), trs)
-
-
-def markets():
-    cards = "".join("""
-    <div class="market" id="%(slug)s">
-      <span class="abbr">%(abbr)s</span>
-      <h3>%(name)s</h3>
-      <p>%(short)s</p>
-      <p class="cities">%(cities)s and more.</p>
-      <a class="more" href="%(slug)s.html" data-prefill-state="%(abbr)s">Sell a house in %(name)s →</a>
-    </div>""" % dict(slug=m["slug"], abbr=m["abbr"], name=esc(m["name"]), short=esc(m["short"]),
-                     cities=esc(", ".join(m["cities"][:8]))) for m in MARKETS)
-    return """<section class="section section-alt" id="markets">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Where we buy</p>
-      <h2>Four home states. Buyers everywhere else.</h2>
-      <p>We focus on Arizona, Florida, Tennessee and North Carolina, and buy nationwide through our network of local buying partners.</p>
-    </div>
-    <div class="grid-4">%s
-      <div class="market wide">
-        <div>
-          <h3>Outside these states?</h3>
-          <p>We still buy. Send us the address and we'll make an offer or match you with a vetted local buyer within 24 hours.</p>
-        </div>
-        <a class="btn btn-accent" href="#offer">Get an offer anywhere in the US</a>
-      </div>
-    </div>
-  </div>
-</section>
-""" % cards
 
 
 def promise():
@@ -489,35 +647,64 @@ def promise():
         ("We buy as-is", "Leave the broken water heater, the old furniture, the boxes in the garage."),
         ("No pressure, no obligation", "Say no and we part on good terms. We'd rather earn a referral than push a deal."),
         ("You pick the closing date", "Seven days or several months. Need time to find your next place? Take it."),
-        ("Every closing runs through a licensed title company or attorney", "Your money never passes through our hands."),
+        ("Closings run through a licensed title company", "Your money never passes through our hands."),
     ]
-    lis = "".join("<li><div><b>%s</b><span>%s</span></div></li>" % (esc(t), esc(d)) for t, d in items)
-    return """<section class="section promise" id="promise">
+    lis = "".join("<li>%s<div><b>%s</b><span>%s</span></div></li>" % (icon("check"), esc(t), esc(d)) for t, d in items)
+    return """<section class="section" id="promise">
   <div class="wrap">
-    <div>
-      <p class="eyebrow">Our promise to you</p>
-      <h2>Six things we put in writing before you decide anything.</h2>
-      <p class="lede">Selling a house to a company you found online should come with guarantees. These are ours, on every offer, in every state.</p>
-      <a class="btn btn-accent btn-lg" href="#offer">Get my written offer</a>
+    <div class="section-head center">
+      <span class="eyebrow">Our promise to you</span>
+      <h2>Six things we put in writing before you decide anything</h2>
+      <p>Selling a house to a company you found online should come with guarantees. These are ours, on every offer, in every state.</p>
     </div>
-    <ol>%s</ol>
+    <ul class="promise-list">%s</ul>
   </div>
 </section>
 """ % lis
+
+
+def markets():
+    cards = ""
+    for m in MARKETS:
+        links = "".join('<a href="%s">%s</a>' % (c["file"], esc(c["city"])) for c in CITY_PAGES if c["st"] == m["abbr"])
+        cards += """
+    <div class="card market" id="%(slug)s">
+      <span class="abbr">%(abbr)s</span>
+      <h3>%(name)s</h3>
+      <p>%(short)s</p>
+      <div class="cities">%(links)s</div>
+      <a class="more" href="%(slug)s.html" data-prefill-state="%(abbr)s">Sell a house in %(name)s →</a>
+    </div>""" % dict(slug=m["slug"], abbr=m["abbr"], name=esc(m["name"]), short=esc(m["short"]), links=links)
+    return """<section class="section section-soft" id="markets">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Where we buy</span>
+      <h2>Four home states. Buyers everywhere else.</h2>
+      <p>We focus on Arizona, Florida, Tennessee and North Carolina, and buy nationwide through our network of local buying partners.</p>
+    </div>
+    <div class="grid-4">%s
+      <div class="market-wide">
+        <div>
+          <h3>Outside these states?</h3>
+          <p>We still buy. Send us the address and we'll make an offer or match you with a vetted local buyer within 24 hours.</p>
+        </div>
+        <a class="btn btn-cta" href="#offer">Get an offer anywhere in the US</a>
+      </div>
+    </div>
+  </div>
+</section>
+""" % cards
 
 
 def testimonials():
     if not TESTIMONIALS:
         return ""
     cards = "".join("""
-    <figure class="quote"><p>%s</p><figcaption><cite>%s · %s</cite></figcaption></figure>""" % (
+    <figure class="card quote"><p>%s</p><figcaption><cite>%s · %s</cite></figcaption></figure>""" % (
         esc(t["quote"]), esc(t["name"]), esc(t.get("where", ""))) for t in TESTIMONIALS)
     return """<section class="section" id="sellers">
   <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">From sellers</p>
-      <h2>In their words.</h2>
-    </div>
+    <div class="section-head center"><span class="eyebrow">From sellers</span><h2>In their words</h2></div>
     <div class="grid-3">%s
     </div>
   </div>
@@ -525,42 +712,51 @@ def testimonials():
 """ % cards
 
 
+FAQ_ITEMS = [
+    ("How do I know this is legitimate?",
+     "Fair question. You never pay us anything, and your money never passes through us: every closing runs through a licensed title company or closing attorney who holds the funds and records the sale. You can have your own attorney review the contract, and you can walk away at any point before signing."),
+    ("Will you lowball me?",
+     "Our offer is built from real numbers that we show you: recent nearby sales, the repairs we will take on, and our costs to resell. If the number doesn't work for you, you've lost a minute and gained a free second opinion on what your house is worth as-is."),
+    ("How do you decide what to offer?",
+     "We look at what similar homes nearby have sold for, subtract what it will cost to repair and resell the property, and leave room for a fair margin. We walk you through the numbers, so you know exactly how we got there."),
+    ("Are there any fees?",
+     "No. No commissions, no service fees, and we pay standard closing costs. The offer you accept is the amount you walk away with, minus anything owed on the property such as a mortgage or liens."),
+    ("What condition does the house need to be in?",
+     "Any. We buy houses with fire or water damage, bad roofs, foundation issues, mold, hoarding situations and unfinished renovations. Leave behind anything you don't want to move."),
+    ("How fast can you close?",
+     "As little as 7 days once title is clear. If you need longer, choose the date that works for you. We close through a licensed title company or closing attorney, and you get paid at closing."),
+    ("Do I have to accept the offer?",
+     "No. Every offer is free and no-obligation. If a listing or another buyer would get you more, we'll tell you so."),
+    ("I still have a mortgage. Can you still buy?",
+     "Yes. The mortgage, along with any liens or back taxes, is paid off from the sale proceeds at closing. If you owe close to what the house is worth, we'll talk through your options honestly."),
+    ("What kinds of property do you buy?",
+     "Single-family homes, condos, townhouses, duplexes and small multifamily, mobile homes with land, and vacant lots. In Arizona, Florida, Tennessee, North Carolina, and nationwide through our buying partners."),
+]
+
+
 def faq(extra=None):
-    items = [
-        ("How do I know this is legitimate?",
-         "Fair question. You never pay us anything, and your money never passes through us: every closing runs through a licensed title company or closing attorney who holds the funds and records the sale. You can have your own attorney review the contract, and you can walk away at any point before signing."),
-        ("Will you lowball me?",
-         "Our offer is built from real numbers that we show you: recent nearby sales, the repairs we will take on, and our costs to resell. If the number doesn't work for you, you've lost a minute and gained a free second opinion on what your house is worth as-is."),
-        ("How do you decide what to offer?",
-         "We look at what similar homes nearby have sold for, subtract what it will cost to repair and resell the property, and leave room for a fair margin. We walk you through the numbers, so you know exactly how we got there."),
-        ("Are there any fees?",
-         "No. No commissions, no service fees, and we pay standard closing costs. The offer you accept is the amount you walk away with, minus anything owed on the property such as a mortgage or liens."),
-        ("What condition does the house need to be in?",
-         "Any. We buy houses with fire or water damage, bad roofs, foundation issues, mold, hoarding situations and unfinished renovations. Leave behind anything you don't want to move."),
-        ("How fast can you close?",
-         "As little as 7 days once title is clear. If you need longer, choose the date that works for you. We close through a licensed title company or closing attorney, and you get paid at closing."),
-        ("Do I have to accept the offer?",
-         "No. Every offer is free and no-obligation. If a listing or another buyer would get you more, we'll tell you so."),
-        ("I still have a mortgage. Can you still buy?",
-         "Yes. The mortgage, along with any liens or back taxes, is paid off from the sale proceeds at closing. If you owe close to what the house is worth, we'll talk through your options honestly."),
-        ("What kinds of property do you buy?",
-         "Single-family homes, condos, townhouses, duplexes and small multifamily, mobile homes with land, and vacant lots. In Arizona, Florida, Tennessee, North Carolina, and nationwide through our buying partners."),
-    ]
-    if extra:
-        items = extra + items
+    items = (extra or []) + FAQ_ITEMS
     ds = "".join("""
       <details><summary>%s</summary><p>%s</p></details>""" % (esc(q), esc(a)) for q, a in items)
-    return """<section class="section" id="faq">
+    return """<section class="section section-soft" id="faq">
   <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Questions</p>
-      <h2>Straight answers before you decide.</h2>
+    <div class="section-head center">
+      <span class="eyebrow">Questions</span>
+      <h2>Straight answers before you decide</h2>
     </div>
     <div class="faq">%s
     </div>
   </div>
 </section>
 """ % ds
+
+
+def faq_jsonld(extra=None):
+    items = (extra or []) + FAQ_ITEMS
+    return {
+        "@type": "FAQPage",
+        "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in items],
+    }
 
 
 def state_options(default):
@@ -571,7 +767,7 @@ def state_options(default):
     return "".join(opts)
 
 
-def offer_form(default_state=""):
+def offer_form(default_state="", default_city=""):
     bullets = [
         "No fees, commissions or closing costs",
         "As-is purchase. Leave behind what you don't want.",
@@ -579,17 +775,25 @@ def offer_form(default_state=""):
         "Mortgage, liens or back taxes? Paid off at closing.",
     ]
     lis = "".join("<li>%s<span>%s</span></li>" % (icon("check"), esc(b)) for b in bullets)
+    talk = ""
+    if PHONE or EMAIL:
+        talk = '<p class="talk">%s%s</p>' % (
+            ('<span>Prefer to talk? Call or text %s</span>' % phone_link()) if PHONE else "",
+            ('<span>Email %s</span>' % email_link()) if EMAIL else "")
+    fallback_lines = ""
+    if PHONE:
+        fallback_lines += '<span>Text or call %s</span>' % phone_link()
+    if EMAIL:
+        fallback_lines += '<span>Email %s or <a data-mail href="mailto:%s">open a pre-filled email</a></span>' % (email_link(), esc(EMAIL))
+    success_phone = ('<p>Expect a call or text from <b data-phone>%s</b>. Save the number so you don\'t miss us.</p>' % esc(PHONE)) if PHONE else ""
     return """<section class="offer section" id="offer">
   <div class="wrap">
     <div>
-      <p class="eyebrow">Get your cash offer</p>
+      <span class="eyebrow">Get your cash offer</span>
       <h2>Tell us about the property. We'll do the rest.</h2>
       <p class="lede">About 60 seconds. We review every property personally and send a written, no-obligation cash offer within 24 hours.</p>
       <ul>%(lis)s</ul>
-      <div class="contact-lines" data-contact-wrap hidden>
-        <span data-phone-wrap hidden>Prefer to talk? Call or text <a data-phone hidden href="#offer"></a></span>
-        <span data-email-wrap hidden>Email <a data-email hidden href="#offer"></a></span>
-      </div>
+      %(talk)s
     </div>
     <form class="form" id="lead-form" novalidate autocomplete="on">
       <ol class="progress" aria-hidden="true"><li class="current">Property</li><li>Details</li><li>Your offer</li></ol>
@@ -603,7 +807,7 @@ def offer_form(default_state=""):
         <div class="row-addr">
           <div class="field">
             <label for="f-city">City</label>
-            <input id="f-city" name="city" type="text" required autocomplete="address-level2">
+            <input id="f-city" name="city" type="text" required autocomplete="address-level2" value="%(city)s">
           </div>
           <div class="field">
             <label for="f-state">State</label>
@@ -616,7 +820,7 @@ def offer_form(default_state=""):
         </div>
         <div class="form-actions">
           <span class="form-note">Free. No obligation. About 60 seconds.</span>
-          <button type="button" class="btn btn-accent" data-next>Continue →</button>
+          <button type="button" class="btn btn-cta" data-next>Continue →</button>
         </div>
       </div>
 
@@ -650,15 +854,11 @@ def offer_form(default_state=""):
         <div class="row-3">
           <div class="field">
             <label for="f-beds">Bedrooms</label>
-            <select id="f-beds" name="beds">
-              <option value="">–</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
-            </select>
+            <select id="f-beds" name="beds"><option value="">–</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option></select>
           </div>
           <div class="field">
             <label for="f-baths">Bathrooms</label>
-            <select id="f-baths" name="baths">
-              <option value="">–</option><option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3</option><option>3.5+</option>
-            </select>
+            <select id="f-baths" name="baths"><option value="">–</option><option>1</option><option>1.5</option><option>2</option><option>2.5</option><option>3</option><option>3.5+</option></select>
           </div>
           <div class="field">
             <label for="f-occupancy">Occupied by</label>
@@ -702,8 +902,8 @@ def offer_form(default_state=""):
           <span class="hint">Helps us get you a number faster. No wrong answer.</span>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn btn-ghost" data-back>Back</button>
-          <button type="button" class="btn btn-accent" data-next>One more step →</button>
+          <button type="button" class="btn btn-outline" data-back>Back</button>
+          <button type="button" class="btn btn-cta" data-next>One more step →</button>
         </div>
       </div>
 
@@ -735,9 +935,9 @@ def offer_form(default_state=""):
         </label>
         <p class="error-msg" data-form-error hidden></p>
         <div class="form-actions">
-          <button type="button" class="btn btn-ghost" data-back>Back</button>
+          <button type="button" class="btn btn-outline" data-back>Back</button>
           <div class="submit-wrap">
-            <button type="submit" class="btn btn-accent btn-lg">Get my cash offer</button>
+            <button type="submit" class="btn btn-cta btn-lg">Get My Cash Offer</button>
             <span class="form-note">Free · No obligation · Reply within 24 hours</span>
           </div>
         </div>
@@ -747,14 +947,11 @@ def offer_form(default_state=""):
       <div class="thanks" data-result="success" hidden>
         %(okmark)s
         <h3>Got it. Your offer is on its way.</h3>
-        <p>We're reviewing the property now. Here's what happens next:</p>
+        %(success_phone)s
         <div class="next-steps">
           <div><span class="day">Within 24 hrs</span><span>We call or text with your written cash offer and the math behind it.</span></div>
           <div><span class="day">Day 2 to 3</span><span>A quick walkthrough or a few photos from your phone. Nothing to clean or fix.</span></div>
           <div><span class="day">Your date</span><span>Sign at the title company and the funds are wired to you.</span></div>
-        </div>
-        <div class="lines" data-contact-wrap hidden>
-          <span data-phone-wrap hidden>Want it faster? Call or text <a data-phone hidden href="#offer"></a></span>
         </div>
       </div>
 
@@ -763,39 +960,49 @@ def offer_form(default_state=""):
         <h3>Almost there. Send us these details.</h3>
         <p>We couldn't deliver this automatically from this page. Copy your request and text or email it to us, and we'll reply within 24 hours.</p>
         <div class="summary"></div>
-        <button type="button" class="btn btn-ghost" data-copy>Copy my request</button>
-        <div class="lines">
-          <span data-phone-wrap hidden>Text or call <a data-phone hidden href="#offer"></a></span>
-          <span data-email-wrap hidden>Email <a data-email hidden href="#offer"></a> or <a data-mail hidden href="#offer">open a pre-filled email</a></span>
-        </div>
+        <button type="button" class="btn btn-outline" data-copy>Copy my request</button>
+        <div class="lines">%(fallback_lines)s</div>
       </div>
     </form>
   </div>
 </section>
-""" % dict(lis=lis, states=state_options(default_state), legal=esc(LEGAL_NAME), okmark=icon("check-circle", "mark"), spark=icon("shield"))
+""" % dict(lis=lis, talk=talk, city=esc(default_city), states=state_options(default_state), legal=esc(LEGAL_NAME),
+           okmark=icon("check-circle", "mark"), spark=icon("shield"), success_phone=success_phone, fallback_lines=fallback_lines)
 
 
 def footer():
-    links = "".join('<li><a href="%s.html">Sell a house in %s</a></li>' % (m["slug"], esc(m["name"])) for m in MARKETS)
+    states = "".join('<li><a href="%s.html">Sell a house in %s</a></li>' % (m["slug"], esc(m["name"])) for m in MARKETS)
+    cities = "".join('<li><a href="%s">%s, %s</a></li>' % (c["file"], esc(c["city"]), c["st"]) for c in CITY_PAGES[:8])
+    contact = ""
+    if PHONE:
+        contact += '<li><a href="tel:%s">%s<span data-phone>%s</span></a></li>' % (PHONE_TEL, icon("phone"), esc(PHONE))
+    if EMAIL:
+        contact += '<li><a href="mailto:%s">%s<span data-email>%s</span></a></li>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
+    sticky_phone = ('<a class="btn btn-outline" href="tel:%s" aria-label="Call %s">%sCall</a>' % (PHONE_TEL, esc(PHONE), icon("phone"))) if PHONE else ""
     return """<footer class="site-footer">
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="index.html">%(mark)s<span>%(brand)s<small>Cash home buyers</small></span></a>
+        <a class="brand" href="index.html">%(mark)s<span>%(brand)s<small>We buy houses for cash</small></span></a>
         <p>%(legal)s buys houses directly from owners in Arizona, Florida, Tennessee and North Carolina, and nationwide through local buying partners. Fair cash offers, no fees, closing on your schedule.</p>
+        <ul class="foot-contact" style="margin-top:1rem">%(contact)s</ul>
       </div>
       <div>
         <h4>Where we buy</h4>
-        <ul>%(links)s<li><a href="index.html#markets">Nationwide</a></li></ul>
+        <ul>%(states)s<li><a href="index.html#markets">Nationwide</a></li></ul>
       </div>
       <div>
-        <h4>Contact</h4>
+        <h4>Popular cities</h4>
+        <ul>%(cities)s</ul>
+      </div>
+      <div>
+        <h4>Company</h4>
         <ul>
-          <li data-phone-wrap hidden><a data-phone hidden href="#offer"></a></li>
-          <li data-email-wrap hidden><a data-email hidden href="#offer"></a></li>
-          <li><a href="#offer">Get a cash offer</a></li>
+          <li><a href="index.html#how">How it works</a></li>
+          <li><a href="index.html#about">Contact us</a></li>
           <li><a href="index.html#faq">Questions</a></li>
-          <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="#offer">Get a cash offer</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
         </ul>
       </div>
     </div>
@@ -805,8 +1012,8 @@ def footer():
     </div>
   </div>
 </footer>
-<div class="sticky-cta"><a class="btn btn-accent" href="#offer">Get my cash offer</a><a class="btn btn-ghost" data-phone hidden href="#offer"></a></div>
-""" % dict(mark=BRAND_MARK, brand=esc(BRAND), legal=esc(LEGAL_NAME), links=links)
+<div class="sticky-cta"><a class="btn btn-cta" href="#offer">Get My Cash Offer</a>%(sticky_phone)s</div>
+""" % dict(mark=BRAND_MARK, brand=esc(BRAND), legal=esc(LEGAL_NAME), contact=contact, states=states, cities=cities, sticky_phone=sticky_phone)
 
 
 def scripts():
@@ -821,96 +1028,161 @@ def scripts():
 
 
 def org_jsonld():
-    return {
-        "@context": "https://schema.org",
+    org = {
         "@type": "Organization",
+        "@id": SITE_URL + "#org",
         "name": LEGAL_NAME,
+        "alternateName": BRAND,
         "url": SITE_URL,
         "description": "Cash home buyers. We buy houses as-is in Arizona, Florida, Tennessee, North Carolina and nationwide.",
         "areaServed": [{"@type": "State", "name": m["name"]} for m in MARKETS] + [{"@type": "Country", "name": "United States"}],
     }
+    if PHONE:
+        org["telephone"] = PHONE_TEL
+    if EMAIL:
+        org["email"] = EMAIL
+    if PHONE or EMAIL:
+        cp = {"@type": "ContactPoint", "contactType": "sales", "availableLanguage": "English"}
+        if PHONE:
+            cp["telephone"] = PHONE_TEL
+        if EMAIL:
+            cp["email"] = EMAIL
+        org["contactPoint"] = [cp]
+    return org
+
+
+def graph(*nodes):
+    return {"@context": "https://schema.org", "@graph": list(nodes)}
+
+
+def service_jsonld(name, area, url):
+    return {
+        "@type": "Service",
+        "serviceType": "Cash home buying",
+        "name": name,
+        "provider": {"@id": SITE_URL + "#org"},
+        "areaServed": area,
+        "url": url,
+    }
 
 
 def page_index():
-    title = "Prime Acre Capital | Sell Your House Fast for Cash in AZ, FL, TN, NC and Nationwide"
+    title = "Sell Your House Fast for Cash | We Buy Houses in AZ, FL, TN, NC | Prime Acre Capital"
     desc = ("Prime Acre Capital LLC buys houses as-is for cash in Arizona, Florida, Tennessee, North Carolina and nationwide. "
-            "No fees, no repairs, no agents. Get a no-obligation cash offer within 24 hours and close in as little as 7 days.")
-    body = (hero_index() + trustbar() + how() + calculator() + compare() + situations() + promise() + markets()
-            + testimonials() + faq() + offer_form() + footer())
-    return head(title, desc, "index.html", org_jsonld()) + header() + body + scripts()
+            "No fees, no repairs, no agents. Get a fair cash offer within 24 hours and close in as little as 7 days. Call or text %s." % PHONE).strip()
+    h1 = "Sell Your House Fast for Cash. Any Condition. Any Situation."
+    lede = ("We buy houses as-is in Arizona, Florida, Tennessee, North Carolina and nationwide. No repairs, no showings, "
+            "no agent fees, and no waiting on a buyer's bank.")
+    body = (hero("Direct cash home buyer · No agents, no fees", h1, lede) + trust_strip() + how() + situations() + about()
+            + compare() + calculator() + promise() + markets() + testimonials() + faq() + offer_form() + footer())
+    return head(title, desc, "index.html", graph(org_jsonld(), faq_jsonld())) + header() + body + scripts()
+
+
+def why_section(title, intro, points):
+    cards = "".join("""
+    <div class="card step" style="text-align:left;padding:1.6rem">
+      <h3>%s</h3>
+      <p>%s</p>
+    </div>""" % (esc(t), esc(d)) for t, d in points)
+    return """<section class="section" id="why">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Local knowledge</span>
+      <h2>%s</h2>
+      <p>%s</p>
+    </div>
+    <div class="grid-3">%s
+    </div>
+  </div>
+</section>
+""" % (esc(title), esc(intro), cards)
+
+
+def cities_section(m, current=None):
+    chips = ""
+    for c in CITY_PAGES:
+        if c["st"] != m["abbr"]:
+            continue
+        if current and c["city"] == current:
+            chips += '<span class="chip on">%s</span>' % esc(c["city"])
+        else:
+            chips += '<a class="chip" href="%s">%s</a>' % (c["file"], esc(c["city"]))
+    others = [c for c in m["cities"] if c not in [x["city"] for x in CITY_PAGES if x["st"] == m["abbr"]]]
+    chips += "".join('<span class="chip">%s</span>' % esc(c) for c in others[:12])
+    return """<section class="section section-soft" id="cities">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Where we buy in %(name)s</span>
+      <h2>%(top)s and everywhere between</h2>
+      <p>City, suburb or county road. If it's in %(name)s, send us the address. <a href="%(slug)s.html">See all of %(name)s →</a></p>
+    </div>
+    <div class="chips" style="justify-content:center">%(chips)s<span class="chip">Anywhere else in %(name)s</span></div>
+  </div>
+</section>
+""" % dict(name=esc(m["name"]), top=esc(", ".join(m["cities"][:3])), slug=m["slug"], chips=chips)
 
 
 def page_state(m):
-    title = "Sell My House Fast in %s | Cash Offer in 24 Hours | %s" % (m["name"], BRAND)
+    title = "Sell My House Fast in %s | We Buy Houses for Cash | %s" % (m["name"], BRAND)
     desc = ("Sell your %s house fast for cash. %s buys houses as-is in %s and across %s. "
-            "No fees, no repairs, no obligation. Get a cash offer within 24 hours." % (m["name"], LEGAL_NAME, ", ".join(m["cities"][:4]), m["name"]))
-    jsonld = {
-        "@context": "https://schema.org",
-        "@type": "Service",
-        "serviceType": "Cash home buying",
-        "name": "Sell your house for cash in %s" % m["name"],
-        "provider": {"@type": "Organization", "name": LEGAL_NAME, "url": SITE_URL},
-        "areaServed": {"@type": "State", "name": m["name"]},
-        "url": SITE_URL + m["slug"] + ".html",
-    }
-    points = "".join("""
-    <div class="step">
-      <h3>%s</h3>
-      <p>%s</p>
-    </div>""" % (esc(t), esc(d)) for t, d in m["points"])
-    why = """<section class="section" id="why">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">%(name)s</p>
-      <h2>Why %(name)s homeowners sell to us.</h2>
-      <p>Every market has its own reasons a house gets hard to sell the traditional way. These are the ones we solve most often in %(name)s.</p>
-    </div>
-    <div class="grid-3">%(points)s
-    </div>
-  </div>
-</section>
-""" % dict(name=esc(m["name"]), points=points)
-    chips = "".join('<span class="chip">%s</span>' % esc(c) for c in m["cities"])
-    cities = """<section class="section section-alt" id="cities">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Where we buy in %(name)s</p>
-      <h2>%(cities_h)s and everywhere between.</h2>
-      <p>City, suburb or county road. If it's in %(name)s, send us the address.</p>
-    </div>
-    <div class="states" style="display:flex;flex-wrap:wrap;gap:.5rem">%(chips)s<span class="chip">Anywhere else in %(name)s</span></div>
-  </div>
-</section>
-""" % dict(name=esc(m["name"]), cities_h=esc(", ".join(m["cities"][:3])), chips=chips)
-    extra_faq = [("Do you buy everywhere in %s?" % m["name"],
-                  "Yes. We buy in %s and the surrounding counties, and in smaller towns across the state. "
-                  "If we can't buy a particular property ourselves, we match you with a vetted local buyer, at no cost to you." % ", ".join(m["cities"][:5]))]
-    body = (hero_state(m) + trustbar() + strip_state(m) + why + how() + calculator() + situations() + promise() + cities
-            + testimonials() + faq(extra_faq) + offer_form(m["abbr"]) + footer())
+            "No fees, no repairs, no obligation. Cash offer within 24 hours. Call or text %s." % (m["name"], LEGAL_NAME, ", ".join(m["cities"][:4]), m["name"], PHONE)).strip()
+    extra = [("Do you buy everywhere in %s?" % m["name"],
+              "Yes. We buy in %s and the surrounding counties, and in smaller towns across the state. "
+              "If we can't buy a particular property ourselves, we match you with a vetted local buyer, at no cost to you." % ", ".join(m["cities"][:5]))]
+    jsonld = graph(org_jsonld(), service_jsonld("Sell your house for cash in %s" % m["name"], {"@type": "State", "name": m["name"]},
+                                                SITE_URL + m["slug"] + ".html"), faq_jsonld(extra))
+    h1 = "Sell Your %s House Fast for Cash" % m["name"]
+    body = (hero("We buy houses in %s" % m["name"], h1, m["lede"], state=m["abbr"]) + trust_strip()
+            + why_section("Why %s homeowners sell to us" % m["name"],
+                          "Every market has its own reasons a house gets hard to sell the traditional way. These are the ones we solve most often in %s." % m["name"],
+                          m["points"])
+            + how() + situations() + about() + calculator() + promise() + cities_section(m) + testimonials()
+            + faq(extra) + offer_form(m["abbr"]) + footer())
     return head(title, desc, m["slug"] + ".html", jsonld) + header() + body + scripts()
+
+
+def page_city(c):
+    m = c["market"]
+    name = "%s, %s" % (c["city"], c["st"])
+    title = "Sell My House Fast in %s | We Buy Houses %s | %s" % (name, c["city"], BRAND)
+    desc = ("We buy houses in %s for cash. %s buys as-is in %s and across %s County. No fees, no repairs, no agents. "
+            "Get a fair cash offer within 24 hours. Call or text %s." % (name, LEGAL_NAME, ", ".join(c["areas"][:3]), c["county"], PHONE)).strip()
+    extra = [("Do you buy houses everywhere in %s?" % c["city"],
+              "Yes. We buy in %s, and throughout %s County. Condos, single-family homes, duplexes, mobile homes with land and vacant lots all qualify." % (", ".join(c["areas"]), c["county"]))]
+    jsonld = graph(org_jsonld(), service_jsonld("Sell your house for cash in %s" % name, {"@type": "City", "name": c["city"], "containedInPlace": {"@type": "State", "name": m["name"]}},
+                                                SITE_URL + c["file"]), faq_jsonld(extra))
+    h1 = "Sell Your House Fast in %s" % name
+    body = (hero("We buy houses in %s" % name, h1, c["intro"], state=c["st"], city=c["city"]) + trust_strip()
+            + why_section("Why %s homeowners sell to us" % c["city"],
+                          "We buy in %s and every neighborhood between. These are the situations we solve most often around %s." % (", ".join(c["areas"]), c["city"]),
+                          m["points"])
+            + how() + situations() + about() + calculator() + promise() + cities_section(m, c["city"]) + testimonials()
+            + faq(extra) + offer_form(c["st"], c["city"]) + footer())
+    return head(title, desc, c["file"], jsonld) + header() + body + scripts()
 
 
 def page_privacy():
     title = "Privacy Policy | %s" % BRAND
     desc = "How %s collects, uses and protects the information you share when requesting a cash offer." % LEGAL_NAME
+    contact = " at %s" % EMAIL if EMAIL else " using the contact details on this site"
     body = """<section class="section" id="privacy">
   <div class="wrap">
     <div class="section-head">
-      <p class="eyebrow">Privacy policy</p>
-      <h2>What we collect and how we use it.</h2>
+      <span class="eyebrow">Privacy policy</span>
+      <h2>What we collect and how we use it</h2>
       <p>Last updated: October 2026</p>
     </div>
-    <div class="faq" style="max-width:44rem">
+    <div class="faq" style="margin:0;max-width:46rem">
       <details open><summary>Information we collect</summary><p>When you request a cash offer we collect the property address and details you provide, your name, phone number and email address, and anything you add in the notes. We also collect standard web analytics such as pages visited and the device used.</p></details>
       <details open><summary>How we use it</summary><p>We use your information to evaluate the property, prepare and deliver a cash offer, and communicate with you about the sale by phone, text message or email. If you have agreed to text messages, you can opt out at any time by replying STOP.</p></details>
       <details open><summary>Sharing</summary><p>We do not sell your personal information. We may share it with the title company, closing attorney or local buying partner involved in purchasing your property, and with service providers who help us run this website and deliver messages. These parties may use it only to provide those services.</p></details>
-      <details open><summary>Your choices</summary><p>You can ask us to correct or delete your information, or to stop contacting you, at any time using the contact details on this site. We keep lead information only as long as needed to evaluate and complete a potential purchase and to meet legal requirements.</p></details>
-      <details open><summary>Contact</summary><p>Questions about this policy can be sent to %s using the contact details in the footer of this site.</p></details>
+      <details open><summary>Your choices</summary><p>You can ask us to correct or delete your information, or to stop contacting you, at any time. We keep lead information only as long as needed to evaluate and complete a potential purchase and to meet legal requirements.</p></details>
+      <details open><summary>Contact</summary><p>Questions about this policy can be sent to %s%s.</p></details>
     </div>
   </div>
 </section>
-""" % esc(LEGAL_NAME)
-    return head(title, desc, "privacy.html", org_jsonld()) + header() + body + offer_form() + footer() + scripts()
+""" % (esc(LEGAL_NAME), esc(contact))
+    return head(title, desc, "privacy.html", graph(org_jsonld())) + header() + body + offer_form() + footer() + scripts()
 
 
 def sitemap(paths):
@@ -922,7 +1194,7 @@ def sitemap(paths):
 
 
 def artifact_build(out_path):
-    """Single-file home page: no document skeleton, CSS/config/JS inlined, state links as in-page anchors."""
+    """Single-file home page: no document skeleton, CSS/config/JS inlined, other pages become in-page anchors."""
     doc = page_index()
     with open(os.path.join(SITE, "assets", "style.css"), encoding="utf-8") as f:
         css = f.read()
@@ -931,16 +1203,21 @@ def artifact_build(out_path):
     with open(os.path.join(SITE, "assets", "app.js"), encoding="utf-8") as f:
         app = f.read()
 
-    body = doc.split("<body>\n", 1)[1].rsplit("<script src=\"config.js\"></script>", 1)[0]
+    body = doc.split("<body>\n", 1)[1].rsplit('<script src="config.js"></script>', 1)[0]
     title = re.search(r"<title>(.*?)</title>", doc).group(1)
     jsonld = re.search(r'<script type="application/ld\+json">.*?</script>', doc, re.S).group(0)
 
-    # In-page targets replace the separate state pages.
     for m in MARKETS:
         body = body.replace('href="%s.html"' % m["slug"], 'href="#%s"' % m["slug"])
+    for c in CITY_PAGES:
+        body = body.replace('href="%s"' % c["file"], 'href="#markets"')
     body = body.replace('href="index.html#', 'href="#').replace('href="index.html"', 'href="#top"')
-    body = body.replace('<li><a href="privacy.html">Privacy</a></li>', '')
+    body = body.replace('<li><a href="privacy.html">Privacy policy</a></li>', '')
     body = body.replace('<a class="sr-only" href="#offer">Skip to the cash offer form</a>\n', "")
+    if os.path.exists(HERO_PHOTO):
+        with open(HERO_PHOTO, "rb") as f:
+            data = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
+        body = body.replace("url(assets/img/hero.jpg)", "url(%s)" % data)
 
     out = ('<title>%s</title>\n<link rel="stylesheet" href="%s">\n<style>\n%s\n</style>\n%s\n%s\n<script>\n%s\n</script>\n<script>\n%s\n</script>\n'
            % (title, esc(FONTS), css, jsonld, body, config, app))
@@ -961,6 +1238,8 @@ def main():
     pages = {"index.html": page_index(), "privacy.html": page_privacy()}
     for m in MARKETS:
         pages[m["slug"] + ".html"] = page_state(m)
+    for c in CITY_PAGES:
+        pages[c["file"]] = page_city(c)
     for name, content in pages.items():
         with open(os.path.join(SITE, name), "w", encoding="utf-8") as f:
             f.write(content)
@@ -970,7 +1249,7 @@ def main():
     with open(os.path.join(SITE, "robots.txt"), "w", encoding="utf-8") as f:
         f.write("User-agent: *\nAllow: /\nSitemap: %ssitemap.xml\n" % SITE_URL)
     open(os.path.join(SITE, ".nojekyll"), "w").close()
-    print("built: " + ", ".join(sorted(pages)) + ", sitemap.xml, robots.txt")
+    print("built %d pages + sitemap.xml, robots.txt" % len(pages))
 
 
 if __name__ == "__main__":

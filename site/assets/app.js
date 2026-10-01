@@ -145,7 +145,16 @@
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify(payload)
-    }).then(function (r) { return r.ok; }).catch(function () { return false; });
+    }).then(function (r) {
+      if (!r.ok) return false;
+      return r.text().then(function (t) {
+        try {
+          var j = JSON.parse(t);
+          if (j && (j.success === false || j.success === "false" || j.error)) return false;
+        } catch (e) { /* non-JSON body: treat 2xx as delivered */ }
+        return true;
+      });
+    }).catch(function () { return false; });
   }
 
   function submitLead(lead) {
@@ -179,6 +188,79 @@
       lead.notes ? "Notes: " + lead.notes : ""
     ];
     return lines.filter(Boolean).join("\n");
+  }
+
+  /* ---------- hero lead card (address + phone + email) ---------- */
+  function initHeroForm() {
+    $$("form.hero-form").forEach(function (form) {
+      var card = form.closest(".lead-card");
+      var errorBox = $("[data-form-error]", form);
+      var done = card ? $(".lead-done", card) : null;
+
+      function fail(msg) {
+        if (!errorBox) return;
+        errorBox.textContent = msg;
+        errorBox.hidden = false;
+      }
+
+      form.addEventListener("input", function (e) {
+        var wrap = e.target.closest(".field");
+        if (wrap) wrap.classList.remove("invalid");
+        if (errorBox) errorBox.hidden = true;
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (form.elements.company && form.elements.company.value) return;
+        var address = form.elements.address.value.trim();
+        var phone = form.elements.phone.value.trim();
+        var email = form.elements.email ? form.elements.email.value.trim() : "";
+        var bad = false;
+        [["address", !address], ["phone", phone.replace(/\D/g, "").length < 10],
+         ["email", !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)]].forEach(function (pair) {
+          var el = form.elements[pair[0]];
+          var wrap = el && el.closest(".field");
+          if (wrap) wrap.classList.toggle("invalid", pair[1]);
+          if (pair[1] && !bad) { bad = true; if (el) el.focus({ preventScroll: true }); }
+        });
+        if (bad) { fail(address ? "Please enter a phone number we can reach you at." : "Please enter the property address."); return; }
+
+        var parsed = parseAddress(address);
+        var state = parsed.state || (form.elements.state ? form.elements.state.value : "");
+        var city = parsed.city || (form.elements.city ? form.elements.city.value : "");
+        var lead = {
+          address: parsed.street, city: city, state: state, zip: parsed.zip,
+          fullAddress: address, phone: phone, email: email,
+          source: "quick-form", page: window.location.pathname,
+          submittedAt: new Date().toISOString(),
+          market: MARKETS[state] ? MARKETS[state].name : "Nationwide"
+        };
+        var btn = $("button[type=submit]", form);
+        if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+        submitLead(lead).then(function (result) {
+          if (btn) { btn.disabled = false; btn.textContent = "Get My Cash Offer →"; }
+          try { window.localStorage.setItem("pac:quickLead", JSON.stringify(lead)); } catch (err) { /* storage unavailable */ }
+          if (result.ok && done) {
+            form.hidden = true;
+            done.hidden = false;
+            var add = $("[data-add-details]", done);
+            if (add) add.addEventListener("click", function () {
+              prefillForm({ street: lead.address, city: lead.city, state: lead.state, zip: lead.zip });
+              var lf = $("#lead-form");
+              if (lf) {
+                if (lf.elements.phone) lf.elements.phone.value = lead.phone;
+                if (lf.elements.email) lf.elements.email.value = lead.email;
+              }
+            });
+            return;
+          }
+          var phoneTxt = String(cfg.phone || "").trim();
+          var emailTxt = String(cfg.email || "").trim();
+          var reach = phoneTxt ? "call or text " + phoneTxt : (emailTxt ? "email " + emailTxt : "try again in a moment");
+          fail("We couldn't send that just now. Please " + reach + " and we'll take it from there.");
+        });
+      });
+    });
   }
 
   /* ---------- multi-step form ---------- */
@@ -363,6 +445,7 @@
     applyContact();
     initNav();
     initSearch();
+    initHeroForm();
     initForm();
     initStickyCta();
     initCalculator();
