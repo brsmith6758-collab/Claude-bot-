@@ -811,7 +811,7 @@ def artifact_build(out_path):
     for m in MARKETS:
         body = body.replace('href="%s.html"' % m["slug"], 'href="#%s"' % m["slug"])
     body = body.replace('href="index.html#', 'href="#').replace('href="index.html"', 'href="#top"')
-    body = body.replace('href="privacy.html"', 'href="#offer"')
+    body = body.replace('<li><a href="privacy.html">Privacy</a></li>', '')
     body = body.replace('<a class="sr-only" href="#offer">Skip to the cash offer form</a>\n', "")
 
     out = ('<title>%s</title>\n<link rel="stylesheet" href="%s">\n<style>\n%s\n</style>\n%s\n%s\n<script>\n%s\n</script>\n<script>\n%s\n</script>\n'
