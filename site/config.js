@@ -17,7 +17,7 @@ window.PAC_CONFIG = {
 
   // Public URL of the site (used for canonical links, sitemap and sharing).
   // Change this to your custom domain (e.g. "https://primeacrecapital.com/") when you connect one.
-  siteUrl: "https://brsmith6758-collab.github.io/Claude-bot-/",
+  siteUrl: "https://primeacrehomebuyers.com/",
 
   // Pre-filled message when a visitor taps "Text us".
   smsText: "Hi, I'd like a cash offer on my house.",
