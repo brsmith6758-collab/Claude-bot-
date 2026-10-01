@@ -135,7 +135,13 @@ ICON = {
     "house": '<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6h-6v6H4a1 1 0 01-1-1z"/>',
     "check": '<path d="M5 12l5 5 9-10"/>',
     "check-circle": '<circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/>',
+    "calendar": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    "shield": '<path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
 }
+
+# Real seller quotes only. Leave empty and the section is not rendered.
+# Example: {"quote": "They closed in nine days and I didn't fix a thing.", "name": "D. Alvarez", "where": "Mesa, AZ"}
+TESTIMONIALS = []
 
 
 def icon(name, cls=""):
@@ -207,11 +213,14 @@ def header():
 
 
 def search_form(input_id, label="Property address", placeholder="Enter your property address"):
-    return """<form class="search" role="search" aria-label="Start your cash offer">
-        <label class="sr-only" for="%s">%s</label>
-        <input id="%s" type="text" name="address" placeholder="%s" autocomplete="street-address" required>
-        <button class="btn btn-accent" type="submit">Get my cash offer</button>
-      </form>""" % (input_id, esc(label), input_id, esc(placeholder))
+    return """<div class="search-wrap">
+        <span class="search-step">Step 1 of 3 · Your address</span>
+        <form class="search" role="search" aria-label="Start your cash offer">
+          <label class="sr-only" for="%s">%s</label>
+          <input id="%s" type="text" name="address" placeholder="%s" autocomplete="street-address" required>
+          <button class="btn btn-accent" type="submit">Get my cash offer</button>
+        </form>
+      </div>""" % (input_id, esc(label), input_id, esc(placeholder))
 
 
 def sheet(property_label="Your address"):
@@ -233,10 +242,10 @@ def hero_index():
   <div class="wrap">
     <div>
       <p class="eyebrow">Cash home buyers · Arizona · Florida · Tennessee · North Carolina · Nationwide</p>
-      <h1>Sell your house fast for a fair cash offer.</h1>
-      <p class="lede">Any condition, any situation. No agents, no fees, no repairs. Tell us about the property and get a written, no-obligation cash offer within 24 hours.</p>
+      <h1>Sell your house as-is. Get a <span class="hl">fair cash offer</span> in 24 hours.</h1>
+      <p class="lede">No repairs, no showings, no agent fees, and no waiting on a buyer's bank. Close in as little as 7 days, or on the date you choose.</p>
       %(search)s
-      <div class="hero-proof"><span>No obligation</span><span>No fees or commissions</span><span>Close in as little as 7 days</span></div>
+      <p class="hero-sub"><b>Free and no obligation.</b> Takes about 60 seconds. Your information is never sold.</p>
     </div>
     %(sheet)s
   </div>
@@ -249,10 +258,10 @@ def hero_state(m):
   <div class="wrap">
     <div>
       <p class="eyebrow">Cash home buyers in %(name)s</p>
-      <h1>Sell your %(name)s house fast for cash.</h1>
+      <h1>Sell your %(name)s house as-is for a <span class="hl">fair cash offer</span>.</h1>
       <p class="lede">%(lede)s</p>
       %(search)s
-      <div class="hero-proof"><span>No obligation</span><span>No fees or commissions</span><span>Close in as little as 7 days</span></div>
+      <p class="hero-sub"><b>Free and no obligation.</b> Written offer within 24 hours. Close in as little as 7 days.</p>
     </div>
     %(sheet)s
   </div>
@@ -262,16 +271,20 @@ def hero_state(m):
            sheet=sheet("Anywhere in %s" % m["name"]))
 
 
-def strip_index():
-    chips = "".join('<a class="chip" href="%s.html">%s</a>' % (m["slug"], esc(m["name"])) for m in MARKETS)
-    return """<div class="strip">
-  <div class="wrap">
-    <span>Buying houses in</span>
-    <div class="states">%s<span class="chip">Nationwide</span></div>
-    <span>As-is purchases · We pay closing costs · Licensed title companies</span>
+def trustbar():
+    items = [
+        ("clock", "Offer in 24 hours", "In writing, with the math behind it"),
+        ("dollar", "$0 fees or commissions", "We pay the closing costs too"),
+        ("calendar", "Close in 7 days", "Or pick any date that suits you"),
+        ("house", "Any condition", "Repairs, tenants, liens: we handle it"),
+    ]
+    cards = "".join("""
+    <div class="trust">%s<div><b>%s</b><span>%s</span></div></div>""" % (icon(k), esc(t), esc(d)) for k, t, d in items)
+    return """<div class="trustbar" aria-label="What you get">
+  <div class="wrap">%s
   </div>
 </div>
-""" % chips
+""" % cards
 
 
 def strip_state(m):
@@ -287,31 +300,25 @@ def strip_state(m):
 
 def how():
     steps = [
-        ("Tell us about the property",
-         "Enter the address and a few details. It takes about a minute, and there's no cost or commitment.",
-         "Today", "about 60 seconds"),
-        ("Get a written cash offer",
-         "We look at the property, nearby sales and the repairs it needs, then send you a real number. No lowball games, no pressure.",
-         "Within", "24 hours"),
-        ("Pick your closing date",
-         "Accept when you're ready. Close in as little as 7 days through a licensed title company, or take a few months. We work around you.",
-         "Close in", "7 to 90+ days"),
+        ("Today", "Tell us about the house", "Sixty seconds online, or one phone call. No cleaning up first, no paperwork to dig out.", False),
+        ("Within 24 hours", "Get your written cash offer", "A real number with the math behind it: nearby sales, the repairs we'd take on, and what you walk away with.", False),
+        ("Day 2 to 3", "A quick walkthrough", "One short visit, or photos from your phone. Nothing to stage, nothing to fix.", False),
+        ("Day 7, or your date", "Sign and get paid", "Close at a licensed title company or attorney's office. Funds are wired to you at closing.", True),
     ]
     cards = "".join("""
-    <div class="step">
-      <span class="step-num">STEP %d</span>
+    <div class="tl%s">
+      <span class="day">%s</span>
       <h3>%s</h3>
       <p>%s</p>
-      <span class="when">%s <b>%s</b></span>
-    </div>""" % (i + 1, esc(t), esc(d), esc(w1), esc(w2)) for i, (t, d, w1, w2) in enumerate(steps))
+    </div>""" % (" final" if final else "", esc(d), esc(t), esc(b)) for d, t, b, final in steps)
     return """<section class="section" id="how">
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>Three steps from "I need to sell" to cash in hand.</h2>
-      <p>No listing, no lender, no waiting on someone else's approval. You deal directly with the buyer.</p>
+      <h2>Your next seven days, if you want them to be.</h2>
+      <p>No listing, no lender, no waiting on someone else's approval. You deal directly with the buyer, and you set the pace.</p>
     </div>
-    <div class="grid-3">%s
+    <div class="timeline">%s
     </div>
   </div>
 </section>
@@ -353,6 +360,68 @@ def situations():
 """ % cards
 
 
+def calculator():
+    return """<section class="section calc-section" id="cost">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">What waiting costs</p>
+      <h2>Every month on the market has a price. See yours.</h2>
+      <p>Most sellers compare the sale price and stop there. Put in your own numbers and see what a typical listing costs before you see a dollar.</p>
+    </div>
+    <div class="calc" id="calc">
+      <div class="calc-inputs">
+        <div class="field">
+          <label for="c-mortgage">Monthly mortgage payment</label>
+          <span class="money-in"><input id="c-mortgage" type="text" inputmode="numeric" value="1,500" data-calc></span>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="c-taxes">Taxes, insurance and HOA per month</label>
+            <span class="money-in"><input id="c-taxes" type="text" inputmode="numeric" value="350" data-calc></span>
+          </div>
+          <div class="field">
+            <label for="c-upkeep">Utilities and upkeep per month</label>
+            <span class="money-in"><input id="c-upkeep" type="text" inputmode="numeric" value="250" data-calc></span>
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="c-price">Likely listing price</label>
+            <span class="money-in"><input id="c-price" type="text" inputmode="numeric" value="300,000" data-calc></span>
+          </div>
+          <div class="field">
+            <label for="c-repairs">Repairs and prep before listing</label>
+            <span class="money-in"><input id="c-repairs" type="text" inputmode="numeric" value="7,500" data-calc></span>
+          </div>
+        </div>
+        <div class="field range">
+          <label for="c-months">Months to list, sell and close the traditional way: <output id="c-months-out" for="c-months">4 months</output></label>
+          <input id="c-months" type="range" min="1" max="12" step="1" value="4" data-calc>
+          <span class="hint">Listing to closing commonly runs 3 to 5 months once showings, offers, inspections and the buyer's loan are done.</span>
+        </div>
+      </div>
+      <div class="calc-out" aria-live="polite">
+        <span class="label">Cost of listing before you see a dollar</span>
+        <div class="calc-big"><span data-out="total">$0</span><small>in carrying costs, commissions, closing costs and repairs</small></div>
+        <div class="calc-rows">
+          <div><span>Carrying costs while listed</span><span data-out="carry">$0</span></div>
+          <div><span>Agent commissions (5.5%)</span><span data-out="commission">$0</span></div>
+          <div><span>Seller closing costs (1.5%)</span><span data-out="closing">$0</span></div>
+          <div><span>Repairs and prep</span><span data-out="repairs">$0</span></div>
+        </div>
+        <div class="calc-vs">
+          <div><span class="label">Listing</span><strong data-out="total2">$0</strong></div>
+          <div class="us"><span class="label">Selling to us</span><strong data-out="us">$0</strong></div>
+        </div>
+        <p class="calc-note">Estimates based on the numbers you enter. Commission and closing-cost rates are typical national figures and vary by market. A cash offer is usually below a retail listing price. The gap is often smaller than the costs above, and you decide once you see our number.</p>
+        <a class="btn btn-accent" href="#offer">Skip the wait. Get my cash offer</a>
+      </div>
+    </div>
+  </div>
+</section>
+"""
+
+
 def compare():
     rows = [
         ("Commissions and fees", "$0", "Typically 5–6% of the sale price"),
@@ -362,7 +431,7 @@ def compare():
         ("Time to close", "7–30 days, your choice", "60–90+ days if financing holds"),
         ("Certainty", "Cash, no financing contingency", "Deals fall through when a loan fails"),
     ]
-    trs = "".join("<tr><td>%s</td><td class=\"us\">%s</td><td>%s</td></tr>" % (esc(a), esc(b), esc(c)) for a, b, c in rows)
+    trs = "".join("<tr><td>%s</td><td class=\"us\"><span class=\"yes\" aria-hidden=\"true\">✓</span>%s</td><td><span class=\"no\" aria-hidden=\"true\">✕</span>%s</td></tr>" % (esc(a), esc(b), esc(c)) for a, b, c in rows)
     return """<section class="section" id="compare">
   <div class="wrap">
     <div class="section-head">
@@ -413,8 +482,55 @@ def markets():
 """ % cards
 
 
+def promise():
+    items = [
+        ("A written offer within 24 hours", "With the math behind it, so you can check our work."),
+        ("Zero fees, commissions or closing costs", "The number on the offer is the number you walk away with, minus what you owe."),
+        ("We buy as-is", "Leave the broken water heater, the old furniture, the boxes in the garage."),
+        ("No pressure, no obligation", "Say no and we part on good terms. We'd rather earn a referral than push a deal."),
+        ("You pick the closing date", "Seven days or several months. Need time to find your next place? Take it."),
+        ("Every closing runs through a licensed title company or attorney", "Your money never passes through our hands."),
+    ]
+    lis = "".join("<li><div><b>%s</b><span>%s</span></div></li>" % (esc(t), esc(d)) for t, d in items)
+    return """<section class="section promise" id="promise">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Our promise to you</p>
+      <h2>Six things we put in writing before you decide anything.</h2>
+      <p class="lede">Selling a house to a company you found online should come with guarantees. These are ours, on every offer, in every state.</p>
+      <a class="btn btn-accent btn-lg" href="#offer">Get my written offer</a>
+    </div>
+    <ol>%s</ol>
+  </div>
+</section>
+""" % lis
+
+
+def testimonials():
+    if not TESTIMONIALS:
+        return ""
+    cards = "".join("""
+    <figure class="quote"><p>%s</p><figcaption><cite>%s · %s</cite></figcaption></figure>""" % (
+        esc(t["quote"]), esc(t["name"]), esc(t.get("where", ""))) for t in TESTIMONIALS)
+    return """<section class="section" id="sellers">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">From sellers</p>
+      <h2>In their words.</h2>
+    </div>
+    <div class="grid-3">%s
+    </div>
+  </div>
+</section>
+""" % cards
+
+
 def faq(extra=None):
     items = [
+        ("How do I know this is legitimate?",
+         "Fair question. You never pay us anything, and your money never passes through us: every closing runs through a licensed title company or closing attorney who holds the funds and records the sale. You can have your own attorney review the contract, and you can walk away at any point before signing."),
+        ("Will you lowball me?",
+         "Our offer is built from real numbers that we show you: recent nearby sales, the repairs we will take on, and our costs to resell. If the number doesn't work for you, you've lost a minute and gained a free second opinion on what your house is worth as-is."),
         ("How do you decide what to offer?",
          "We look at what similar homes nearby have sold for, subtract what it will cost to repair and resell the property, and leave room for a fair margin. We walk you through the numbers, so you know exactly how we got there."),
         ("Are there any fees?",
@@ -476,10 +592,10 @@ def offer_form(default_state=""):
       </div>
     </div>
     <form class="form" id="lead-form" novalidate autocomplete="on">
-      <div class="progress" aria-hidden="true"><span class="done"></span><span></span><span></span></div>
+      <ol class="progress" aria-hidden="true"><li class="current">Property</li><li>Details</li><li>Your offer</li></ol>
 
       <div class="form-step" data-step="1">
-        <h3>Step 1 of 3 · The property</h3>
+        <h3>Step 1 of 3 · Where's the property?</h3>
         <div class="field">
           <label for="f-address">Street address</label>
           <input id="f-address" name="address" type="text" required autocomplete="street-address" placeholder="123 Main St">
@@ -499,13 +615,14 @@ def offer_form(default_state=""):
           </div>
         </div>
         <div class="form-actions">
-          <span class="form-note">No obligation. We never sell your information.</span>
-          <button type="button" class="btn btn-accent" data-next>Continue</button>
+          <span class="form-note">Free. No obligation. About 60 seconds.</span>
+          <button type="button" class="btn btn-accent" data-next>Continue →</button>
         </div>
       </div>
 
       <div class="form-step" data-step="2" hidden>
-        <h3>Step 2 of 3 · About the house</h3>
+        <h3>Step 2 of 3 · Nice. A few quick details.</h3>
+        <p class="personal" data-personal hidden>%(spark)s<span></span></p>
         <div class="row-2">
           <div class="field">
             <label for="f-type">Property type</label>
@@ -586,12 +703,12 @@ def offer_form(default_state=""):
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" data-back>Back</button>
-          <button type="button" class="btn btn-accent" data-next>Continue</button>
+          <button type="button" class="btn btn-accent" data-next>One more step →</button>
         </div>
       </div>
 
       <div class="form-step" data-step="3" hidden>
-        <h3>Step 3 of 3 · Where to send your offer</h3>
+        <h3>Step 3 of 3 · Last step. Where should we send your offer?</h3>
         <div class="field">
           <label for="f-name">Your name</label>
           <input id="f-name" name="name" type="text" required autocomplete="name">
@@ -600,6 +717,7 @@ def offer_form(default_state=""):
           <div class="field">
             <label for="f-phone">Phone</label>
             <input id="f-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555">
+            <span class="hint">Only used to send your offer. Never sold or shared.</span>
           </div>
           <div class="field">
             <label for="f-email">Email <span class="opt">(optional)</span></label>
@@ -618,7 +736,10 @@ def offer_form(default_state=""):
         <p class="error-msg" data-form-error hidden></p>
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" data-back>Back</button>
-          <button type="submit" class="btn btn-accent btn-lg">Get my cash offer</button>
+          <div class="submit-wrap">
+            <button type="submit" class="btn btn-accent btn-lg">Get my cash offer</button>
+            <span class="form-note">Free · No obligation · Reply within 24 hours</span>
+          </div>
         </div>
         <p class="form-note">By submitting, you agree that %(legal)s may contact you about your property by phone, text or email. Consent is not a condition of any purchase. We never sell your information.</p>
       </div>
@@ -626,7 +747,12 @@ def offer_form(default_state=""):
       <div class="thanks" data-result="success" hidden>
         %(okmark)s
         <h3>Got it. Your offer is on its way.</h3>
-        <p>We'll review the property and reach out within 24 hours with a written cash offer. Keep an eye on your phone.</p>
+        <p>We're reviewing the property now. Here's what happens next:</p>
+        <div class="next-steps">
+          <div><span class="day">Within 24 hrs</span><span>We call or text with your written cash offer and the math behind it.</span></div>
+          <div><span class="day">Day 2 to 3</span><span>A quick walkthrough or a few photos from your phone. Nothing to clean or fix.</span></div>
+          <div><span class="day">Your date</span><span>Sign at the title company and the funds are wired to you.</span></div>
+        </div>
         <div class="lines" data-contact-wrap hidden>
           <span data-phone-wrap hidden>Want it faster? Call or text <a data-phone hidden href="#offer"></a></span>
         </div>
@@ -646,7 +772,7 @@ def offer_form(default_state=""):
     </form>
   </div>
 </section>
-""" % dict(lis=lis, states=state_options(default_state), legal=esc(LEGAL_NAME), okmark=icon("check-circle", "mark"))
+""" % dict(lis=lis, states=state_options(default_state), legal=esc(LEGAL_NAME), okmark=icon("check-circle", "mark"), spark=icon("shield"))
 
 
 def footer():
@@ -679,7 +805,7 @@ def footer():
     </div>
   </div>
 </footer>
-<div class="sticky-cta"><a class="btn btn-accent" href="#offer">Get my cash offer</a></div>
+<div class="sticky-cta"><a class="btn btn-accent" href="#offer">Get my cash offer</a><a class="btn btn-ghost" data-phone hidden href="#offer"></a></div>
 """ % dict(mark=BRAND_MARK, brand=esc(BRAND), legal=esc(LEGAL_NAME), links=links)
 
 
@@ -709,7 +835,8 @@ def page_index():
     title = "Prime Acre Capital | Sell Your House Fast for Cash in AZ, FL, TN, NC and Nationwide"
     desc = ("Prime Acre Capital LLC buys houses as-is for cash in Arizona, Florida, Tennessee, North Carolina and nationwide. "
             "No fees, no repairs, no agents. Get a no-obligation cash offer within 24 hours and close in as little as 7 days.")
-    body = (hero_index() + strip_index() + how() + situations() + compare() + markets() + faq() + offer_form() + footer())
+    body = (hero_index() + trustbar() + how() + calculator() + compare() + situations() + promise() + markets()
+            + testimonials() + faq() + offer_form() + footer())
     return head(title, desc, "index.html", org_jsonld()) + header() + body + scripts()
 
 
@@ -758,7 +885,8 @@ def page_state(m):
     extra_faq = [("Do you buy everywhere in %s?" % m["name"],
                   "Yes. We buy in %s and the surrounding counties, and in smaller towns across the state. "
                   "If we can't buy a particular property ourselves, we match you with a vetted local buyer, at no cost to you." % ", ".join(m["cities"][:5]))]
-    body = (hero_state(m) + strip_state(m) + why + how() + situations() + cities + faq(extra_faq) + offer_form(m["abbr"]) + footer())
+    body = (hero_state(m) + trustbar() + strip_state(m) + why + how() + calculator() + situations() + promise() + cities
+            + testimonials() + faq(extra_faq) + offer_form(m["abbr"]) + footer())
     return head(title, desc, m["slug"] + ".html", jsonld) + header() + body + scripts()
 
 

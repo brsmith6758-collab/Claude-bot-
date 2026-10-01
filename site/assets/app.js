@@ -186,14 +186,15 @@
     var form = $("#lead-form");
     if (!form) return;
     var steps = $$(".form-step", form);
-    var bars = $$(".progress span", form);
+    var bars = $$(".progress li", form);
     var errorBox = $("[data-form-error]", form);
     var current = 0;
 
     function show(i) {
       current = i;
       steps.forEach(function (s, k) { s.hidden = k !== i; });
-      bars.forEach(function (b, k) { b.classList.toggle("done", k <= i); });
+      bars.forEach(function (b, k) { b.classList.toggle("done", k < i); b.classList.toggle("current", k === i); });
+      if (i === 1) personalize();
       if (errorBox) errorBox.hidden = true;
       var h = $("h3", steps[i]);
       if (h) h.setAttribute("tabindex", "-1");
@@ -201,6 +202,20 @@
         form.scrollIntoView({ behavior: "smooth", block: "start" });
         if (h) h.focus({ preventScroll: true });
       }
+    }
+
+    function personalize() {
+      var line = $("[data-personal]", form);
+      if (!line) return;
+      var city = form.elements.city ? form.elements.city.value.trim() : "";
+      var st = form.elements.state ? form.elements.state.value : "";
+      var market = MARKETS[st] ? MARKETS[st].name : "";
+      var where = city && market ? city + ", " + market : (market || city);
+      var text = where
+        ? "We buy houses in " + where + ". Two quick steps and your offer is on its way."
+        : "We buy nationwide. Two quick steps and your offer is on its way.";
+      $("span", line).textContent = text;
+      line.hidden = false;
     }
 
     function fieldWrap(el) { return el.closest(".field"); }
@@ -301,6 +316,45 @@
     }, { threshold: 0.05 }).observe(offer);
   }
 
+  /* ---------- cost-of-waiting calculator ---------- */
+  function initCalculator() {
+    var root = $("#calc");
+    if (!root) return;
+    var fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    var num = function (id) {
+      var el = $("#" + id, root);
+      var v = parseFloat(String(el ? el.value : "").replace(/[^0-9.]/g, ""));
+      return isFinite(v) && v >= 0 ? v : 0;
+    };
+    var out = function (key, value) {
+      $$("[data-out=" + key + "]", root).forEach(function (el) { el.textContent = fmt.format(Math.round(value)); });
+    };
+    function update() {
+      var months = num("c-months") || 1;
+      var monthly = num("c-mortgage") + num("c-taxes") + num("c-upkeep");
+      var price = num("c-price");
+      var carry = monthly * months;
+      var commission = price * 0.055;
+      var closing = price * 0.015;
+      var repairs = num("c-repairs");
+      var total = carry + commission + closing + repairs;
+      var us = monthly * (7 / 30);
+      out("carry", carry); out("commission", commission); out("closing", closing); out("repairs", repairs);
+      out("total", total); out("total2", total); out("us", us);
+      var mo = $("#c-months-out", root);
+      if (mo) mo.textContent = months + (months === 1 ? " month" : " months");
+    }
+    $$("[data-calc]", root).forEach(function (el) {
+      el.addEventListener("input", update);
+      if (el.type !== "range") el.addEventListener("blur", function () {
+        var v = num(el.id);
+        el.value = v ? new Intl.NumberFormat("en-US").format(v) : "";
+        update();
+      });
+    });
+    update();
+  }
+
   function initYear() {
     $$("[data-year]").forEach(function (el) { el.textContent = String(new Date().getFullYear()); });
   }
@@ -311,6 +365,7 @@
     initSearch();
     initForm();
     initStickyCta();
+    initCalculator();
     initYear();
   }
 

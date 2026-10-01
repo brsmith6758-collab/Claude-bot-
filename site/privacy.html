@@ -67,10 +67,10 @@
       </div>
     </div>
     <form class="form" id="lead-form" novalidate autocomplete="on">
-      <div class="progress" aria-hidden="true"><span class="done"></span><span></span><span></span></div>
+      <ol class="progress" aria-hidden="true"><li class="current">Property</li><li>Details</li><li>Your offer</li></ol>
 
       <div class="form-step" data-step="1">
-        <h3>Step 1 of 3 · The property</h3>
+        <h3>Step 1 of 3 · Where's the property?</h3>
         <div class="field">
           <label for="f-address">Street address</label>
           <input id="f-address" name="address" type="text" required autocomplete="street-address" placeholder="123 Main St">
@@ -90,13 +90,14 @@
           </div>
         </div>
         <div class="form-actions">
-          <span class="form-note">No obligation. We never sell your information.</span>
-          <button type="button" class="btn btn-accent" data-next>Continue</button>
+          <span class="form-note">Free. No obligation. About 60 seconds.</span>
+          <button type="button" class="btn btn-accent" data-next>Continue →</button>
         </div>
       </div>
 
       <div class="form-step" data-step="2" hidden>
-        <h3>Step 2 of 3 · About the house</h3>
+        <h3>Step 2 of 3 · Nice. A few quick details.</h3>
+        <p class="personal" data-personal hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span></span></p>
         <div class="row-2">
           <div class="field">
             <label for="f-type">Property type</label>
@@ -177,12 +178,12 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" data-back>Back</button>
-          <button type="button" class="btn btn-accent" data-next>Continue</button>
+          <button type="button" class="btn btn-accent" data-next>One more step →</button>
         </div>
       </div>
 
       <div class="form-step" data-step="3" hidden>
-        <h3>Step 3 of 3 · Where to send your offer</h3>
+        <h3>Step 3 of 3 · Last step. Where should we send your offer?</h3>
         <div class="field">
           <label for="f-name">Your name</label>
           <input id="f-name" name="name" type="text" required autocomplete="name">
@@ -191,6 +192,7 @@
           <div class="field">
             <label for="f-phone">Phone</label>
             <input id="f-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555">
+            <span class="hint">Only used to send your offer. Never sold or shared.</span>
           </div>
           <div class="field">
             <label for="f-email">Email <span class="opt">(optional)</span></label>
@@ -209,7 +211,10 @@
         <p class="error-msg" data-form-error hidden></p>
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" data-back>Back</button>
-          <button type="submit" class="btn btn-accent btn-lg">Get my cash offer</button>
+          <div class="submit-wrap">
+            <button type="submit" class="btn btn-accent btn-lg">Get my cash offer</button>
+            <span class="form-note">Free · No obligation · Reply within 24 hours</span>
+          </div>
         </div>
         <p class="form-note">By submitting, you agree that Prime Acre Capital LLC may contact you about your property by phone, text or email. Consent is not a condition of any purchase. We never sell your information.</p>
       </div>
@@ -217,7 +222,12 @@
       <div class="thanks" data-result="success" hidden>
         <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>
         <h3>Got it. Your offer is on its way.</h3>
-        <p>We'll review the property and reach out within 24 hours with a written cash offer. Keep an eye on your phone.</p>
+        <p>We're reviewing the property now. Here's what happens next:</p>
+        <div class="next-steps">
+          <div><span class="day">Within 24 hrs</span><span>We call or text with your written cash offer and the math behind it.</span></div>
+          <div><span class="day">Day 2 to 3</span><span>A quick walkthrough or a few photos from your phone. Nothing to clean or fix.</span></div>
+          <div><span class="day">Your date</span><span>Sign at the title company and the funds are wired to you.</span></div>
+        </div>
         <div class="lines" data-contact-wrap hidden>
           <span data-phone-wrap hidden>Want it faster? Call or text <a data-phone hidden href="#offer"></a></span>
         </div>
@@ -265,7 +275,7 @@
     </div>
   </div>
 </footer>
-<div class="sticky-cta"><a class="btn btn-accent" href="#offer">Get my cash offer</a></div>
+<div class="sticky-cta"><a class="btn btn-accent" href="#offer">Get my cash offer</a><a class="btn btn-ghost" data-phone hidden href="#offer"></a></div>
 <script src="config.js"></script>
 <script src="assets/app.js"></script>
 </body>
