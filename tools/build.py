@@ -36,6 +36,7 @@ def read_config():
         "siteUrl": url if url.endswith("/") else url + "/",
         "phone": get("phone"),
         "email": get("email"),
+        "reviews": get("googleReviewsUrl"),
     }
 
 
@@ -44,7 +45,68 @@ SITE_URL = CFG["siteUrl"]
 PHONE = CFG["phone"]
 PHONE_TEL = "+1" + re.sub(r"\D", "", PHONE)[-10:] if PHONE else ""
 EMAIL = CFG["email"]
+REVIEWS_URL = CFG["reviews"]
 HERO_PHOTO = os.path.join(SITE, "assets", "img", "hero.jpg")
+TEAM_PHOTO = os.path.join(SITE, "assets", "img", "team.jpg")
+
+# UI strings for the two languages the site ships in.
+T = {
+    "en": {
+        "serving": "We buy houses in Arizona, Florida, Tennessee, North Carolina and nationwide",
+        "call_or_text": "Call or text", "text_us": "Text us", "lang_switch": ("Español", "es.html"),
+        "tag": "We buy houses for cash",
+        "nav": [("How it works", "#how"), ("Where we buy", "#markets"), ("FAQ", "#faq"), ("Contact", "#about")],
+        "cta": "Get My Cash Offer", "cta_arrow": "Get My Cash Offer →",
+        "skip": "Skip to the cash offer form",
+        "card_title": "Get Your Fair Cash Offer",
+        "card_sub": "Start below. It takes about 30 seconds and there's no obligation.",
+        "f_address": "Property address", "f_phone": "Phone", "f_email": "Email", "optional": "(optional)",
+        "fine": "No obligation. We never sell or share your information.",
+        "done_h": "You're all set!",
+        "done_p": "We're pulling up the property now. Expect a call or text%s within 24 hours with your cash offer. Save the number so you don't miss us.",
+        "done_more": "Add details to speed up my offer", "done_alt": "Or call or text",
+        "bullets": ["Fair, written cash offer within 24 hours", "No fees, no commissions, no closing costs", "Close in as little as 7 days, or on your date"],
+        "talk": "Prefer to talk? Call or text",
+        "trust": [("clock", "Offer in 24 hours", "In writing, with the math behind it"),
+                  ("dollar", "$0 fees or commissions", "We pay the closing costs too"),
+                  ("calendar", "Close in 7 days", "Or pick any date that suits you"),
+                  ("house", "Any condition", "Repairs, tenants, liens: we handle it")],
+        "foot_where": "Where we buy", "foot_cities": "Popular cities", "foot_company": "Company",
+        "foot_blurb": "%s buys houses directly from owners in Arizona, Florida, Tennessee and North Carolina, and nationwide through local buying partners. Fair cash offers, no fees, closing on your schedule.",
+        "foot_links": [("How it works", "index.html#how"), ("Contact us", "index.html#about"), ("Questions", "index.html#faq"), ("Get a cash offer", "#offer"), ("Privacy policy", "privacy.html")],
+        "sell_in": "Sell a house in %s", "nationwide": "Nationwide", "reviews": "Read our Google reviews",
+        "legal": "%s is a real estate investment company that purchases property directly from owners. It is not a listing service. All offers are no-obligation. Offer and closing timelines describe typical transactions and depend on title, occupancy and local requirements. We follow federal and state Fair Housing laws.",
+        "rights": "All rights reserved.", "call": "Call", "text": "Text",
+    },
+    "es": {
+        "serving": "Compramos casas en Arizona, Florida, Tennessee, Carolina del Norte y en todo el país",
+        "call_or_text": "Llame o envíe un texto al", "text_us": "Envíenos un texto", "lang_switch": ("English", "index.html"),
+        "tag": "Compramos casas por efectivo",
+        "nav": [("Cómo funciona", "#how"), ("Dónde compramos", "#markets"), ("Preguntas", "#faq"), ("Contacto", "#about")],
+        "cta": "Recibir mi oferta", "cta_arrow": "Recibir mi oferta →",
+        "skip": "Ir al formulario de oferta",
+        "card_title": "Reciba su oferta justa en efectivo",
+        "card_sub": "Empiece abajo. Toma unos 30 segundos y no hay ningún compromiso.",
+        "f_address": "Dirección de la propiedad", "f_phone": "Teléfono", "f_email": "Correo electrónico", "optional": "(opcional)",
+        "fine": "Sin compromiso. Nunca vendemos ni compartimos su información.",
+        "done_h": "¡Listo!",
+        "done_p": "Ya estamos revisando la propiedad. Espere una llamada o un mensaje de texto%s en las próximas 24 horas con su oferta en efectivo. Guarde el número para no perder nuestra llamada.",
+        "done_more": "", "done_alt": "O llame o envíe un texto al",
+        "bullets": ["Oferta justa por escrito en 24 horas", "Sin comisiones ni gastos de cierre", "Cierre en tan solo 7 días, o en la fecha que usted elija"],
+        "talk": "¿Prefiere hablar? Llame o envíe un texto al",
+        "trust": [("clock", "Oferta en 24 horas", "Por escrito, con los números detrás"),
+                  ("dollar", "$0 en comisiones", "También pagamos los gastos de cierre"),
+                  ("calendar", "Cierre en 7 días", "O en la fecha que mejor le convenga"),
+                  ("house", "Cualquier condición", "Reparaciones, inquilinos, gravámenes: nos encargamos")],
+        "foot_where": "Dónde compramos", "foot_cities": "Ciudades populares", "foot_company": "Empresa",
+        "foot_blurb": "%s compra casas directamente a sus dueños en Arizona, Florida, Tennessee y Carolina del Norte, y en todo el país a través de compradores locales asociados. Ofertas justas en efectivo, sin comisiones, con cierre en su fecha.",
+        "foot_links": [("Cómo funciona", "#how"), ("Contacto", "#about"), ("Preguntas", "#faq"), ("Recibir una oferta", "#offer"), ("Política de privacidad", "privacy.html")],
+        "sell_in": "Vender una casa en %s", "nationwide": "Todo el país", "reviews": "Lea nuestras reseñas en Google",
+        "legal": "%s es una empresa de inversión inmobiliaria que compra propiedades directamente a sus dueños. No es un servicio de listados. Todas las ofertas son sin compromiso. Los plazos de oferta y cierre describen transacciones típicas y dependen del título, la ocupación y los requisitos locales. Cumplimos con las leyes federales y estatales de Vivienda Justa.",
+        "rights": "Todos los derechos reservados.", "call": "Llamar", "text": "Texto",
+    },
+}
+STATE_ES = {"AZ": "Arizona", "FL": "Florida", "TN": "Tennessee", "NC": "Carolina del Norte"}
 
 FONTS = ("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800"
          "&family=Figtree:wght@400;500;600;700&display=swap")
@@ -208,6 +270,8 @@ ICON = {
     "mail": '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     "pen": '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13 7l4 4"/>',
     "lock": '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+    "chat": '<path d="M4 5h16v11H9l-5 4z"/>',
+    "star": '<path d="M12 3l2.8 5.9 6.2.8-4.6 4.4 1.2 6.2L12 17.3 6.4 20.3l1.2-6.2L3 9.7l6.2-.8z"/>',
 }
 
 
@@ -302,6 +366,13 @@ def phone_link(cls=""):
     return '<a%s href="tel:%s" data-phone>%s</a>' % (c, PHONE_TEL, esc(PHONE))
 
 
+def sms_link(label, cls=""):
+    if not PHONE:
+        return ""
+    c = ' class="%s"' % cls if cls else ""
+    return '<a%s href="sms:%s" data-sms>%s</a>' % (c, PHONE_TEL, label)
+
+
 def email_link(cls=""):
     if not EMAIL:
         return ""
@@ -312,17 +383,21 @@ def email_link(cls=""):
 # ---------------------------------------------------------------- partials
 
 
-def head(title, desc, path, jsonld):
+def head(title, desc, path, jsonld, lang="en"):
     url = SITE_URL + ("" if path == "index.html" else path)
+    alternates = ""
+    if path in ("index.html", "es.html"):
+        alternates = ('<link rel="alternate" hreflang="en" href="%s">\n<link rel="alternate" hreflang="es" href="%ses.html">\n'
+                      '<link rel="alternate" hreflang="x-default" href="%s">\n' % (SITE_URL, SITE_URL, SITE_URL))
     return """<!doctype html>
-<html lang="en">
+<html lang="%(lang)s">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
 <link rel="canonical" href="%(url)s">
-<meta property="og:type" content="website">
+%(alternates)s<meta property="og:type" content="website">
 <meta property="og:site_name" content="%(brand)s">
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(desc)s">
@@ -338,98 +413,109 @@ def head(title, desc, path, jsonld):
 </head>
 <body>
 """ % dict(title=esc(title), desc=esc(desc), url=esc(url), brand=esc(BRAND), favicon=FAVICON,
-           fonts=esc(FONTS), jsonld=json.dumps(jsonld, ensure_ascii=False))
+           fonts=esc(FONTS), jsonld=json.dumps(jsonld, ensure_ascii=False), lang=lang, alternates=alternates)
 
 
-def topbar():
+def topbar(lang="en"):
+    t = T[lang]
     contact = ""
     if PHONE:
-        contact += '<span>%sCall or text %s</span>' % (icon("phone"), phone_link())
+        contact += '<span>%s%s %s</span>' % (icon("phone"), esc(t["call_or_text"]), phone_link())
+        contact += '<span>%s%s</span>' % (icon("chat"), sms_link(esc(t["text_us"])))
     if EMAIL:
         contact += '<span>%s%s</span>' % (icon("mail"), email_link())
+    contact += '<span class="lang"><a href="%s" lang="%s">%s</a></span>' % (t["lang_switch"][1], "es" if lang == "en" else "en", esc(t["lang_switch"][0]))
     return """<div class="topbar">
   <div class="wrap">
-    <span class="serving">We buy houses in Arizona, Florida, Tennessee, North Carolina and nationwide</span>
+    <span class="serving">%s</span>
     <div class="contact">%s</div>
   </div>
 </div>
-""" % contact
+""" % (esc(t["serving"]), contact)
 
 
-def header():
+def header(lang="en", same_page=False):
+    t = T[lang]
     phone_btn = ('<a class="btn btn-outline" href="tel:%s">%s<span data-phone>%s</span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))) if PHONE else ""
-    return """<a class="sr-only" href="#offer">Skip to the cash offer form</a>
+    prefix = "" if same_page else "index.html"
+    links = "".join('<a href="%s%s">%s</a>' % (prefix, href, esc(label)) for label, href in t["nav"])
+    return """<a class="sr-only" href="#offer">%(skip)s</a>
 %(topbar)s<header class="site-header" id="top">
   <div class="wrap">
-    <a class="brand" href="index.html" aria-label="%(brand)s home">
+    <a class="brand" href="%(home)s" aria-label="%(brand)s">
       %(mark)s
-      <span>%(brand)s<small>We buy houses for cash</small></span>
+      <span>%(brand)s<small>%(tag)s</small></span>
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="index.html#how">How it works</a>
-      <a href="index.html#markets">Where we buy</a>
-      <a href="index.html#faq">FAQ</a>
-      <a href="index.html#about">Contact</a>
+      %(links)s
       %(phone_btn)s
-      <a class="btn btn-cta" href="#offer">Get My Cash Offer</a>
+      <a class="btn btn-cta" href="#offer">%(cta)s</a>
     </nav>
   </div>
 </header>
-""" % dict(topbar=topbar(), brand=esc(BRAND), mark=BRAND_MARK, phone_btn=phone_btn)
+""" % dict(skip=esc(t["skip"]), topbar=topbar(lang), home="es.html" if lang == "es" else "index.html", brand=esc(BRAND),
+           mark=BRAND_MARK, tag=esc(t["tag"]), links=links, phone_btn=phone_btn, cta=esc(t["cta"]))
 
 
-def lead_card(state="", city="", title="Get Your Fair Cash Offer"):
+def lead_card(state="", city="", lang="en", card_id="lead-card", details=True):
+    t = T[lang]
     hidden = ""
     if state:
         hidden += '<input type="hidden" name="state" value="%s">' % esc(state)
     if city:
         hidden += '<input type="hidden" name="city" value="%s">' % esc(city)
     placeholder = "123 Main St, %s" % (city + ", " + state if city else (MARKET_BY_ABBR[state]["name"] if state else "Phoenix, AZ"))
-    done_phone = (' from <b data-phone>%s</b>' % esc(PHONE)) if PHONE else ""
+    done_phone = ((' from <b data-phone>%s</b>' if lang == "en" else ' del <b data-phone>%s</b>') % esc(PHONE)) if PHONE else ""
     alt = ""
     if PHONE or EMAIL:
-        alt = '<p class="alt">Or call or text %s%s</p>' % (phone_link() if PHONE else "", (" · " + email_link()) if (PHONE and EMAIL) else (email_link() if EMAIL else ""))
-    return """<div class="lead-card" id="lead-card">
+        alt = '<p class="alt">%s %s%s</p>' % (esc(t["done_alt"]), phone_link() if PHONE else "", (" · " + email_link()) if (PHONE and EMAIL) else (email_link() if EMAIL else ""))
+    more = ('<a class="btn btn-outline" href="#offer" data-add-details>%s</a>' % esc(t["done_more"])) if (details and t["done_more"]) else ""
+    uid = card_id.replace("lead-card", "h")
+    return """<div class="lead-card" id="%(card_id)s">
       <h2>%(title)s</h2>
-      <p class="sub">Start below. It takes about 30 seconds and there's no obligation.</p>
+      <p class="sub">%(sub)s</p>
       <form class="hero-form" novalidate autocomplete="on">
         <div class="field">
-          <label for="h-address">Property address</label>
-          <input id="h-address" name="address" type="text" required autocomplete="street-address" placeholder="%(ph)s">
+          <label for="%(uid)s-address">%(f_address)s</label>
+          <input id="%(uid)s-address" name="address" type="text" required autocomplete="street-address" placeholder="%(ph)s">
         </div>
         <div class="row-2">
           <div class="field">
-            <label for="h-phone">Phone</label>
-            <input id="h-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555">
+            <label for="%(uid)s-phone">%(f_phone)s</label>
+            <input id="%(uid)s-phone" name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="(555) 555-5555">
           </div>
           <div class="field">
-            <label for="h-email">Email <span class="opt">(optional)</span></label>
-            <input id="h-email" name="email" type="email" autocomplete="email" placeholder="you@email.com">
+            <label for="%(uid)s-email">%(f_email)s <span class="opt">%(optional)s</span></label>
+            <input id="%(uid)s-email" name="email" type="email" autocomplete="email" placeholder="you@email.com">
           </div>
         </div>
         %(hidden)s
-        <div class="hp" aria-hidden="true"><label for="h-company">Company</label><input id="h-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
+        <div class="hp" aria-hidden="true"><label for="%(uid)s-company">Company</label><input id="%(uid)s-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
         <p class="error-msg" data-form-error hidden></p>
-        <button class="btn btn-cta btn-lg" type="submit">Get My Cash Offer →</button>
-        <p class="fine">%(lock)sNo obligation. We never sell or share your information.</p>
+        <button class="btn btn-cta btn-lg" type="submit">%(cta)s</button>
+        <p class="fine">%(lock)s%(fine)s</p>
       </form>
       <div class="lead-done" hidden>
         %(okmark)s
-        <h3>You're all set!</h3>
-        <p>We're pulling up the property now. Expect a call or text%(done_phone)s within 24 hours with your cash offer. Save the number so you don't miss us.</p>
-        <a class="btn btn-outline" href="#offer" data-add-details>Add details to speed up my offer</a>
+        <h3>%(done_h)s</h3>
+        <p>%(done_p)s</p>
+        %(more)s
         %(alt)s
       </div>
-    </div>""" % dict(title=esc(title), ph=esc(placeholder), hidden=hidden, lock=icon("lock"), okmark=icon("check-circle", "mark"),
-                     done_phone=done_phone, alt=alt)
+    </div>""" % dict(card_id=card_id, uid=uid, title=esc(t["card_title"]), sub=esc(t["card_sub"]), f_address=esc(t["f_address"]),
+                     f_phone=esc(t["f_phone"]), f_email=esc(t["f_email"]), optional=esc(t["optional"]), ph=esc(placeholder),
+                     hidden=hidden, cta=esc(t["cta_arrow"]), lock=icon("lock"), fine=esc(t["fine"]), okmark=icon("check-circle", "mark"),
+                     done_h=esc(t["done_h"]), done_p=esc(t["done_p"]) % done_phone, more=more, alt=alt)
 
 
-def hero(eyebrow, h1, lede, state="", city=""):
+def hero(eyebrow, h1, lede, state="", city="", lang="en"):
+    t = T[lang]
     has_photo = os.path.exists(HERO_PHOTO)
     photo = '<div class="hero-photo" style="background-image:url(assets/img/hero.jpg)"></div>' if has_photo else ""
     street = "" if has_photo else '<div class="street">%s</div>' % STREET_ART
-    talk = ('<p class="talk">Prefer to talk? Call or text %s</p>' % phone_link()) if PHONE else ""
+    talk = ('<p class="talk">%s %s</p>' % (esc(t["talk"]), phone_link())) if PHONE else ""
+    bullets = "".join('<li>%s<span>%s</span></li>' % (icon("check"), esc(b)) for b in t["bullets"])
     return """<section class="hero%(cls)s">
   %(photo)s
   <div class="wrap">
@@ -437,11 +523,7 @@ def hero(eyebrow, h1, lede, state="", city=""):
       <span class="eyebrow-pill">%(eyebrow)s</span>
       <h1>%(h1)s</h1>
       <p class="lede">%(lede)s</p>
-      <ul class="bullets">
-        <li>%(check)s<span>Fair, written cash offer within 24 hours</span></li>
-        <li>%(check)s<span>No fees, no commissions, no closing costs</span></li>
-        <li>%(check)s<span>Close in as little as 7 days, or on your date</span></li>
-      </ul>
+      <ul class="bullets">%(bullets)s</ul>
       %(talk)s
     </div>
     %(card)s
@@ -449,16 +531,11 @@ def hero(eyebrow, h1, lede, state="", city=""):
   %(street)s
 </section>
 """ % dict(cls=" has-photo" if has_photo else "", photo=photo, eyebrow=esc(eyebrow), h1=h1, lede=esc(lede),
-           check=icon("check"), talk=talk, card=lead_card(state, city), street=street)
+           bullets=bullets, talk=talk, card=lead_card(state, city, lang), street=street)
 
 
-def trust_strip():
-    items = [
-        ("clock", "Offer in 24 hours", "In writing, with the math behind it"),
-        ("dollar", "$0 fees or commissions", "We pay the closing costs too"),
-        ("calendar", "Close in 7 days", "Or pick any date that suits you"),
-        ("house", "Any condition", "Repairs, tenants, liens: we handle it"),
-    ]
+def trust_strip(lang="en"):
+    items = T[lang]["trust"]
     cards = "".join("""
     <div class="trust">%s<div><b>%s</b><span>%s</span></div></div>""" % (icon(k), esc(t), esc(d)) for k, t, d in items)
     return """<div class="trust-strip" aria-label="What you get">
@@ -533,9 +610,12 @@ def about():
         lines += '<a href="tel:%s">%s<span><span data-phone>%s</span><small>Call or text, 7 days a week</small></span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))
     if EMAIL:
         lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>We reply within 24 hours</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
+    if REVIEWS_URL:
+        lines += '<a href="%s" target="_blank" rel="noopener">%s<span>%s<small>Google</small></span></a>' % (esc(REVIEWS_URL), icon("star"), esc(T["en"]["reviews"]))
+    art = ('<img src="assets/img/team.jpg" alt="The %s team" loading="lazy">' % esc(BRAND)) if os.path.exists(TEAM_PHOTO) else ABOUT_ART
     return """<section class="section about" id="about">
   <div class="wrap">
-    <div class="about-art">%(art)s</div>
+    <div class="about-art%(photo)s">%(art)s</div>
     <div>
       <span class="eyebrow">Who you're dealing with</span>
       <h2>A direct buyer. Not a middleman, not a call center.</h2>
@@ -545,7 +625,7 @@ def about():
     </div>
   </div>
 </section>
-""" % dict(art=ABOUT_ART, legal=esc(LEGAL_NAME), lines=lines)
+""" % dict(art=art, photo=" has-photo" if os.path.exists(TEAM_PHOTO) else "", legal=esc(LEGAL_NAME), lines=lines)
 
 
 def compare():
@@ -970,50 +1050,57 @@ def offer_form(default_state="", default_city=""):
            okmark=icon("check-circle", "mark"), spark=icon("shield"), success_phone=success_phone, fallback_lines=fallback_lines)
 
 
-def footer():
-    states = "".join('<li><a href="%s.html">Sell a house in %s</a></li>' % (m["slug"], esc(m["name"])) for m in MARKETS)
+def footer(lang="en"):
+    t = T[lang]
+    name = (lambda m: STATE_ES[m["abbr"]] if lang == "es" else m["name"])
+    states = "".join('<li><a href="%s.html">%s</a></li>' % (m["slug"], esc(t["sell_in"] % name(m))) for m in MARKETS)
     cities = "".join('<li><a href="%s">%s, %s</a></li>' % (c["file"], esc(c["city"]), c["st"]) for c in CITY_PAGES[:8])
     contact = ""
     if PHONE:
         contact += '<li><a href="tel:%s">%s<span data-phone>%s</span></a></li>' % (PHONE_TEL, icon("phone"), esc(PHONE))
+        contact += '<li>%s</li>' % sms_link(icon("chat") + "<span>%s</span>" % esc(t["text_us"]))
     if EMAIL:
         contact += '<li><a href="mailto:%s">%s<span data-email>%s</span></a></li>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
-    sticky_phone = ('<a class="btn btn-outline" href="tel:%s" aria-label="Call %s">%sCall</a>' % (PHONE_TEL, esc(PHONE), icon("phone"))) if PHONE else ""
+    if REVIEWS_URL:
+        contact += '<li><a href="%s" target="_blank" rel="noopener">%s<span>%s</span></a></li>' % (esc(REVIEWS_URL), icon("star"), esc(t["reviews"]))
+    links = "".join('<li><a href="%s">%s</a></li>' % (href, esc(label)) for label, href in t["foot_links"])
+    sticky = ""
+    if PHONE:
+        sticky += '<a class="btn btn-outline" href="tel:%s" aria-label="%s %s">%s%s</a>' % (PHONE_TEL, esc(t["call"]), esc(PHONE), icon("phone"), esc(t["call"]))
+        sticky += sms_link(icon("chat") + esc(t["text"]), "btn btn-outline")
+    home = "es.html" if lang == "es" else "index.html"
     return """<footer class="site-footer">
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="index.html">%(mark)s<span>%(brand)s<small>We buy houses for cash</small></span></a>
-        <p>%(legal)s buys houses directly from owners in Arizona, Florida, Tennessee and North Carolina, and nationwide through local buying partners. Fair cash offers, no fees, closing on your schedule.</p>
+        <a class="brand" href="%(home)s">%(mark)s<span>%(brand)s<small>%(tag)s</small></span></a>
+        <p>%(blurb)s</p>
         <ul class="foot-contact" style="margin-top:1rem">%(contact)s</ul>
       </div>
       <div>
-        <h4>Where we buy</h4>
-        <ul>%(states)s<li><a href="index.html#markets">Nationwide</a></li></ul>
+        <h4>%(h_where)s</h4>
+        <ul>%(states)s<li><a href="%(home)s#markets">%(nationwide)s</a></li></ul>
       </div>
       <div>
-        <h4>Popular cities</h4>
+        <h4>%(h_cities)s</h4>
         <ul>%(cities)s</ul>
       </div>
       <div>
-        <h4>Company</h4>
-        <ul>
-          <li><a href="index.html#how">How it works</a></li>
-          <li><a href="index.html#about">Contact us</a></li>
-          <li><a href="index.html#faq">Questions</a></li>
-          <li><a href="#offer">Get a cash offer</a></li>
-          <li><a href="privacy.html">Privacy policy</a></li>
-        </ul>
+        <h4>%(h_company)s</h4>
+        <ul>%(links)s</ul>
       </div>
     </div>
     <div class="legal">
-      <p>© <span data-year>2026</span> %(legal)s. All rights reserved.</p>
-      <p>%(legal)s is a real estate investment company that purchases property directly from owners. It is not a listing service. All offers are no-obligation. Offer and closing timelines describe typical transactions and depend on title, occupancy and local requirements. We follow federal and state Fair Housing laws.</p>
+      <p>© <span data-year>2026</span> %(legal)s. %(rights)s</p>
+      <p>%(legal_text)s</p>
     </div>
   </div>
 </footer>
-<div class="sticky-cta"><a class="btn btn-cta" href="#offer">Get My Cash Offer</a>%(sticky_phone)s</div>
-""" % dict(mark=BRAND_MARK, brand=esc(BRAND), legal=esc(LEGAL_NAME), contact=contact, states=states, cities=cities, sticky_phone=sticky_phone)
+<div class="sticky-cta"><a class="btn btn-cta" href="#offer">%(cta)s</a>%(sticky)s</div>
+""" % dict(home=home, mark=BRAND_MARK, brand=esc(BRAND), tag=esc(t["tag"]), blurb=esc(t["foot_blurb"] % LEGAL_NAME), contact=contact,
+           h_where=esc(t["foot_where"]), states=states, nationwide=esc(t["nationwide"]), h_cities=esc(t["foot_cities"]), cities=cities,
+           h_company=esc(t["foot_company"]), links=links, legal=esc(LEGAL_NAME), rights=esc(t["rights"]),
+           legal_text=esc(t["legal"] % LEGAL_NAME), cta=esc(t["cta"]), sticky=sticky)
 
 
 def scripts():
@@ -1161,6 +1248,163 @@ def page_city(c):
     return head(title, desc, c["file"], jsonld) + header() + body + scripts()
 
 
+def page_es():
+    """Spanish landing page: quick forms top and bottom, core sections translated."""
+    t = T["es"]
+    h1 = "Venda su casa rápido por efectivo. En cualquier condición. En cualquier situación."
+    lede = ("Compramos casas tal como están en Arizona, Florida, Tennessee, Carolina del Norte y en todo Estados Unidos. "
+            "Sin reparaciones, sin visitas, sin comisiones de agente y sin esperar al banco del comprador.")
+    steps = [
+        ("phone", "Cuéntenos sobre su casa", "Llene el formulario corto o llámenos. Toma un minuto y nadie lo va a presionar.", "Toma 60 segundos"),
+        ("pen", "Reciba su oferta en efectivo", "Revisamos la propiedad, las ventas cercanas y las reparaciones necesarias, y le enviamos una oferta por escrito con los números detrás.", "En 24 horas"),
+        ("calendar", "Elija su fecha de cierre", "Acepte cuando esté listo. Cierre en tan solo 7 días a través de una compañía de títulos con licencia, o tómese el tiempo que necesite.", "7 días o su fecha"),
+    ]
+    step_cards = "".join("""
+    <div class="card step"><span class="num">%d</span>%s<h3>%s</h3><p>%s</p><span class="when">%s</span></div>""" % (
+        i + 1, icon(k, "ico"), esc(a), esc(b), esc(c)) for i, (k, a, b, c) in enumerate(steps))
+    sits = [
+        ("clock", "Enfrentando una ejecución hipotecaria", "¿Atrasado en los pagos o ya tiene fecha de subasta? Una venta en efectivo antes de la subasta puede pagar al banco y ayudarle a evitar una ejecución hipotecaria en su historial."),
+        ("doc", "Heredó una casa", "Sucesión, herederos fuera del estado, una casa llena de pertenencias. Llévese lo que quiera y déjenos el resto."),
+        ("key", "Cansado de ser arrendador", "Inquilinos problemáticos, rentas atrasadas, reparaciones constantes. Compramos con inquilinos adentro y respetamos el contrato."),
+        ("users", "Divorcio o separación", "Una venta rápida y limpia con un solo número con el que todos puedan estar de acuerdo, y una fecha de cierre que funcione para ambos."),
+        ("arrow", "Mudanza o cambio de trabajo", "Cierre antes de irse de la ciudad, con una fecha que coincida con su mudanza y no con el calendario de un agente."),
+        ("tool", "Reparaciones mayores o infracciones de código", "Techo, cimientos, moho, daños por fuego o agua, permisos abiertos. La compramos exactamente como está."),
+        ("dollar", "Atrasado en impuestos o con gravámenes", "Impuestos atrasados, gravámenes de la HOA y sentencias se pagan de la venta al cierre. Usted no pone dinero."),
+        ("house", "Propiedad vacía o no deseada", "Una segunda casa, un terreno o una casa que lleva años desocupada. Conviértala en efectivo sin renovarla primero."),
+    ]
+    sit_cards = "".join("""
+    <div class="card sit">%s<div><h3>%s</h3><p>%s</p></div></div>""" % (icon(k), esc(a), esc(b)) for k, a, b in sits)
+    rows = [
+        ("Comisiones y cargos", "$0", "Normalmente 5–6% del precio de venta"),
+        ("Reparaciones", "Ninguna. Compramos tal como está.", "Generalmente requeridas después de la inspección"),
+        ("Gastos de cierre", "Los pagamos nosotros", "El vendedor normalmente paga una parte"),
+        ("Visitas y casas abiertas", "Ninguna", "Semanas de visitas y limpieza"),
+        ("Tiempo para cerrar", "7–30 días, usted elige", "60–90+ días si el financiamiento no falla"),
+        ("Certeza", "Efectivo, sin contingencia de financiamiento", "Las ventas se caen cuando el préstamo falla"),
+    ]
+    trs = "".join('<tr><td>%s</td><td class="us"><span class="yes" aria-hidden="true">✓</span>%s</td><td><span class="no" aria-hidden="true">✕</span>%s</td></tr>'
+                  % (esc(a), esc(b), esc(c)) for a, b, c in rows)
+    promises = [
+        ("Una oferta por escrito en 24 horas", "Con los números detrás, para que pueda revisar nuestro trabajo."),
+        ("Cero comisiones, cargos o gastos de cierre", "El número de la oferta es el número con el que se va, menos lo que deba."),
+        ("Compramos tal como está", "Deje el calentador roto, los muebles viejos, las cajas del garaje."),
+        ("Sin presión, sin compromiso", "Diga que no y quedamos en buenos términos. Preferimos ganarnos una recomendación que forzar un trato."),
+        ("Usted elige la fecha de cierre", "Siete días o varios meses. ¿Necesita tiempo para encontrar su próximo hogar? Tómeselo."),
+        ("Los cierres se hacen con una compañía de títulos con licencia", "Su dinero nunca pasa por nuestras manos."),
+    ]
+    plis = "".join("<li>%s<div><b>%s</b><span>%s</span></div></li>" % (icon("check"), esc(a), esc(b)) for a, b in promises)
+    faqs = [
+        ("¿Cómo sé que esto es legítimo?", "Buena pregunta. Usted nunca nos paga nada y su dinero nunca pasa por nosotros: cada cierre se hace a través de una compañía de títulos o un abogado de cierre con licencia, que guarda los fondos y registra la venta. Puede pedirle a su propio abogado que revise el contrato, y puede retirarse en cualquier momento antes de firmar."),
+        ("¿Me van a ofrecer muy poco?", "Nuestra oferta se basa en números reales que le mostramos: ventas recientes cercanas, las reparaciones que asumiremos y nuestros costos para revender. Si el número no le funciona, perdió un minuto y ganó una segunda opinión gratis sobre lo que vale su casa tal como está."),
+        ("¿Hay algún cargo?", "No. Sin comisiones, sin cargos por servicio, y nosotros pagamos los gastos de cierre habituales. La oferta que acepte es la cantidad con la que se va, menos lo que deba sobre la propiedad, como una hipoteca o gravámenes."),
+        ("¿En qué condición tiene que estar la casa?", "En cualquiera. Compramos casas con daños por fuego o agua, techos en mal estado, problemas de cimientos, moho, acumulación de objetos y remodelaciones sin terminar. Deje todo lo que no quiera llevarse."),
+        ("¿Qué tan rápido pueden cerrar?", "En tan solo 7 días una vez que el título esté limpio. Si necesita más tiempo, elija la fecha que le convenga. Cerramos a través de una compañía de títulos o un abogado con licencia, y usted recibe su dinero al cierre."),
+        ("Todavía tengo hipoteca. ¿Pueden comprar de todos modos?", "Sí. La hipoteca, junto con cualquier gravamen o impuesto atrasado, se paga con el dinero de la venta al cierre. Si debe casi lo que vale la casa, hablaremos de sus opciones con honestidad."),
+        ("¿Tengo que aceptar la oferta?", "No. Cada oferta es gratis y sin compromiso. Si poner la casa en venta u otro comprador le daría más, se lo diremos."),
+    ]
+    fds = "".join("""
+      <details><summary>%s</summary><p>%s</p></details>""" % (esc(q), esc(a)) for q, a in faqs)
+    mcards = ""
+    shorts = {"AZ": "Phoenix, Tucson y los pueblos entre ellos.", "FL": "De Jacksonville a Miami, del Golfo al Atlántico.",
+              "TN": "Nashville, Memphis, Knoxville, Chattanooga.", "NC": "Charlotte, el Triángulo, el Triad y la costa."}
+    for m in MARKETS:
+        links = "".join('<a href="%s">%s</a>' % (c["file"], esc(c["city"])) for c in CITY_PAGES if c["st"] == m["abbr"])
+        mcards += """
+    <div class="card market"><span class="abbr">%s</span><h3>%s</h3><p>%s</p><div class="cities">%s</div></div>""" % (
+            m["abbr"], esc(STATE_ES[m["abbr"]]), esc(shorts[m["abbr"]]), links)
+    contact_lines = ""
+    if PHONE:
+        contact_lines += '<a href="tel:%s">%s<span><span data-phone>%s</span><small>Llame o envíe un texto, los 7 días de la semana</small></span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))
+    if EMAIL:
+        contact_lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>Respondemos en menos de 24 horas</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
+    body = hero("Compradores directos · Sin comisiones", h1, lede, lang="es") + trust_strip("es") + """
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Cómo funciona</span><h2>Vender su casa por efectivo es tan fácil como 1, 2, 3</h2>
+    <p>Sin agentes, sin banco, sin esperar la aprobación de nadie. Usted trata directamente con el comprador.</p></div>
+    <div class="grid-3">%(steps)s
+    </div>
+    <div class="steps-cta"><a class="btn btn-cta btn-lg" href="#offer">Recibir mi oferta en efectivo</a><small>Gratis, sin compromiso, y puede decir que no en cualquier momento.</small></div>
+  </div>
+</section>
+<section class="section section-soft" id="situations">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Cualquier situación</span><h2>Compramos casas en cualquier situación</h2>
+    <p>Sea lo que sea que esté pasando, no es la primera persona que nos lo cuenta. Estas son las situaciones en las que más ayudamos.</p></div>
+    <div class="grid-4">%(sits)s
+    </div>
+  </div>
+</section>
+<section class="section about" id="about">
+  <div class="wrap">
+    <div class="about-art">%(art)s</div>
+    <div>
+      <span class="eyebrow">Con quién está tratando</span>
+      <h2>Un comprador directo. Ni intermediarios, ni un centro de llamadas.</h2>
+      <p class="lede">%(legal)s compra casas directamente a sus dueños en Arizona, Florida, Tennessee y Carolina del Norte, y en todo el país a través de compradores locales asociados. Cuando nos contacta, habla con las personas que hacen la oferta.</p>
+      <p>No somos agentes y no vamos a poner su casa en venta ni a pasar su información a terceros. Le hacemos una oferta real, le mostramos cómo llegamos a ella y cerramos a través de una compañía de títulos con licencia para que su dinero esté protegido de principio a fin.</p>
+      <div class="contact-card">%(contact)s</div>
+    </div>
+  </div>
+</section>
+<section class="section" id="compare">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Compare sus opciones</span><h2>Vender con nosotros vs. vender con un agente</h2>
+    <p>Un agente puede conseguir un precio más alto en papel. Después de reparaciones, comisiones, gastos mensuales y meses de espera, la diferencia suele ser menor de lo que parece.</p></div>
+    <div class="compare"><table>
+      <thead><tr><th scope="col">Lo que le cuesta</th><th scope="col" class="us">Vender a %(brand)s</th><th scope="col">Vender con un agente</th></tr></thead>
+      <tbody>%(rows)s</tbody></table></div>
+    <p class="compare-note">Las cifras de venta con agente son rangos generales del mercado, no una cotización para su propiedad. Cada oferta que hacemos viene detallada para que usted compare.</p>
+  </div>
+</section>
+<section class="section section-soft" id="promise">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Nuestra promesa</span><h2>Seis cosas que ponemos por escrito antes de que usted decida nada</h2>
+    <p>Venderle su casa a una empresa que encontró en internet debería venir con garantías. Estas son las nuestras, en cada oferta y en cada estado.</p></div>
+    <ul class="promise-list">%(promises)s</ul>
+  </div>
+</section>
+<section class="section" id="markets">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Dónde compramos</span><h2>Cuatro estados principales. Compradores en todos los demás.</h2>
+    <p>Nos enfocamos en Arizona, Florida, Tennessee y Carolina del Norte, y compramos en todo el país a través de nuestra red de compradores locales.</p></div>
+    <div class="grid-4">%(markets)s
+      <div class="market-wide"><div><h3>¿Fuera de estos estados?</h3><p>También compramos. Envíenos la dirección y le haremos una oferta o lo conectaremos con un comprador local verificado en 24 horas.</p></div>
+      <a class="btn btn-cta" href="#offer">Recibir una oferta en cualquier parte de EE. UU.</a></div>
+    </div>
+  </div>
+</section>
+<section class="section section-soft" id="faq">
+  <div class="wrap">
+    <div class="section-head center"><span class="eyebrow">Preguntas</span><h2>Respuestas claras antes de decidir</h2></div>
+    <div class="faq">%(faqs)s
+    </div>
+  </div>
+</section>
+<section class="offer section" id="offer">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Reciba su oferta en efectivo</span>
+      <h2>Cuéntenos sobre la propiedad. Nosotros hacemos el resto.</h2>
+      <p class="lede">Toma unos 30 segundos. Revisamos cada propiedad personalmente y le enviamos una oferta en efectivo por escrito y sin compromiso en 24 horas.</p>
+      <ul><li>%(check)s<span>Sin comisiones, cargos ni gastos de cierre</span></li><li>%(check)s<span>Compramos tal como está. Deje lo que no quiera.</span></li><li>%(check)s<span>Cierre en 7 días, o elija una fecha posterior</span></li><li>%(check)s<span>¿Hipoteca, gravámenes o impuestos atrasados? Se pagan al cierre.</span></li></ul>
+      %(talk)s
+    </div>
+    %(card2)s
+  </div>
+</section>
+""" % dict(steps=step_cards, sits=sit_cards, art=ABOUT_ART, legal=esc(LEGAL_NAME), contact=contact_lines, brand=esc(BRAND), rows=trs,
+           promises=plis, markets=mcards, faqs=fds, check=icon("check"),
+           talk=('<p class="talk"><span>¿Prefiere hablar? Llame o envíe un texto al %s</span></p>' % phone_link()) if PHONE else "",
+           card2=lead_card(lang="es", card_id="lead-card-2", details=False))
+    title = "Compramos Casas por Efectivo en Arizona, Florida, Tennessee y Carolina del Norte | Prime Acre Capital"
+    desc = ("Venda su casa rápido por efectivo. Prime Acre Capital LLC compra casas tal como están en Arizona, Florida, Tennessee, "
+            "Carolina del Norte y en todo el país. Sin comisiones, sin reparaciones, sin compromiso. Oferta en 24 horas. Llame o envíe un texto al %s." % PHONE).strip()
+    jsonld = graph(org_jsonld(), {"@type": "FAQPage", "inLanguage": "es",
+                                   "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]})
+    return head(title, desc, "es.html", jsonld, lang="es") + header("es", same_page=True) + body + footer("es") + scripts()
+
+
 def page_privacy():
     title = "Privacy Policy | %s" % BRAND
     desc = "How %s collects, uses and protects the information you share when requesting a cash offer." % LEGAL_NAME
@@ -1213,6 +1457,7 @@ def artifact_build(out_path):
         body = body.replace('href="%s"' % c["file"], 'href="#markets"')
     body = body.replace('href="index.html#', 'href="#').replace('href="index.html"', 'href="#top"')
     body = body.replace('<li><a href="privacy.html">Privacy policy</a></li>', '')
+    body = re.sub(r'<span class="lang">.*?</span>', '', body)
     body = body.replace('<a class="sr-only" href="#offer">Skip to the cash offer form</a>\n', "")
     if os.path.exists(HERO_PHOTO):
         with open(HERO_PHOTO, "rb") as f:
@@ -1235,7 +1480,7 @@ def main():
         artifact_build(args.artifact)
         return
 
-    pages = {"index.html": page_index(), "privacy.html": page_privacy()}
+    pages = {"index.html": page_index(), "privacy.html": page_privacy(), "es.html": page_es()}
     for m in MARKETS:
         pages[m["slug"] + ".html"] = page_state(m)
     for c in CITY_PAGES:

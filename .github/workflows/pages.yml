@@ -1,4 +1,8 @@
-name: Deploy site to GitHub Pages
+name: Publish site to GitHub Pages
+
+# Publishes the contents of site/ to the gh-pages branch, which GitHub Pages serves.
+# No repository settings are required: GitHub enables Pages automatically for a public
+# repo that has a gh-pages branch.
 
 on:
   push:
@@ -7,30 +11,21 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: publish-site
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Configure GitHub Pages (enables it on first run)
-        uses: actions/configure-pages@v5
+      - name: Push site/ to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          enablement: true
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          force_orphan: true

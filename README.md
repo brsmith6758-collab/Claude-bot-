@@ -29,14 +29,31 @@ details the seller entered. No account needed.
 Prefer something else? Put a Formspree URL (`https://formspree.io/f/XXXXXXXX`), a
 Zapier/Make webhook or your CRM's JSON endpoint in `leadEndpoint`.
 
-## Deploy to GitHub Pages (one click, then a merge)
+## Deployment (live)
 
-1. **Settings → Pages → Build and deployment → Source: "GitHub Actions"**
-   (https://github.com/brsmith6758-collab/Claude-bot-/settings/pages).
-   The workflow cannot flip this switch itself; GitHub only lets a repo admin do it.
-2. Merge this branch into `main`. Every later push to `main` that touches `site/`
-   redeploys automatically.
-3. The site appears at `https://brsmith6758-collab.github.io/Claude-bot-/`.
+The site is served by GitHub Pages from the `gh-pages` branch:
+**https://brsmith6758-collab.github.io/Claude-bot-/**
+
+Every push to `main` or to this branch that touches `site/` republishes it
+automatically (`.github/workflows/pages.yml` copies `site/` to `gh-pages`).
+Nothing in the repository settings needs to change.
+
+## Settings in `site/config.js`
+
+| Setting | What it does |
+| --- | --- |
+| `phone`, `email` | Shown everywhere on the site and in the search-engine data. Rebuild after changing. |
+| `leadEndpoint` | Where form submissions go (FormSubmit by default). |
+| `smsText` | Pre-filled message when a seller taps "Text us". |
+| `googleReviewsUrl` | Paste your Google Business Profile review link and a "Read our Google reviews" link appears. |
+| `ga4MeasurementId` | Google Analytics 4. Leads fire a `generate_lead` event; calls and texts fire `click_to_call` / `click_to_text`. |
+| `googleAdsConversion` | Google Ads lead conversion label. Fires on every submitted lead. |
+| `metaPixelId` | Meta pixel. Fires PageView and Lead. |
+
+Photos: add `site/assets/img/hero.jpg` for a photo hero and `site/assets/img/team.jpg`
+for a real photo in the "who you're dealing with" section, then rebuild.
+
+Spanish: `es.html` is a full Spanish landing page, linked from the top bar.
 
 ## Getting found on Google (what actually moves the needle)
 

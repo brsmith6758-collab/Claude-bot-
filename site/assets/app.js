@@ -6,6 +6,21 @@
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
+  var LANG = (document.documentElement.getAttribute("lang") || "en").slice(0, 2);
+  var MSG = {
+    en: { sending: "Sending…", cta: "Get My Cash Offer →", needAddress: "Please enter the property address.",
+          needPhone: "Please enter a phone number we can reach you at.", checkFields: "Please check the highlighted fields.",
+          failPrefix: "We couldn't send that just now. Please ", call: "call or text ", email: "email ", retry: "try again in a moment",
+          failSuffix: " and we'll take it from there.", copied: "Copied", selectCopy: "Select and copy",
+          weBuyIn: "We buy houses in ", twoSteps: ". Two quick steps and your offer is on its way.", nationwide: "We buy nationwide" },
+    es: { sending: "Enviando…", cta: "Recibir mi oferta →", needAddress: "Por favor ingrese la dirección de la propiedad.",
+          needPhone: "Por favor ingrese un número de teléfono donde podamos contactarlo.", checkFields: "Por favor revise los campos marcados.",
+          failPrefix: "No pudimos enviar su solicitud en este momento. Por favor ", call: "llame o envíe un texto al ", email: "escriba a ", retry: "intente de nuevo en un momento",
+          failSuffix: " y nosotros nos encargamos.", copied: "Copiado", selectCopy: "Seleccione y copie",
+          weBuyIn: "Compramos casas en ", twoSteps: ". Dos pasos rápidos y su oferta va en camino.", nationwide: "Compramos en todo el país" }
+  };
+  var M = MSG[LANG] || MSG.en;
+
   var MARKETS = {
     AZ: { name: "Arizona", zip: /^8[56]\d{3}$/ },
     FL: { name: "Florida", zip: /^3[2-4]\d{3}$/ },
@@ -29,9 +44,59 @@
       if (el.tagName === "A") el.setAttribute("href", "mailto:" + email);
       el.hidden = false;
     });
+    var smsBody = String(cfg.smsText || "").trim();
+    $$("[data-sms]").forEach(function (el) {
+      if (!phone) { el.hidden = true; return; }
+      el.setAttribute("href", "sms:" + ("+1" + phone.replace(/\D/g, "").slice(-10)) + (smsBody ? "?&body=" + encodeURIComponent(smsBody) : ""));
+      el.hidden = false;
+    });
     $$("[data-phone-wrap]").forEach(function (el) { el.hidden = !phone; });
     $$("[data-email-wrap]").forEach(function (el) { el.hidden = !email; });
     $$("[data-contact-wrap]").forEach(function (el) { el.hidden = !(phone || email); });
+  }
+
+  /* ---------- analytics and ad conversion tracking (only when IDs are set) ---------- */
+  var ADS = String(cfg.googleAdsConversion || "").trim();
+  function initAnalytics() {
+    var ga = String(cfg.ga4MeasurementId || "").trim();
+    var awId = ADS.split("/")[0];
+    var fb = String(cfg.metaPixelId || "").trim();
+    if (ga || awId) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+      var s = document.createElement("script");
+      s.async = true;
+      s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(ga || awId);
+      document.head.appendChild(s);
+      window.gtag("js", new Date());
+      if (ga) window.gtag("config", ga);
+      if (awId) window.gtag("config", awId);
+    }
+    if (fb && !window.fbq) {
+      var n = window.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+      window._fbq = n; n.push = n; n.loaded = true; n.version = "2.0"; n.queue = [];
+      var f = document.createElement("script");
+      f.async = true;
+      f.src = "https://connect.facebook.net/en_US/fbevents.js";
+      document.head.appendChild(f);
+      window.fbq("init", fb);
+      window.fbq("track", "PageView");
+    }
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest("a[href^='tel:'], a[href^='sms:']");
+      if (!a) return;
+      track(a.getAttribute("href").indexOf("tel:") === 0 ? "click_to_call" : "click_to_text", {});
+    });
+  }
+  function track(name, params) {
+    try {
+      if (window.gtag) window.gtag("event", name, params || {});
+      if (window.fbq && name === "generate_lead") window.fbq("track", "Lead", params || {});
+    } catch (e) { /* tracking must never break the form */ }
+  }
+  function trackLead(lead) {
+    track("generate_lead", { lead_source: lead.source, market: lead.market, state: lead.state });
+    if (ADS && window.gtag) { try { window.gtag("event", "conversion", { send_to: ADS }); } catch (e) { /* ignore */ } }
   }
 
   /* ---------- header nav ---------- */
@@ -223,7 +288,7 @@
           if (wrap) wrap.classList.toggle("invalid", pair[1]);
           if (pair[1] && !bad) { bad = true; if (el) el.focus({ preventScroll: true }); }
         });
-        if (bad) { fail(address ? "Please enter a phone number we can reach you at." : "Please enter the property address."); return; }
+        if (bad) { fail(address ? M.needPhone : M.needAddress); return; }
 
         var parsed = parseAddress(address);
         var state = parsed.state || (form.elements.state ? form.elements.state.value : "");
@@ -236,10 +301,11 @@
           market: MARKETS[state] ? MARKETS[state].name : "Nationwide"
         };
         var btn = $("button[type=submit]", form);
-        if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+        if (btn) { btn.disabled = true; btn.textContent = M.sending; }
         submitLead(lead).then(function (result) {
-          if (btn) { btn.disabled = false; btn.textContent = "Get My Cash Offer →"; }
+          if (btn) { btn.disabled = false; btn.textContent = M.cta; }
           try { window.localStorage.setItem("pac:quickLead", JSON.stringify(lead)); } catch (err) { /* storage unavailable */ }
+          if (result.ok) trackLead(lead);
           if (result.ok && done) {
             form.hidden = true;
             done.hidden = false;
@@ -256,8 +322,8 @@
           }
           var phoneTxt = String(cfg.phone || "").trim();
           var emailTxt = String(cfg.email || "").trim();
-          var reach = phoneTxt ? "call or text " + phoneTxt : (emailTxt ? "email " + emailTxt : "try again in a moment");
-          fail("We couldn't send that just now. Please " + reach + " and we'll take it from there.");
+          var reach = phoneTxt ? M.call + phoneTxt : (emailTxt ? M.email + emailTxt : M.retry);
+          fail(M.failPrefix + reach + M.failSuffix);
         });
       });
     });
@@ -293,9 +359,7 @@
       var st = form.elements.state ? form.elements.state.value : "";
       var market = MARKETS[st] ? MARKETS[st].name : "";
       var where = city && market ? city + ", " + market : (market || city);
-      var text = where
-        ? "We buy houses in " + where + ". Two quick steps and your offer is on its way."
-        : "We buy nationwide. Two quick steps and your offer is on its way.";
+      var text = where ? M.weBuyIn + where + M.twoSteps : M.nationwide + M.twoSteps;
       $("span", line).textContent = text;
       line.hidden = false;
     }
@@ -317,7 +381,7 @@
         if (bad && ok) { ok = false; el.focus({ preventScroll: true }); }
       });
       if (!ok && errorBox) {
-        errorBox.textContent = "Please check the highlighted fields.";
+        errorBox.textContent = M.checkFields;
         errorBox.hidden = false;
       }
       return ok;
@@ -350,9 +414,10 @@
       lead.source = "primeacrecapital-site";
       lead.market = MARKETS[lead.state] ? MARKETS[lead.state].name : "Nationwide";
 
-      if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+      if (btn) { btn.disabled = true; btn.textContent = M.sending; }
       submitLead(lead).then(function (result) {
-        if (btn) { btn.disabled = false; btn.textContent = "Get my cash offer"; }
+        if (btn) { btn.disabled = false; btn.textContent = "Get My Cash Offer"; }
+        if (result.ok) trackLead(lead);
         steps.forEach(function (s) { s.hidden = true; });
         var progress = $(".progress", form);
         if (progress) progress.hidden = true;
@@ -363,10 +428,10 @@
         var copy = $("[data-copy]", panel);
         if (copy) copy.addEventListener("click", function () {
           var text = leadSummary(lead);
-          var done = function () { copy.textContent = "Copied"; };
+          var done = function () { copy.textContent = M.copied; };
           var fail = function () {
             if (sum) { var r = document.createRange(); r.selectNodeContents(sum); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
-            copy.textContent = "Select and copy";
+            copy.textContent = M.selectCopy;
           };
           if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fail);
           else fail();
@@ -443,6 +508,7 @@
 
   function init() {
     applyContact();
+    initAnalytics();
     initNav();
     initSearch();
     initHeroForm();
