@@ -295,7 +295,7 @@
         var city = parsed.city || (form.elements.city ? form.elements.city.value : "");
         var lead = {
           address: parsed.street, city: city, state: state, zip: parsed.zip,
-          fullAddress: address, phone: phone, email: email,
+          fullAddress: address, phone: phone, email: email, smsConsent: false,
           source: "quick-form", page: window.location.pathname,
           submittedAt: new Date().toISOString(),
           market: MARKETS[state] ? MARKETS[state].name : "Nationwide"

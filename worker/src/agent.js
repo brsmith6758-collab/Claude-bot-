@@ -1,21 +1,25 @@
 // One chat turn: append the seller's message, run Claude with our tools until it
 // answers, and return the reply plus the updated (append-only) history.
 import Anthropic from "@anthropic-ai/sdk";
-import { buildSystemPrompt, TOOLS, contextLine } from "./prompt.js";
+import { buildSystemPrompt, TOOLS, contextLine, cleanPage } from "./prompt.js";
 import {
   scheduleConfig, openSlots, pickSlots, slotLabel, isValidTimeZone, calendarLink, stateTimeZone, zonedParts, ymd,
 } from "./slots.js";
 import {
-  normalizeLead, storeLead, emailLead, bookedSlots, isSlotTaken, reserveSlot, phoneBooking, bookingsToday, countBooking,
+  normalizeLead, normalizeStop, storeLead, storeStop, emailLead, emailStop, bookedSlots, isSlotTaken, reserveSlot,
+  phoneBooking, bookingsToday, countBooking,
 } from "./leads.js";
 
 const MAX_MODEL_CALLS = 5;
 const MAX_TOKENS = 16000;          // room for thinking plus the reply (non-streaming default)
-const TURN_BUDGET_MS = 45000;      // the browser gives up at 60 s
+const TURN_BUDGET_MS = 45000;      // the browser gives up at 75 s
 const MAX_HISTORY_MESSAGES = 100;
 const MAX_HISTORY_CHARS = 150000;
 const MAX_BOOKINGS_PER_CONVERSATION = 2;
 const MAX_BOOKINGS_PER_DAY = 3;    // per visitor network, when KV is bound
+const MAX_STOPS_PER_CONVERSATION = 2;
+const MAX_STOPS_PER_DAY = 5;       // do-not-contact requests, per visitor network
+const MAX_TRANSCRIPT_CHARS = 6000;
 
 const ZONE_NAMES = {
   "America/Chicago": "Central time",
@@ -143,20 +147,40 @@ export function cleanAssistantContent(content) {
   return content.filter((b, i) => i > last || b.type === "text");
 }
 
-/** Bookings and callback requests that already succeeded in this conversation. */
-function priorBookings(history) {
-  let n = 0;
+/** Successful tool results in this conversation: bookings/callbacks, and stop requests. */
+function priorActions(history) {
+  const n = { bookings: 0, stops: 0 };
   for (const m of history) {
     if (m.role !== "user") continue;
     for (const b of m.content) {
       if (b.type !== "tool_result" || b.is_error) continue;
       try {
         const r = JSON.parse(b.content);
-        if (r.booked === true || r.saved === true) n++;
+        if (r.booked === true || r.saved === true) n.bookings++;
+        if (r.recorded === true) n.stops++;
       } catch { /* not ours */ }
     }
   }
   return n;
+}
+
+const CONTEXT_PREFIX = /^\[Site context[^\]\n]*\]\n?/;
+
+/**
+ * The conversation as plain text, newest part kept: the team's record of what
+ * the seller said, including their answer to the texting question.
+ */
+export function transcriptText(messages, max = MAX_TRANSCRIPT_CHARS) {
+  const lines = [];
+  for (const m of messages) {
+    for (const b of m.content || []) {
+      if (b.type !== "text") continue;
+      const t = (m.role === "user" ? b.text.replace(CONTEXT_PREFIX, "") : b.text).trim();
+      if (t) lines.push(`${m.role === "user" ? "Seller" : "Assistant"}: ${t}`);
+    }
+  }
+  const out = lines.join("\n");
+  return out.length > max ? `...${out.slice(out.length - max)}` : out;
 }
 
 // ---------------------------------------------------------------- tools
@@ -213,7 +237,7 @@ async function runTool(name, input, ctx) {
     if (ctx.bookingsThisResponse >= 1) {
       return { content: { error: "Only one booking or callback request can be made at a time. Confirm this one with the seller first." }, isError: true };
     }
-    if (ctx.priorBookings + ctx.bookingsThisTurn >= MAX_BOOKINGS_PER_CONVERSATION) {
+    if (ctx.prior.bookings + ctx.bookingsThisTurn >= MAX_BOOKINGS_PER_CONVERSATION) {
       return { content: { error: `This conversation already has a booking. Tell the seller the team has their details, and that they can call or text ${biz.phone} to change anything.` }, isError: true };
     }
     if ((await bookingsToday(env, ctx.clientKey, nowMs)) >= MAX_BOOKINGS_PER_DAY) {
@@ -221,7 +245,7 @@ async function runTool(name, input, ctx) {
     }
     ctx.bookingsThisResponse++;
 
-    const { lead, error } = normalizeLead(input);
+    const { lead, error } = normalizeLead(input, { kind: name === "book_call" ? "book" : "save" });
     if (error) { ctx.bookingsThisResponse--; return { content: { error }, isError: true }; }
 
     let appointment;
@@ -285,6 +309,7 @@ async function runTool(name, input, ctx) {
       page: ctx.page,
       lang,
       submittedAt: new Date(nowMs).toISOString(),
+      transcript: transcriptText(ctx.messages),
     };
     let stored = false;
     let emailed = false;
@@ -295,13 +320,44 @@ async function runTool(name, input, ctx) {
 
     const content = appointment
       ? { booked: true, when: appointment.sellerLabel, call_length_minutes: cfg.slotMinutes, what_next: "The team reviews the property before the call; a written cash offer typically follows within 24 hours of the review." }
-      : { saved: true, what_next: `The team will reach out during business hours (${biz.hoursLabel}).` };
+      : { saved: true, what_next: `The team will ${lead.phone ? "reach out" : "follow up by email"} during business hours (${biz.hoursLabel}).` };
     return {
       content,
       lead: { ...full, delivered: emailed, stored },
       ui: appointment
         ? { booking: { when: appointment.sellerLabel, calendarUrl: appointment.sellerCalendarUrl } }
         : { saved: true },
+    };
+  }
+
+  if (name === "do_not_contact") {
+    if (ctx.stopsThisTurn >= 1 || ctx.prior.stops + ctx.stopsThisTurn >= MAX_STOPS_PER_CONVERSATION) {
+      return { content: { recorded: true, note: "Already recorded in this conversation. Just confirm it to the seller." } };
+    }
+    if ((await bookingsToday(env, ctx.clientKey, nowMs, "dn")) >= MAX_STOPS_PER_DAY) {
+      return { content: { error: `Too many requests from this connection today. Ask the seller to email ${biz.email} with the number or email to remove.` }, isError: true };
+    }
+    const { notice, error } = normalizeStop(input);
+    if (error) return { content: { error }, isError: true };
+    ctx.stopsThisTurn++;
+    const full = {
+      ...notice,
+      type: "do_not_contact",
+      source: "website-chat",
+      page: ctx.page,
+      lang,
+      submittedAt: new Date(nowMs).toISOString(),
+      transcript: transcriptText(ctx.messages),
+    };
+    let stored = false;
+    let emailed = false;
+    try { stored = await storeStop(env, full); } catch (e) { console.error("storeStop failed", e && e.message); }
+    try { emailed = await emailStop(env, full); } catch (e) { console.error("emailStop failed", e && e.message); }
+    try { await countBooking(env, ctx.clientKey, nowMs, "dn"); } catch (e) { console.error("count stop failed", e && e.message); }
+    return {
+      content: { recorded: true, what_next: "Confirm in one sentence that we won't contact them again." },
+      lead: { ...full, delivered: emailed, stored },
+      ui: { stopped: true },
     };
   }
 
@@ -349,19 +405,20 @@ export async function runTurn({
   const biz = businessInfo(env);
   const lang = context.lang === "es" ? "es" : "en";
   const sellerTz = sellerTimeZone(context, biz);
-  const page = String(context.page || "/").slice(0, 200);
+  const page = cleanPage(context.page);
 
   const base = checkHistory(history);
   if (!(await verifyHistory(env, base, sig))) throw new HistoryError("history signature does not match");
-  const ctx = {
-    env, biz, sellerTz, lang, page, nowMs, clientKey,
-    priorBookings: priorBookings(base), bookingsThisTurn: 0, bookingsThisResponse: 0,
-  };
-
+  // Only the website writes the site-context line; a visitor can't type one.
+  const said = String(message).replace(/\[(\s*site context)/gi, "($1");
   const text = base.length === 0
-    ? `${contextLine({ page, lang, localTime: context.localTime, timeZone: sellerTz })}\n${message}`
-    : message;
+    ? `${contextLine({ page, lang, localTime: context.localTime, timeZone: sellerTz })}\n${said}`
+    : said;
   const messages = [...base, { role: "user", content: [{ type: "text", text }] }];
+  const ctx = {
+    env, biz, sellerTz, lang, page, nowMs, clientKey, messages,
+    prior: priorActions(base), bookingsThisTurn: 0, bookingsThisResponse: 0, stopsThisTurn: 0,
+  };
   const firstNew = base.length;
 
   const api = client || new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
@@ -377,9 +434,12 @@ export async function runTurn({
 
     let response;
     try {
+      const left = Math.max(5000, remaining);
       response = await api.beta.messages.create(requestParams(env, system, messages), {
-        timeout: Math.max(5000, Math.min(30000, remaining)),
-        maxRetries: remaining > 35000 ? 1 : 0,
+        timeout: Math.min(30000, left),
+        maxRetries: left > 35000 ? 1 : 0,
+        // One deadline for the attempt, any retry, and any retry-after wait together.
+        signal: AbortSignal.timeout(left),
       });
     } catch (e) {
       // A booking already happened this turn: report it rather than lose it.
@@ -452,6 +512,9 @@ function fallbackText(lang, biz, ui, stop) {
   }
   if (ui.saved) {
     return lang === "es" ? "Listo, el equipo se comunicará con usted pronto." : "Got it. The team will reach out soon.";
+  }
+  if (ui.stopped) {
+    return lang === "es" ? "Listo. No volveremos a contactarle." : "Done. We won't contact you again.";
   }
   console.warn("empty reply", stop);
   return lang === "es"

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizePhone, normalizeLead, buildMime, leadEmailText } from "../src/leads.js";
+import { normalizePhone, normalizeLead, normalizeStop, buildMime, leadEmailText, stopEmailText } from "../src/leads.js";
 
 test("phone numbers", () => {
   assert.equal(normalizePhone("773-937-5416"), "(773) 937-5416");
@@ -25,7 +25,33 @@ test("lead normalization", () => {
   assert.equal(normalizeLead({ ...base, email: "nope" }).lead.email, "");
   assert.match(normalizeLead({ ...base, name: " " }).error, /name/);
   assert.match(normalizeLead({ ...base, phone: "12" }).error, /phone/);
-  assert.match(normalizeLead({ ...base, property_address: "" }).error, /address/);
+  assert.match(normalizeLead({ ...base, property_address: "", city: "", zip: "" }).error, /address/);
+  assert.equal(normalizeLead({ ...base, property_address: "" }).lead.city, "Mesa", "a city is enough when they won't give the street");
+});
+
+test("a callback request can be email-only; a booked call needs a phone", () => {
+  const save = { kind: "save" };
+  const emailOnly = normalizeLead({ ...base, phone: "" }, save);
+  assert.equal(emailOnly.lead.phone, "");
+  assert.equal(emailOnly.lead.email, "dana@example.com");
+  assert.equal(emailOnly.lead.smsConsent, false, "no phone, no texting consent");
+  assert.match(normalizeLead({ ...base, phone: "", email: "" }, save).error, /phone number or an email/);
+  assert.match(normalizeLead({ ...base, phone: "555-01" }, save).error, /not a valid/, "a mistyped number is checked once");
+  assert.match(normalizeLead({ ...base, phone: "" }).error, /booked call needs/);
+  const text = leadEmailText({ ...emailOnly.lead, page: "/", submittedAt: "x" });
+  assert.match(text, /Contact: email only/);
+  assert.doesNotMatch(text, /Texts OK/);
+});
+
+test("stop requests need a phone or email and produce a clear notice", () => {
+  assert.match(normalizeStop({ name: "", phone: "", email: "", channels: "all", note: "" }).error, /phone number or email/);
+  const { notice } = normalizeStop({ name: "Dana", phone: "602 555 0143", email: "", channels: "texts", note: "stop texting me" });
+  assert.equal(notice.phone, "(602) 555-0143");
+  assert.equal(notice.channels, "texts");
+  assert.equal(normalizeStop({ name: "", phone: "", email: "a@b.co", channels: "bogus", note: "" }).notice.channels, "all");
+  const text = stopEmailText({ ...notice, page: "/", submittedAt: "x", transcript: "Seller: stop texting me" });
+  assert.match(text, /^DO NOT CONTACT: stop all texts/);
+  assert.match(text, /CONVERSATION\nSeller: stop texting me/);
 });
 
 test("email message is valid MIME with a decodable body", () => {

@@ -85,7 +85,7 @@ async function waitBot(page, n) {
 
 // ---------------------------------------------------------------- AI mode (local Worker + mock API)
 {
-  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:8787" });
+  const { ctx, page, posted } = await pageWith({ endpoint: process.env.WORKER_URL || "http://127.0.0.1:8787" });
   await page.goto(`${SITE}/sell-my-house-fast-mesa-az.html`);
   await page.click(".pac-launcher");
   await waitBot(page, 1);
@@ -229,6 +229,87 @@ async function waitBot(page, n) {
   assert(await page.isHidden("#pac-panel"), "chat does not reopen full screen over the next page on a phone");
   assert(!(await page.evaluate(() => document.documentElement.classList.contains("pac-lock"))), "page scroll is not locked");
   assert(await page.getAttribute(".pac-foot a[href='privacy.html']", "target") === "_blank", "chat privacy link opens in a new tab");
+  await ctx.close();
+}
+
+// ---------------------------------------------------------------- consent, email-only, stop requests
+const botCount = (page) => page.$$eval(".pac-msg.bot", (els) => els.length);
+async function say(page, text, n = 1) {
+  const before = await botCount(page);
+  await sendText(page, text);
+  await waitBot(page, before + n);
+}
+async function tap(page, label, n = 1) {
+  const before = await botCount(page);
+  await page.click(`.pac-chip >> text=${label}`);
+  await waitBot(page, before + n);
+}
+const last = async (page, back = 1) => (await bubbles(page)).at(-back);
+{
+  // Foreclosure question, a seller who won't give a phone number, then STOP.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  assert(/Anthropic/.test(await page.textContent(".pac-foot")), "chat footer says an AI provider (Anthropic) processes chats");
+  assert(!/follows up/.test(await page.textContent(".pac-foot")), "footer no longer promises a follow-up on every chat");
+  await say(page, "I'm being foreclosed and the auction is in 10 days", 2);
+  const fc = await last(page, 2);
+  assert(/HUD/.test(fc) && /800-569-4287/.test(fc) && !/7 days/.test(fc), "foreclosure question gets the foreclosure answer with the HUD line");
+  await tap(page, "Yes, let's do it");
+  await say(page, "123 Main St, Mesa AZ 85201");
+  await tap(page, "Needs major repairs");
+  await tap(page, "Within 30 days");
+  await say(page, "Dana Lee");
+  await say(page, "I'd rather not");
+  assert(/email you instead/.test(await last(page)), "a seller who won't give a number is offered email");
+  await tap(page, "Email me instead");
+  assert(/email address/.test(await last(page)), "asks for the email");
+  await say(page, "dana@example.com");
+  assert(posted.length === 1 && posted[0].phone === "" && posted[0].email === "dana@example.com" && posted[0].smsConsent === false && /Email follow-up only/.test(posted[0].callTime), `email-only lead posted: ${JSON.stringify(posted[0] && { p: posted[0].phone, e: posted[0].email, c: posted[0].callTime })}`);
+  assert(/Seller: I'd rather not/.test(posted[0].transcript), "the lead carries the chat transcript");
+  assert(/email you at dana@example.com/.test(await last(page)), "confirms email follow-up");
+  await say(page, "STOP");
+  assert(posted.length === 2 && posted[1].type === "do_not_contact" && posted[1].email === "dana@example.com" && /^DO NOT CONTACT/.test(posted[1]._subject), "STOP sends a do-not-contact notice for the known email");
+  assert(/won't contact you again/.test(await last(page)), "confirms the stop request");
+  await ctx.close();
+}
+{
+  // Unclear consent is asked again; "ok but calls only" is not consent.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await tap(page, "I want a cash offer");
+  await say(page, "77 Elm St, Phoenix AZ");
+  await tap(page, "Move-in ready");
+  await tap(page, "As soon as possible");
+  await say(page, "Sam Ortiz");
+  await say(page, "480-555-0101");
+  assert(/Msg & data rates may apply; reply STOP to opt out\. Agreeing isn't required\./.test(await last(page)), "texting question carries the disclosures");
+  await say(page, "maybe");
+  assert(/Just to be sure/.test(await last(page)), "an unclear answer is asked again");
+  await say(page, "ok but calls only");
+  assert(/good time for a quick call/.test(await last(page)), "moves on to the call time");
+  const before = await botCount(page);
+  await page.click(".pac-chip.slot >> nth=0");
+  await waitBot(page, before + 1);
+  assert(posted.length === 1 && posted[0].smsConsent === false && posted[0].textingAnswer === "ok but calls only" && /reply STOP/.test(posted[0].textingQuestion), "'ok but calls only' is recorded as no, with the question and answer");
+  const done = await last(page);
+  assert(/confirm by phone/.test(done) && !/call or text\./.test(done.split("If anything")[0]), "calls-only seller isn't promised a text");
+  await ctx.close();
+}
+{
+  // A stop request before any details: asks which number, then sends the notice.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "please stop texting me");
+  assert(/phone number or email should we stop/.test(await last(page)), "asks which number to stop contacting");
+  await say(page, "602-555-0143");
+  assert(posted.length === 1 && posted[0].type === "do_not_contact" && posted[0].phone === "(602) 555-0143", "do-not-contact notice posted with the number");
+  assert(/won't contact you again/.test(await last(page)), "confirms");
   await ctx.close();
 }
 

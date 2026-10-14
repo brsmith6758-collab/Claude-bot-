@@ -99,17 +99,25 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
 
 ## Where leads go
 
-- **Your inbox**, every time, with the call time in your zone and a one-click "add to calendar" link.
+- **Your inbox**, every time, with the call time in your zone, a one-click "add to calendar" link,
+  and the full chat conversation (your record of what the seller said, including their answer
+  to the texting question).
+- **"DO NOT CONTACT" emails** when a seller asks in the chat to stop calls, texts or emails.
+  Take them off your lists and cancel any call they booked.
 - **KV storage** (if bound): Cloudflare → Storage & databases → Workers KV → `prime-acre-chat-leads`.
-  Keys starting `lead:` are leads; keys starting `slot:` are booked call times.
+  Keys starting `lead:` are leads, `slot:` are booked call times, and `dnc:` are stop requests.
 
 ## How it behaves
 
-- Discloses that it is an AI assistant and that a person follows up.
+- Says it is an AI assistant, and tells visitors up front that chats are processed by Anthropic.
+  It never promises a follow-up unless it actually sent the seller's details to you.
 - Never gives a price or value estimate, never promises outcomes, gives no legal or tax advice,
-  points homeowners facing foreclosure to free HUD-approved counselors as well, and stays away
-  from anything Fair Housing protects.
-- Asks before texting, and records the answer with the lead.
+  and stays away from anything Fair Housing protects.
+- Asks before texting, with the standard wording (message and data rates, reply STOP, not required),
+  and counts only a clear yes. Sellers who won't give a phone number can ask for email follow-up instead.
+- Records "stop contacting me" requests and emails you a DO NOT CONTACT notice.
+- Doesn't tell a seller who may owe more than the house is worth that the sale pays off the mortgage;
+  points people facing foreclosure to free HUD-approved counselors.
 - Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone.
 - Limits abuse in code: one booking per reply, two per conversation, three per visitor per day,
   one upcoming call per phone number, and a signed conversation history nobody can forge.
@@ -140,7 +148,7 @@ then `node test/e2e-api.mjs` and `NODE_PATH=$(npm root -g) node test/e2e-browser
 | --- | --- |
 | `src/index.js` | HTTP entry: allowed origins, rate limit, `/health`, `/chat` |
 | `src/agent.js` | One chat turn: Claude with tools, append-only history, refusal and fallback handling |
-| `src/prompt.js` | The assistant's instructions and its three tools |
+| `src/prompt.js` | The assistant's instructions and its four tools |
 | `src/slots.js` | Call times in your zone, shown in the seller's |
 | `src/leads.js` | Lead checks, storage, email |
 | `../site/assets/chat.js` | The bubble on the website (both modes) |

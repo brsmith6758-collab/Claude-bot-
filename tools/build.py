@@ -63,7 +63,7 @@ T = {
         "f_address": "Property address", "f_phone": "Phone", "f_email": "Email", "optional": "(optional)",
         "fine": "No obligation. We never sell or share your information.",
         "done_h": "You're all set!",
-        "done_p": "We're pulling up the property now. Expect a call or text%s within 24 hours with your cash offer. Save the number so you don't miss us.",
+        "done_p": "We're pulling up the property now. Expect a call%s within 24 hours with your cash offer. Save the number so you don't miss us.",
         "done_more": "Add details to speed up my offer", "done_alt": "Or call or text",
         "bullets": ["Fair, written cash offer within 24 hours", "No fees, no commissions, no closing costs", "Close in as little as 7 days, or on your date"],
         "talk": "Prefer to talk? Call or text",
@@ -90,7 +90,7 @@ T = {
         "f_address": "Dirección de la propiedad", "f_phone": "Teléfono", "f_email": "Correo electrónico", "optional": "(opcional)",
         "fine": "Sin compromiso. Nunca vendemos ni compartimos su información.",
         "done_h": "¡Listo!",
-        "done_p": "Ya estamos revisando la propiedad. Espere una llamada o un mensaje de texto%s en las próximas 24 horas con su oferta en efectivo. Guarde el número para no perder nuestra llamada.",
+        "done_p": "Ya estamos revisando la propiedad. Espere una llamada%s en las próximas 24 horas con su oferta en efectivo. Guarde el número para no perder nuestra llamada.",
         "done_more": "", "done_alt": "O llame o envíe un texto al",
         "bullets": ["Oferta justa por escrito en 24 horas", "Sin comisiones ni gastos de cierre", "Cierre en tan solo 7 días, o en la fecha que usted elija"],
         "talk": "¿Prefiere hablar? Llame o envíe un texto al",
@@ -866,7 +866,7 @@ def offer_form(default_state="", default_city=""):
         fallback_lines += '<span>Text or call %s</span>' % phone_link()
     if EMAIL:
         fallback_lines += '<span>Email %s or <a data-mail href="mailto:%s">open a pre-filled email</a></span>' % (email_link(), esc(EMAIL))
-    success_phone = ('<p>Expect a call or text from <b data-phone>%s</b>. Save the number so you don\'t miss us.</p>' % esc(PHONE)) if PHONE else ""
+    success_phone = ('<p>Expect a call from <b data-phone>%s</b>. Save the number so you don\'t miss us.</p>' % esc(PHONE)) if PHONE else ""
     return """<section class="offer section" id="offer">
   <div class="wrap">
     <div>
@@ -1011,8 +1011,8 @@ def offer_form(default_state="", default_city=""):
         </div>
         <div class="hp" aria-hidden="true"><label for="f-company">Company</label><input id="f-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
         <label class="check">
-          <input id="f-sms" name="smsConsent" type="checkbox" checked>
-          <span>It's okay to text me about my offer. Message and data rates may apply. Reply STOP to opt out at any time.</span>
+          <input id="f-sms" name="smsConsent" type="checkbox">
+          <span>Text me about my offer (optional). Message and data rates may apply. Reply STOP to opt out at any time. Agreeing is not required to get an offer.</span>
         </label>
         <p class="error-msg" data-form-error hidden></p>
         <div class="form-actions">
@@ -1022,7 +1022,7 @@ def offer_form(default_state="", default_city=""):
             <span class="form-note">Free · No obligation · Reply within 24 hours</span>
           </div>
         </div>
-        <p class="form-note">By submitting, you agree that %(legal)s may contact you about your property by phone, text or email. Consent is not a condition of any purchase. We never sell your information.</p>
+        <p class="form-note">By submitting, you agree that %(legal)s may contact you about your property by phone or email, and by text only if you checked the box above. Consent is not a condition of any purchase. We never sell your information.</p>
       </div>
 
       <div class="thanks" data-result="success" hidden>
@@ -1422,7 +1422,7 @@ def page_privacy():
       <details open><summary>Information we collect</summary><p>When you request a cash offer we collect the property address and details you provide, your name, phone number and email address, and anything you add in the notes. We also collect standard web analytics such as pages visited and the device used.</p></details>
       <details open><summary>How we use it</summary><p>We use your information to evaluate the property, prepare and deliver a cash offer, and communicate with you about the sale by phone, text message or email. If you have agreed to text messages, you can opt out at any time by replying STOP.</p></details>
       <details open><summary>Sharing</summary><p>We do not sell your personal information. We may share it with the title company, closing attorney or local buying partner involved in purchasing your property, and with service providers who help us run this website and deliver messages. These parties may use it only to provide those services.</p></details>
-      <details open><summary>Website chat</summary><p>Our website chat is an AI assistant. What you type in the chat is processed by our AI provider (Anthropic) and our hosting provider (Cloudflare) so the assistant can reply, check open call times, and send the details you share to our team. Please don't share sensitive information such as Social Security, bank, or loan account numbers in the chat. Chat messages are not used to make decisions about you; a person from our team reviews every request.</p></details>
+      <details open><summary>Website chat</summary><p>Our website chat is an AI assistant. What you type in the chat is processed by our AI provider (Anthropic) and our hosting provider (Cloudflare) so the assistant can reply, check open call times, and send the details you share to our team. Please don't share sensitive information such as Social Security, bank, or loan account numbers in the chat. Chat messages are not used to make decisions about you; a person from our team reviews every request you send through the chat. If you ask in the chat for us to stop calling, texting or emailing you, that request is passed to our team and honored.</p></details>
       <details open><summary>Your choices</summary><p>You can ask us to correct or delete your information, or to stop contacting you, at any time. We keep lead information only as long as needed to evaluate and complete a potential purchase and to meet legal requirements.</p></details>
       <details open><summary>Contact</summary><p>Questions about this policy can be sent to %s%s.</p></details>
     </div>

@@ -11,6 +11,7 @@
   var LANG = (document.documentElement.getAttribute("lang") || "en").slice(0, 2) === "es" ? "es" : "en";
   var PHONE = String(cfg.phone || "").trim();
   var PHONE_TEL = PHONE ? "+1" + PHONE.replace(/\D/g, "").slice(-10) : "";
+  var EMAIL = String(cfg.email || "").trim();
   var ENDPOINT = String(cfg.chatEndpoint || "").replace(/\/+$/, "");
   var STORE_KEY = "pac:chat:v1";
   var TEASE_KEY = "pac:chat:teased";
@@ -23,7 +24,7 @@
       close: "Close chat", placeholder: "Type your message…", send: "Send", input: "Message",
       teaseTitle: "Thinking about selling?", teaseBody: "I can answer questions and set up a quick call for a cash offer.",
       teaseClose: "Dismiss",
-      foot: "Automated assistant; a real person follows up. Prefer to talk? Call or text ",
+      foot: "Automated assistant. Chats may be processed by our AI provider (Anthropic) and are shared with our team. Please don't share SSN or bank details. Prefer to talk? Call or text ",
       privacy: "Privacy",
       greet: "Hi! I'm the Prime Acre Capital assistant. I can answer your questions and set up a quick call to get you a no-obligation cash offer. What brings you here today?",
       chips: ["I want a cash offer", "How does it work?", "Book a call", "Talk to a person"],
@@ -42,13 +43,22 @@
       gTimelineChips: ["As soon as possible", "Within 30 days", "In 1 to 3 months", "Just exploring"],
       gName: "Thanks. What's your name?",
       gPhone: function (n) { return "Nice to meet you" + (n ? ", " + n : "") + ". What's the best phone number to reach you?"; },
-      gPhoneBad: "That doesn't look like a 10-digit US number. Could you check it?",
-      gConsent: "Is it OK if we text you at that number about your offer?",
+      gPhoneBad: "That doesn't look like a 10-digit US number. You can check it, or if you'd rather not share a number, the team can email you instead.",
+      gEmailInstead: "Email me instead",
+      gEmail: "Sure. What's the best email address?",
+      gEmailBad: "That email doesn't look right. Could you check it?",
+      gConsent: "Can we text you at that number about your offer? Msg & data rates may apply; reply STOP to opt out. Agreeing isn't required.",
+      gConsentAgain: "Just to be sure: is texting OK? Please tap one.",
       gConsentChips: ["Yes, texting is fine", "Calls only, please"],
       gTime: "When's a good time for a quick call? Pick one, or type a time that works.",
       gTimeAsap: "As soon as possible",
       gSending: "One moment…",
-      gDone: function (when) { return "Thanks! " + (when ? "I've asked the team to call you around " + when + ". They'll confirm by call or text. " : "The team will reach out shortly. ") + "They review the property first, and a written cash offer typically follows within 24 hours of the review. If anything changes, call or text " + PHONE + "."; },
+      gDone: function (when, sms) { return "Thanks! " + (when ? "I've asked the team to call you around " + when + ". They'll confirm by " + (sms ? "call or text" : "phone") + ". " : "The team will reach out shortly. ") + "They review the property first, and a written cash offer typically follows within 24 hours of the review. If anything changes, call or text " + PHONE + "."; },
+      gDoneEmail: function (email) { return "Thanks! The team will email you at " + email + ". They review the property first, and a written cash offer typically follows within 24 hours of the review."; },
+      emailOnly: "Email follow-up only",
+      gStopAsk: "Understood. What phone number or email should we stop contacting?",
+      gStopDone: "Done. We won't contact you again. Sorry for the bother.",
+      gStopFail: "I couldn't send that automatically. Please email " + (EMAIL || "us") + " with the number or email to remove, and we'll take care of it.",
       gStale: "That time has already passed. Here are the next open options:",
       gFail: "I couldn't send that automatically. Please call or text " + PHONE + " and mention these details:",
       gAfter: "The team has your details and will reach out. For anything else, call or text " + PHONE + ".",
@@ -62,10 +72,10 @@
       requested: "requested time",
       faq: [
         [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. The offer you accept is what you walk away with, minus anything owed on the property."],
-        [/how (fast|quick|long|soon)|close|closing|days/i, "We can close in as little as 7 days once title is clear, or on a later date you pick."],
+        [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
+        [/how (fast|quick|long|soon)|\bclos(e|ing)\b|\bdays?\b/i, "We can close in as little as 7 days once title is clear, or on a later date you pick."],
         [/condition|repair|as.?is|clean|damage|fix/i, "We buy houses as-is in any condition. No repairs, no cleaning, no showings. Leave behind anything you don't want."],
         [/legit|scam|trust|real|safe/i, "Fair question. You never pay us anything, and every closing goes through a licensed title company or closing attorney, so your money never passes through our hands. You can have your own attorney review the contract."],
-        [/mortgage|owe|lien|tax|foreclos/i, "Mortgages, liens, and back taxes are paid off from the sale at closing. If you're facing foreclosure, timing matters, so the sooner we talk the better."],
         [/where|state|area|arizona|florida|tennessee|carolina|nationwide/i, "We focus on Arizona, Florida, Tennessee, and North Carolina, and buy nationwide through local buying partners."],
         [/how (does|do) (it|this) work|process|steps/i, "It's simple: tell us about the house, we review it and send a written, no-obligation cash offer, and you pick the closing date."],
         [/how much|worth|price|value|offer amount/i, "The offer comes after the team reviews the property, so I can't give a number here. A quick call is the fastest way to a real offer."],
@@ -78,7 +88,7 @@
       close: "Cerrar chat", placeholder: "Escriba su mensaje…", send: "Enviar", input: "Mensaje",
       teaseTitle: "¿Piensa vender?", teaseBody: "Puedo responder sus preguntas y programar una llamada para una oferta en efectivo.",
       teaseClose: "Cerrar",
-      foot: "Asistente automatizado; una persona real le dará seguimiento. ¿Prefiere hablar? Llame o envíe un texto al ",
+      foot: "Asistente automatizado. Los chats pueden ser procesados por nuestro proveedor de IA (Anthropic) y se comparten con nuestro equipo. No comparta su número de Seguro Social ni datos bancarios. ¿Prefiere hablar? Llame o envíe un texto al ",
       privacy: "Privacidad",
       greet: "¡Hola! Soy el asistente de Prime Acre Capital. Puedo responder sus preguntas y programar una llamada rápida para darle una oferta en efectivo sin compromiso. ¿En qué le puedo ayudar?",
       chips: ["Quiero una oferta en efectivo", "¿Cómo funciona?", "Programar una llamada", "Hablar con una persona"],
@@ -96,13 +106,22 @@
       gTimelineChips: ["Lo antes posible", "En 30 días", "En 1 a 3 meses", "Solo estoy explorando"],
       gName: "Gracias. ¿Cuál es su nombre?",
       gPhone: function (n) { return "Mucho gusto" + (n ? ", " + n : "") + ". ¿Cuál es el mejor número para comunicarnos con usted?"; },
-      gPhoneBad: "Ese número no parece de 10 dígitos. ¿Lo puede revisar?",
-      gConsent: "¿Está bien si le enviamos mensajes de texto a ese número sobre su oferta?",
+      gPhoneBad: "Ese número no parece de 10 dígitos. Puede revisarlo, o si prefiere no dar un número, el equipo le puede escribir por correo electrónico.",
+      gEmailInstead: "Prefiero correo electrónico",
+      gEmail: "Claro. ¿Cuál es su correo electrónico?",
+      gEmailBad: "Ese correo no parece correcto. ¿Lo puede revisar?",
+      gConsent: "¿Le podemos enviar mensajes de texto a ese número sobre su oferta? Pueden aplicarse tarifas de mensajes y datos; responda STOP para cancelar. No es obligatorio aceptar.",
+      gConsentAgain: "Para estar seguros: ¿le podemos enviar textos? Elija una opción, por favor.",
       gConsentChips: ["Sí, textos está bien", "Solo llamadas, por favor"],
       gTime: "¿Cuándo le queda bien una llamada rápida? Elija una opción o escriba un horario.",
       gTimeAsap: "Lo antes posible",
       gSending: "Un momento…",
-      gDone: function (when) { return "¡Gracias! " + (when ? "Le pedí al equipo que le llame alrededor de " + when + ". Le confirmarán por llamada o texto. " : "El equipo se comunicará pronto. ") + "Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión. Si algo cambia, llame o envíe un texto al " + PHONE + "."; },
+      gDone: function (when, sms) { return "¡Gracias! " + (when ? "Le pedí al equipo que le llame alrededor de " + when + ". Le confirmarán por " + (sms ? "llamada o texto" : "teléfono") + ". " : "El equipo se comunicará pronto. ") + "Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión. Si algo cambia, llame o envíe un texto al " + PHONE + "."; },
+      gDoneEmail: function (email) { return "¡Gracias! El equipo le escribirá a " + email + ". Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión."; },
+      emailOnly: "Solo seguimiento por correo electrónico",
+      gStopAsk: "Entendido. ¿Qué número de teléfono o correo electrónico debemos dejar de contactar?",
+      gStopDone: "Listo. No volveremos a contactarle. Disculpe la molestia.",
+      gStopFail: "No pude enviar esto automáticamente. Por favor escriba a " + (EMAIL || "nuestro correo") + " con el número o correo que debemos quitar y nos encargamos.",
       gStale: "Ese horario ya pasó. Estas son las próximas opciones:",
       gFail: "No pude enviar esto automáticamente. Por favor llame o envíe un texto al " + PHONE + " con estos datos:",
       gAfter: "El equipo tiene sus datos y se comunicará con usted. Para cualquier otra cosa, llame o envíe un texto al " + PHONE + ".",
@@ -116,10 +135,10 @@
       requested: "horario solicitado",
       faq: [
         [/comisi|cobr|costo|cargo|pagar/i, "No hay comisiones ni cargos, y nosotros pagamos los gastos de cierre habituales. La oferta que acepte es lo que recibe, menos lo que deba sobre la propiedad."],
-        [/rápid|cuánto tiempo|cerrar|cierre|días/i, "Podemos cerrar en tan solo 7 días una vez que el título esté limpio, o en una fecha posterior que usted elija."],
+        [/hipoteca|\bdebo\b|\bdebe\b|gravamen|impuesto|ejecuci|embargo|subasta|atrasad/i, "Si el precio de venta cubre lo que debe, la hipoteca, los gravámenes y los impuestos atrasados se pagan con la venta al cierre. Si podría deber más de lo que vale la casa, el equipo revisará los números con usted honestamente. Si enfrenta una ejecución hipotecaria, el tiempo importa, y un consejero de vivienda aprobado por HUD también puede ayudarle gratis: hud.gov o 800-569-4287."],
+        [/rápid|cuánto tiempo|\bcerrar\b|\bcierre\b|\bd[ií]as?\b/i, "Podemos cerrar en tan solo 7 días una vez que el título esté limpio, o en una fecha posterior que usted elija."],
         [/condici|repar|arregl|limpi|daño/i, "Compramos casas tal como están, en cualquier condición. Sin reparaciones, sin limpieza, sin visitas."],
         [/estafa|confi|real|segur|legít/i, "Buena pregunta. Usted nunca nos paga nada, y cada cierre se hace con una compañía de títulos o un abogado con licencia; su dinero nunca pasa por nuestras manos."],
-        [/hipoteca|debo|gravamen|impuesto|ejecuci/i, "Las hipotecas, gravámenes e impuestos atrasados se pagan con la venta al cierre. Si enfrenta una ejecución hipotecaria, el tiempo importa."],
         [/dónde|donde|estado|arizona|florida|tennessee|carolina/i, "Nos enfocamos en Arizona, Florida, Tennessee y Carolina del Norte, y compramos en todo el país con compradores locales asociados."],
         [/cómo funciona|como funciona|proceso|pasos/i, "Es sencillo: nos cuenta de la casa, la revisamos y le enviamos una oferta por escrito sin compromiso, y usted elige la fecha de cierre."],
         [/cuánto|cuanto|vale|precio|valor/i, "La oferta llega después de que el equipo revisa la propiedad, así que no puedo darle un número aquí. Una llamada rápida es la forma más fácil de obtener una oferta real."],
@@ -454,7 +473,7 @@
   var failures = 0;
   function aiSend(text, isRetry) {
     var ctrl = window.AbortController ? new AbortController() : null;
-    var timer = window.setTimeout(function () { if (ctrl) ctrl.abort(); }, 60000);
+    var timer = window.setTimeout(function () { if (ctrl) ctrl.abort(); }, 75000); // the Worker stops itself at about 45 s
     fetch(ENDPOINT + "/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -471,9 +490,11 @@
         setBusy(false);
         bot(res.body.reply);
         handleUi(res.body.ui || {});
-        (res.body.leads || []).forEach(deliverLead);
+        var leads = res.body.leads || [];
+        leads.forEach(deliverLead);
         var ui = res.body.ui || {};
-        if ((res.body.leads && res.body.leads.length) || ui.booking || ui.saved) state.leadSent = true;
+        if (leads.some(function (l) { return l.type !== "do_not_contact"; }) || ui.booking || ui.saved) state.leadSent = true;
+        if (ui.stopped) state.optedOut = true;
         save();
         return;
       }
@@ -528,6 +549,13 @@
 
   // Leads the Worker could not email itself go through the site's form endpoint.
   function deliverLead(lead) {
+    if (lead.type === "do_not_contact") {
+      if (!lead.delivered && pac().submitLead) {
+        pac().submitLead(stopNotice(lead.name, lead.phone, lead.email, lead.note, lead.channels, lead.transcript, "website-chat"))
+          .then(function (r) { if (!r || !r.ok) console.warn("chat stop-request email fallback failed"); });
+      }
+      return;
+    }
     var mapped = {
       _subject: (lead.appointment ? "Booked call " + lead.appointment.ownerLabel + ": " : "New seller lead (chat): ") + [lead.address, lead.city, lead.state].filter(Boolean).join(", "),
       address: lead.address, city: lead.city, state: lead.state, zip: lead.zip,
@@ -536,7 +564,8 @@
       timeline: lead.timeline, reason: lead.reason, askingPrice: lead.askingPrice, notes: lead.notes,
       callTime: lead.appointment ? lead.appointment.ownerLabel + " (seller: " + lead.appointment.sellerLabel + ")" : lead.callbackPreference,
       addToCalendar: lead.appointment ? lead.appointment.ownerCalendarUrl : "",
-      source: "website-chat", page: lead.page, submittedAt: lead.submittedAt, market: lead.state || "Nationwide"
+      source: "website-chat", page: lead.page, submittedAt: lead.submittedAt, market: lead.state || "Nationwide",
+      transcript: lead.transcript || ""
     };
     if (!lead.delivered && pac().submitLead) {
       pac().submitLead(mapped).then(function (r) { if (!r || !r.ok) console.warn("chat lead email fallback failed"); });
@@ -564,6 +593,49 @@
     if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
     if (d.length !== 10 || /^[01]/.test(d)) return null;
     return { formatted: "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6), raw: m[0] };
+  }
+
+  function extractEmail(text) {
+    var m = String(text).match(/[^\s@<>(),;:"]+@[^\s@<>(),;:"]+\.[A-Za-z]{2,}/);
+    return m ? m[0].slice(0, 200) : "";
+  }
+
+  // A reply made only of yes-words ("yes", "sure, go ahead", "sí, claro") is a clear yes.
+  var YES_RE = /^(?:y|yes|yeah|yep|yup|sure|ok|okay|of course|go ahead|s[ií]|claro|por supuesto|est[aá] bien|adelante)(?:[\s,.!]+(?:yes|yeah|sure|ok|okay|of course|go ahead|please|that'?s fine|is fine|fine|text me|s[ií]|claro|por supuesto|est[aá] bien|adelante|por favor))*[\s.!]*$/i;
+
+  // "Stop contacting me", in the words people actually use. Narrow on purpose:
+  // "don't call me before 5" is a preference, not an opt-out.
+  var STOP_RE = /^\s*(stop|stop all|unsubscribe|alto|basta)\s*[.!]*\s*$|\bstop (calling|texting|contacting|emailing|messaging)\b|\b(do not|don'?t|never) (call|text|contact|email|message) me (again|anymore|any more|ever)\b|\b(do not|don'?t) contact me\b|\bremove (me|my (number|phone|email|info))\b|\btake me off\b|\bunsubscribe\b|\bopt(-| )?out\b|\bdejen de (llamar|escribir|enviar|contactar)|\bno me (contacten|vuelvan a)|\bb[oó]rr(en|ar) mi\b/i;
+
+  function chatTranscript() {
+    var out = state.transcript.filter(function (i) { return i && i.text; })
+      .map(function (i) { return (i.who === "me" ? "Seller: " : "Assistant: ") + i.text; }).join("\n");
+    return out.length > 6000 ? "..." + out.slice(-6000) : out;
+  }
+
+  function stopNotice(name, phone, email, words, channels, transcript, source) {
+    return {
+      _subject: "DO NOT CONTACT: " + [name, phone, email].filter(Boolean).join(" "),
+      type: "do_not_contact", action: "Stop all " + (channels && channels !== "all" ? channels : "calls, texts and email") + " to this person. Cancel any call they booked.",
+      name: name || "", phone: phone || "", email: email || "", note: String(words || "").slice(0, 300),
+      source: source, page: window.location.pathname, lang: LANG, submittedAt: new Date().toISOString(),
+      transcript: transcript || ""
+    };
+  }
+
+  function guidedStop(phone, email, words) {
+    state.g.step = "stopping";
+    save();
+    setBusy(true);
+    var notice = stopNotice(state.g.data.name, phone, email, words, "all", chatTranscript(), "website-chat-guided");
+    var submit = pac().submitLead ? pac().submitLead(notice) : Promise.resolve({ ok: false });
+    submit.then(function (r) {
+      setBusy(false);
+      bot(r && r.ok ? T.gStopDone : T.gStopFail);
+      state.optedOut = true;
+      state.g.step = "done";
+      save();
+    });
   }
 
   function wantsOffer(text) {
@@ -625,6 +697,16 @@
     var g = state.g;
     var data = g.data;
     var answer;
+    if (g.step !== "stop" && g.step !== "stopping" && STOP_RE.test(text)) {
+      var knownPhone = data.phone || "";
+      var knownEmail = data.email || "";
+      if (knownPhone || knownEmail) { guidedStop(knownPhone, knownEmail, text); return; }
+      g.step = "stop";
+      g.stopTries = 0;
+      bot(T.gStopAsk);
+      save();
+      return;
+    }
     switch (g.step) {
       case "intent":
       case "faq":
@@ -669,16 +751,44 @@
         bot(T.gPhone(data.name.split(/\s+/)[0]));
         break;
       case "phone":
+        var typedEmail = extractEmail(text);
+        if (text === T.gEmailInstead || (typedEmail && !extractPhone(text))) {
+          if (typedEmail) { data.email = typedEmail; finishEmailOnly(); return; }
+          g.step = "email";
+          bot(T.gEmail);
+          break;
+        }
         var digits = text.replace(/\D/g, "");
         if (digits.length === 11 && digits.charAt(0) === "1") digits = digits.slice(1);
-        if (digits.length !== 10 || /^[01]/.test(digits)) { bot(T.gPhoneBad); break; }
+        if (digits.length !== 10 || /^[01]/.test(digits)) {
+          bot(T.gPhoneBad);
+          setChips([T.gEmailInstead, T.chips[3]]);
+          break;
+        }
         data.phone = "(" + digits.slice(0, 3) + ") " + digits.slice(3, 6) + "-" + digits.slice(6);
         g.step = "consent";
         bot(T.gConsent);
         setChips(T.gConsentChips);
         break;
+      case "email":
+        var em = extractEmail(text);
+        if (!em) { bot(T.gEmailBad); setChips([T.chips[3]]); break; }
+        data.email = em;
+        finishEmailOnly();
+        return;
       case "consent":
-        data.smsConsent = text === T.gConsentChips[0] || /^(?:y|yes|yeah|yep|sure|ok|okay|s[ií]|claro)(?:$|[\s,.!])/i.test(text.trim());
+        // Only a clear yes counts. "OK but calls only" or anything unclear is not consent.
+        var said = text.trim();
+        var yes = said === T.gConsentChips[0] || YES_RE.test(said);
+        var no = said === T.gConsentChips[1] || /\b(no|not|nope|don'?t|do not|never|only|solo|nunca|sin)\b/i.test(said);
+        if (!yes && !no && !g.consentAsked) {
+          g.consentAsked = true;
+          bot(T.gConsentAgain);
+          setChips(T.gConsentChips);
+          break;
+        }
+        data.smsConsent = yes && !no;
+        data.consentReply = said.slice(0, 200);
         g.step = "time";
         bot(T.gTime);
         setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
@@ -704,8 +814,10 @@
         return;
       case "callback":
         var ph = extractPhone(text);
-        var nm = text.replace(ph ? ph.raw : "", "").replace(/[,;:.]+/g, " ").replace(/\b(my name is|i'?m|this is|me llamo|soy|call me|ll[aá]menme|please|por favor|at|al)\b/gi, " ").replace(/\s+/g, " ").trim();
+        var ce = ph ? "" : extractEmail(text);
+        var nm = text.replace(ph ? ph.raw : ce, "").replace(/[,;:.]+/g, " ").replace(/\b(my name is|i'?m|this is|me llamo|soy|call me|ll[aá]menme|please|por favor|at|al)\b/gi, " ").replace(/\s+/g, " ").trim();
         if (nm) data.name = nm.slice(0, 120);
+        if (!ph && ce) { data.email = ce; data.address = data.address || T.notGiven; finishEmailOnly(); return; }
         if (!ph) { bot(T.gCallbackName); break; }
         data.phone = ph.formatted;
         data.address = data.address || T.notGiven;
@@ -713,10 +825,19 @@
         bot(T.gConsent);
         setChips(T.gConsentChips);
         break;
+      case "stop":
+        var sp = extractPhone(text);
+        var se = extractEmail(text);
+        if (sp || se) { guidedStop(sp ? sp.formatted : "", se, text); return; }
+        g.stopTries = (g.stopTries || 0) + 1;
+        if (g.stopTries >= 2) { bot(T.gStopFail); g.step = "done"; break; }
+        bot(T.gStopAsk);
+        break;
       case "sending":
+      case "stopping":
         return;
       default:
-        bot(faqAnswer(text) || T.gAfter);
+        bot(faqAnswer(text) || (state.optedOut ? T.gStopDone : T.gAfter));
     }
     save();
   }
@@ -724,7 +845,7 @@
   function guidedSummary(d) {
     return [
       (LANG === "es" ? "Nombre: " : "Name: ") + (d.name || ""),
-      (LANG === "es" ? "Teléfono: " : "Phone: ") + (d.phone || ""),
+      d.email && !d.phone ? (LANG === "es" ? "Correo: " : "Email: ") + d.email : (LANG === "es" ? "Teléfono: " : "Phone: ") + (d.phone || ""),
       (LANG === "es" ? "Propiedad: " : "Property: ") + (d.address || ""),
       (LANG === "es" ? "Condición: " : "Condition: ") + (d.condition || ""),
       (LANG === "es" ? "Plazo: " : "Timeline: ") + (d.timeline || ""),
@@ -732,17 +853,30 @@
     ].join("\n");
   }
 
+  function finishEmailOnly() {
+    var d = state.g.data;
+    d.phone = "";
+    d.smsConsent = false;
+    d.callTime = T.emailOnly;
+    state.g.step = "sending";
+    save();
+    finishGuided();
+  }
+
   function finishGuided() {
     var d = state.g.data;
     var asap = d.callTime === T.gTimeAsap;
+    var emailOnly = !d.phone && !!d.email;
     var lead = {
-      _subject: "New seller lead (chat" + (asap ? "" : ", call requested " + d.callTime) + "): " + d.address,
+      _subject: "New seller lead (chat" + (emailOnly ? ", email only" : asap ? "" : ", call requested " + d.callTime) + "): " + d.address,
       address: d.address, city: "", state: d.state || "", zip: "",
-      name: d.name, phone: d.phone, email: "", smsConsent: !!d.smsConsent,
+      name: d.name, phone: d.phone || "", email: d.email || "", smsConsent: !!d.smsConsent,
+      textingQuestion: d.phone ? T.gConsent : "", textingAnswer: d.phone ? (d.consentReply || "") : "",
       condition: d.condition, timeline: d.timeline,
-      callTime: d.callTime + (asap ? "" : " (requested, please confirm)"),
+      callTime: emailOnly ? T.emailOnly : d.callTime + (asap ? "" : " (requested, please confirm)"),
       source: "website-chat-guided", page: window.location.pathname, lang: LANG,
-      submittedAt: new Date().toISOString(), market: d.state || "Nationwide"
+      submittedAt: new Date().toISOString(), market: d.state || "Nationwide",
+      transcript: chatTranscript()
     };
     setBusy(true);
     var submit = pac().submitLead ? pac().submitLead(lead) : Promise.resolve({ ok: false });
@@ -751,8 +885,11 @@
       if (r && r.ok) {
         if (pac().trackLead) pac().trackLead({ source: "website-chat-guided", market: lead.market, state: lead.state });
         state.leadSent = true;
-        if (!asap) card({ type: "booking", when: d.callTime, requested: true });
-        bot(T.gDone(asap ? "" : d.callTime));
+        if (emailOnly) bot(T.gDoneEmail(d.email));
+        else {
+          if (!asap) card({ type: "booking", when: d.callTime, requested: true });
+          bot(T.gDone(asap ? "" : d.callTime, !!d.smsConsent));
+        }
       } else {
         bot(T.gFail);
         card({ type: "summary", text: guidedSummary(d) });
@@ -768,7 +905,8 @@
   function restore() {
     state.transcript.forEach(function (item) { log.appendChild(renderItem(item)); });
     renderChips();
-    if (state.g && state.g.step === "sending") state.g.step = "time";
+    if (state.g && state.g.step === "sending") state.g.step = state.g.data && state.g.data.phone ? "time" : "email";
+    if (state.g && state.g.step === "stopping") state.g.step = "stop";
     if (state.open && !smallScreen()) openPanel(false);
     else if (state.open) { state.open = false; save(); }
   }

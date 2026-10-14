@@ -16,30 +16,51 @@ export function normalizePhone(raw) {
   return `(${ten.slice(0, 3)}) ${ten.slice(3, 6)}-${ten.slice(6)}`;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function cleanEmail(raw) {
+  const email = clip(raw, 200);
+  return EMAIL_RE.test(email) ? email : "";
+}
+
 /**
  * Validate and normalize a lead collected by the assistant.
+ * kind "book" (a booked call) needs a phone number; kind "save" (a callback or
+ * follow-up request) needs a phone number or an email address.
  * Returns { lead } or { error } where error is a short reason the model can act on.
  */
-export function normalizeLead(input) {
+export function normalizeLead(input, { kind = "book" } = {}) {
   const name = clip(input.name, 120);
-  const phone = normalizePhone(input.phone);
+  const rawPhone = clip(input.phone, 40);
+  const phone = normalizePhone(rawPhone);
+  const email = cleanEmail(input.email);
   const address = clip(input.property_address, 200);
+  const city = clip(input.city, 100);
+  const zip = (clip(input.zip, 10).match(/\d{5}/) || [""])[0];
   if (!name) return { error: "Missing the seller's name. Ask for it, then try again." };
-  if (!phone) return { error: "The phone number is not a valid 10-digit US number. Ask the seller to confirm it, then try again." };
-  if (!address) return { error: "Missing the property address. Ask for it, then try again." };
-  let email = clip(input.email, 200);
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) email = "";
+  if (!phone) {
+    if (kind === "book") {
+      return { error: "A booked call needs a valid 10-digit US phone number. Ask the seller to confirm it once; if they'd rather not share one, offer email follow-up with save_lead instead." };
+    }
+    if (/\d/.test(rawPhone)) {
+      return { error: "The phone number is not a valid 10-digit US number. Ask the seller to confirm it once; if they'd rather not share one, send an empty phone with their email." };
+    }
+    if (!email) {
+      return { error: "Needs a phone number or an email address. Ask once; if the seller won't share either, give them our phone number instead and don't ask again." };
+    }
+  }
+  if (!address && !city && !zip) return { error: "Missing where the property is. Ask for the address, or at least the city or ZIP." };
   const state = clip(input.state, 2).toUpperCase();
   return {
     lead: {
       name,
-      phone,
+      phone: phone || "",
       email,
       address,
-      city: clip(input.city, 100),
+      city,
       state: /^[A-Z]{2}$/.test(state) ? state : "",
-      zip: (clip(input.zip, 10).match(/\d{5}/) || [""])[0],
-      smsConsent: input.sms_consent === true,
+      zip,
+      smsConsent: Boolean(phone) && input.sms_consent === true,
       propertyType: clip(input.property_type, 100),
       condition: clip(input.condition),
       occupancy: clip(input.occupancy, 100),
@@ -52,10 +73,35 @@ export function normalizeLead(input) {
   };
 }
 
+/** Validate a "stop contacting me" request. Returns { notice } or { error }. */
+export function normalizeStop(input) {
+  const rawPhone = clip(input.phone, 40);
+  const phone = normalizePhone(rawPhone);
+  const email = cleanEmail(input.email);
+  if (!phone && !email) {
+    return {
+      error: /\d/.test(rawPhone)
+        ? "That phone number is not a valid 10-digit US number. Ask the seller to confirm it once."
+        : "Needs the phone number or email address to stop contacting. Ask the seller once which one.",
+    };
+  }
+  const channels = ["all", "calls", "texts", "email"].includes(input.channels) ? input.channels : "all";
+  return { notice: { name: clip(input.name, 120), phone: phone || "", email, channels, note: clip(input.note, 500) } };
+}
+
 function randomId() {
   const a = new Uint8Array(6);
   crypto.getRandomValues(a);
   return [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Record a do-not-contact request in KV (when bound), keyed by phone and by email. */
+export async function storeStop(env, notice) {
+  if (!env.LEADS) return false;
+  const value = JSON.stringify(notice);
+  if (notice.phone) await env.LEADS.put(`dnc:phone:${digitsOf(notice.phone)}`, value);
+  if (notice.email) await env.LEADS.put(`dnc:email:${notice.email.toLowerCase()}`, value);
+  return true;
 }
 
 /** Store the lead in KV (when bound). Keys sort by time: lead:<iso>:<rand>. */
@@ -108,18 +154,21 @@ export async function phoneBooking(env, phone, nowMs) {
   }
 }
 
-/** Bookings and callback requests made today from one visitor network. */
-export async function bookingsToday(env, clientKey, nowMs) {
+/**
+ * Requests made today from one visitor network. kind "bk" counts bookings and
+ * callback requests; "dn" counts do-not-contact requests.
+ */
+export async function bookingsToday(env, clientKey, nowMs, kind = "bk") {
   if (!env.LEADS || !clientKey) return 0;
   const day = new Date(nowMs).toISOString().slice(0, 10);
-  return parseInt((await env.LEADS.get(`bk:${clientKey}:${day}`)) || "0", 10) || 0;
+  return parseInt((await env.LEADS.get(`${kind}:${clientKey}:${day}`)) || "0", 10) || 0;
 }
 
-export async function countBooking(env, clientKey, nowMs) {
+export async function countBooking(env, clientKey, nowMs, kind = "bk") {
   if (!env.LEADS || !clientKey) return;
   const day = new Date(nowMs).toISOString().slice(0, 10);
-  const n = (await bookingsToday(env, clientKey, nowMs)) + 1;
-  await env.LEADS.put(`bk:${clientKey}:${day}`, String(n), { expirationTtl: 60 * 60 * 26 });
+  const n = (await bookingsToday(env, clientKey, nowMs, kind)) + 1;
+  await env.LEADS.put(`${kind}:${clientKey}:${day}`, String(n), { expirationTtl: 60 * 60 * 26 });
 }
 
 export async function isSlotTaken(env, iso) {
@@ -187,7 +236,7 @@ export function leadEmailText(lead) {
     row("Name", lead.name),
     row("Phone", lead.phone),
     row("Email", lead.email),
-    row("Texts OK", lead.smsConsent ? "yes" : "no - call or email only"),
+    lead.phone ? row("Texts OK", lead.smsConsent ? "yes" : "no - call or email only") : row("Contact", "email only (no phone given)"),
     "",
     row("Property", [lead.address, lead.city, [lead.state, lead.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")),
     row("Type", lead.propertyType),
@@ -202,30 +251,52 @@ export function leadEmailText(lead) {
     row("Submitted", lead.submittedAt),
     lead.appointment ? row("Add to your calendar", lead.appointment.ownerCalendarUrl) : null,
   ];
-  return lines.filter((l) => l !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+  const body = lines.filter((l) => l !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+  return lead.transcript ? `${body}\n\nCONVERSATION (keep for your records; it includes the texting answer)\n${lead.transcript}` : body;
 }
 
-/** Email the lead to the owner through the SEND_EMAIL binding, when configured. */
-export async function emailLead(env, lead) {
+export function stopEmailText(notice) {
+  const row = (label, value) => (value ? `${label}: ${value}` : null);
+  const what = { all: "calls, texts and email", calls: "calls", texts: "texts", email: "email" }[notice.channels] || "calls, texts and email";
+  const lines = [
+    `DO NOT CONTACT: stop all ${what} to this person.`,
+    "Remove them from your call and text lists and cancel any call they booked.",
+    "",
+    row("Name", notice.name),
+    row("Phone", notice.phone),
+    row("Email", notice.email),
+    row("Their words", notice.note),
+    "",
+    row("Came from", `${notice.page || "/"} (website chat${notice.lang === "es" ? ", Spanish" : ""})`),
+    row("Submitted", notice.submittedAt),
+  ];
+  const body = lines.filter((l) => l !== null).join("\n").replace(/\n{3,}/g, "\n\n");
+  return notice.transcript ? `${body}\n\nCONVERSATION\n${notice.transcript}` : body;
+}
+
+async function emailOwner(env, { subject, text, replyTo }) {
   if (!env.SEND_EMAIL) return false;
   const to = env.LEAD_TO || "brsmith6758@gmail.com";
   const from = env.LEAD_FROM || "assistant@primeacrehomebuyers.com";
-  const where = [lead.address, lead.city, lead.state].filter(Boolean).join(", ");
-  const subject = lead.appointment
-    ? `New booked call ${lead.appointment.ownerLabel}: ${where}`
-    : `New seller lead (callback): ${where}`;
   const domain = from.split("@")[1] || "localhost";
-  const raw = buildMime({
-    from,
-    fromName: "Prime Acre website",
-    to,
-    replyTo: lead.email || undefined,
-    subject: subject.slice(0, 180),
-    text: leadEmailText(lead),
-    domain,
-  });
+  const raw = buildMime({ from, fromName: "Prime Acre website", to, replyTo: replyTo || undefined, subject: subject.slice(0, 180), text, domain });
   // Loaded only when email is configured, so the Worker never depends on it otherwise.
   const { EmailMessage } = await import("cloudflare:email");
   await env.SEND_EMAIL.send(new EmailMessage(from, to, raw));
   return true;
+}
+
+/** Email the lead to the owner through the SEND_EMAIL binding, when configured. */
+export async function emailLead(env, lead) {
+  const where = [lead.address, lead.city, lead.state].filter(Boolean).join(", ");
+  const subject = lead.appointment
+    ? `New booked call ${lead.appointment.ownerLabel}: ${where}`
+    : `New seller lead (${lead.phone ? "callback" : "email follow-up"}): ${where}`;
+  return emailOwner(env, { subject, text: leadEmailText(lead), replyTo: lead.email });
+}
+
+/** Email the owner a do-not-contact notice, when email is configured. */
+export async function emailStop(env, notice) {
+  const who = [notice.name, notice.phone, notice.email].filter(Boolean).join(" ");
+  return emailOwner(env, { subject: `DO NOT CONTACT: ${who}`, text: stopEmailText(notice) });
 }

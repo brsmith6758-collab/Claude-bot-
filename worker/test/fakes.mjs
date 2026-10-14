@@ -20,13 +20,16 @@ export function fakeMailer() {
 /** A fake Anthropic client whose beta.messages.create replays scripted responses. */
 export function fakeClient(script) {
   const calls = [];
+  const options = [];
   let i = 0;
   return {
     calls,
+    options,
     beta: {
       messages: {
-        async create(params) {
+        async create(params, opts = {}) {
           calls.push(JSON.parse(JSON.stringify(params)));
+          options.push(opts);
           const step = script[i++];
           if (!step) throw new Error("script exhausted");
           return typeof step === "function" ? step(params) : step;
