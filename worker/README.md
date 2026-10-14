@@ -60,9 +60,12 @@ To update the assistant later on this path, paste the new `cloudflare-paste/work
    `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `ANTHROPIC_API_KEY`.
 4. **Actions → Deploy chat assistant (Cloudflare Worker) → Run workflow.**
 
-The workflow runs the tests, creates the `prime-acre-chat-leads` storage, deploys to
-`chat.primeacrehomebuyers.com` with a per-visitor rate limit, and stores the API key as a secret.
-After that, every change to `worker/` deploys itself.
+The workflow first checks that the Anthropic key works (it stops with a clear error if the key is
+mistyped, revoked, or the account has no credit), then runs the tests, creates the
+`prime-acre-chat-leads` storage, deploys to `chat.primeacrehomebuyers.com` with a per-visitor rate
+limit, and stores the API key as a secret. After that, every change to `worker/` deploys itself.
+Deploy only through this workflow or Path A: a plain `npx wrangler deploy` from a laptop uploads
+no lead storage binding and silently turns off lead storage and the double-booking guard.
 
 If you used Path A first and switch to Path B, the GitHub deploy takes over the Worker's settings.
 Keep the KV namespace named `prime-acre-chat-leads` and nothing is lost.
@@ -138,6 +141,7 @@ cd worker
 npm install
 npm test                       # unit + SDK-level tests (no network, no API cost)
 npm run bundle:paste           # rebuild cloudflare-paste/worker.js after changing src/
+node --import ./test/register-stubs.mjs test/deadline.slow.mjs   # 45 s: turn deadline holds under a slow API
 ```
 
 End-to-end, with no API cost: run `node test/mock-anthropic.mjs` (a scripted fake of the

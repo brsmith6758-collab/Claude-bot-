@@ -1,6 +1,8 @@
 # Prime Acre Capital website assistant.
-# Deploy: `npx wrangler deploy` (or the GitHub Action in .github/workflows/chat-worker.yml).
-# The only required setting is the secret:  npx wrangler secret put ANTHROPIC_API_KEY
+# Deploy through the GitHub Action (.github/workflows/chat-worker.yml) or the dashboard paste
+# (README, Path A). Don't run a plain `npx wrangler deploy` with this file: it uploads no lead
+# storage or email binding and removes the ones the Action or the dashboard added.
+# The only required setting is the secret ANTHROPIC_API_KEY.
 name = "prime-acre-chat"
 main = "src/index.js"
 compatibility_date = "2026-09-30"
@@ -23,11 +25,12 @@ DAYS_AHEAD = "7"
 LEAD_TO = "brsmith6758@gmail.com"
 LEAD_FROM = "assistant@primeacrehomebuyers.com"
 
-# Optional but recommended: stores every lead and prevents double-booking.
-# Create it with `npx wrangler kv namespace create LEADS`, paste the id here, uncomment.
+# Lead storage (stores every lead, prevents double-booking): the GitHub Action finds or creates
+# the KV namespace titled "prime-acre-chat-leads" and adds the LEADS binding at deploy time.
+# Leave this commented out; the Action skips its own step if you add one here.
 # [[kv_namespaces]]
 # binding = "LEADS"
-# id = "PASTE_KV_NAMESPACE_ID"
+# id = "ID_OF_prime-acre-chat-leads"
 
 # Optional: emails each lead to LEAD_TO through Cloudflare Email Routing.
 # Requires Email Routing enabled on the zone with LEAD_TO verified as a destination.
@@ -45,3 +48,7 @@ simple = { limit = 20, period = 60 }
 name = "GLOBAL_LIMITER"
 namespace_id = "1002"
 simple = { limit = 300, period = 60 }
+
+# Keep the Worker's logs (API key problems, failed emails) viewable in the dashboard.
+[observability]
+enabled = true
