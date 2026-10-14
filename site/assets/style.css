@@ -191,7 +191,7 @@ p { margin: 0; }
 .street { position: absolute; left: 0; right: 0; bottom: -2px; z-index: 0; line-height: 0; pointer-events: none; }
 .street svg { width: 100%; height: clamp(190px, 21vw, 290px); display: block; }
 @media (max-width: 900px) {
-  .hero .wrap { grid-template-columns: 1fr; padding-bottom: clamp(170px, 42vw, 240px); }
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); padding-bottom: clamp(170px, 42vw, 240px); }
   .street svg { height: clamp(150px, 40vw, 230px); }
 }
 
@@ -203,7 +203,7 @@ p { margin: 0; }
 .trust b { display: block; font-family: var(--font-display); font-weight: 800; font-size: 1rem; line-height: 1.2; }
 .trust span { color: var(--ink-2); font-size: 0.86rem; }
 @media (max-width: 900px) { .trust-strip .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 480px) { .trust-strip .wrap { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .trust-strip .wrap { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- sections ---------- */
 .section { padding-block: clamp(3rem, 7vw, 5.5rem); }
@@ -217,7 +217,7 @@ p { margin: 0; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; }
 @media (max-width: 900px) { .grid-3, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); } }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); transition: transform 0.2s ease, box-shadow 0.2s ease; min-width: 0; }
 .card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 
@@ -253,7 +253,7 @@ p { margin: 0; }
 .contact-card a:hover { color: var(--brand); }
 .contact-card svg { flex: 0 0 36px; width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); }
 .contact-card small { color: var(--ink-2); font-weight: 500; display: block; font-size: 0.82rem; }
-@media (max-width: 860px) { .about .wrap { grid-template-columns: 1fr; } .about-art { min-height: 220px; } }
+@media (max-width: 860px) { .about .wrap { grid-template-columns: minmax(0, 1fr); } .about-art { min-height: 220px; } }
 
 /* comparison */
 .compare { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
@@ -293,8 +293,8 @@ p { margin: 0; }
 .calc-vs .us strong { color: var(--cta); }
 .calc-note { font-size: 0.8rem; color: var(--on-dark-2); }
 .calc-out .btn { justify-self: start; }
-@media (max-width: 860px) { .calc { grid-template-columns: 1fr; } }
-@media (max-width: 420px) { .calc-vs { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .calc { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .calc-vs { grid-template-columns: minmax(0, 1fr); } }
 
 /* promise checklist */
 .promise-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2rem; }
@@ -302,7 +302,7 @@ p { margin: 0; }
 .promise-list svg { flex: 0 0 28px; width: 28px; height: 28px; padding: 5px; border-radius: 50%; background: var(--ok); color: #fff; margin-top: 0.1rem; }
 .promise-list b { display: block; font-family: var(--font-display); font-size: 1.02rem; }
 .promise-list span { color: var(--ink-2); font-size: 0.92rem; }
-@media (max-width: 760px) { .promise-list { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .promise-list { grid-template-columns: minmax(0, 1fr); } }
 
 /* markets */
 .market { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem; }
@@ -346,7 +346,7 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
 .offer .talk { color: var(--on-dark-2); margin-top: 1.75rem; }
 .offer .talk a { color: var(--on-dark); }
 .offer .talk span { display: block; }
-@media (max-width: 900px) { .offer .wrap { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .offer .wrap { grid-template-columns: minmax(0, 1fr); } }
 
 .form { background: var(--surface); color: var(--ink); border-radius: 18px; padding: 1.6rem; box-shadow: var(--shadow-lg); min-width: 0; }
 .progress { display: flex; gap: 0.4rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
@@ -373,7 +373,7 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
 .row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .row-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .row-addr { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
-@media (max-width: 560px) { .row-2, .row-addr { grid-template-columns: 1fr; } .row-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .row-2, .row-addr { grid-template-columns: minmax(0, 1fr); } .row-3 { grid-template-columns: 1fr 1fr; } }
 .form-actions { display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; margin-top: 0.4rem; flex-wrap: wrap; }
 .form-note { font-size: 0.8rem; color: var(--ink-2); }
 .check { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.84rem; color: var(--ink-2); }
@@ -416,10 +416,19 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
 .site-footer .foot-contact svg { width: 18px; height: 18px; color: var(--cta); flex: 0 0 18px; }
 .legal { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--dark-line); font-size: 0.8rem; display: grid; gap: 0.5rem; max-width: 64rem; }
 @media (max-width: 900px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .foot-grid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- header fit ---------- */
-.brand, .nav a, .btn, .topbar .contact span, .talk a { white-space: nowrap; }
+.brand, .nav a, .topbar .contact span, .talk a, .sticky-cta .btn { white-space: nowrap; }
+.btn { text-align: center; }
+/* Grid tracks may shrink below their content's min-content width on narrow screens. */
+.brand { min-width: 0; }
+.brand > span { min-width: 0; }
+.nav-toggle { flex: 0 0 auto; }
+@media (max-width: 420px) {
+  .brand { font-size: 1.05rem; }
+  .brand small { white-space: normal; letter-spacing: 0.02em; }
+}
 .nav { gap: 1.1rem; }
 @media (max-width: 1120px) { .nav a:not(.btn):nth-child(4) { display: none; } }
 @media (max-width: 860px) { .nav a:not(.btn):nth-child(4) { display: block; } }

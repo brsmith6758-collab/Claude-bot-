@@ -1,0 +1,42 @@
+# Prime Acre Capital website assistant.
+# Deploy: `npx wrangler deploy` (or the GitHub Action in .github/workflows/chat-worker.yml).
+# The only required setting is the secret:  npx wrangler secret put ANTHROPIC_API_KEY
+name = "prime-acre-chat"
+main = "src/index.js"
+compatibility_date = "2026-09-30"
+
+# Serve at chat.primeacrehomebuyers.com (Cloudflare creates the DNS record and certificate).
+routes = [
+  { pattern = "chat.primeacrehomebuyers.com", custom_domain = true }
+]
+
+[vars]
+MODEL = "claude-opus-5-5"
+EFFORT = "low"
+BUSINESS_TZ = "America/Chicago"
+BUSINESS_DAYS = "1,2,3,4,5,6"      # 1 = Monday ... 7 = Sunday
+BUSINESS_START = "09:00"
+BUSINESS_END = "19:00"
+SLOT_MINUTES = "30"
+MIN_NOTICE_MINUTES = "60"
+DAYS_AHEAD = "7"
+LEAD_TO = "brsmith6758@gmail.com"
+LEAD_FROM = "assistant@primeacrehomebuyers.com"
+
+# Optional but recommended: stores every lead and prevents double-booking.
+# Create it with `npx wrangler kv namespace create LEADS`, paste the id here, uncomment.
+# [[kv_namespaces]]
+# binding = "LEADS"
+# id = "PASTE_KV_NAMESPACE_ID"
+
+# Optional: emails each lead to LEAD_TO through Cloudflare Email Routing.
+# Requires Email Routing enabled on the zone with LEAD_TO verified as a destination.
+# [[send_email]]
+# name = "SEND_EMAIL"
+# destination_address = "brsmith6758@gmail.com"
+
+# Optional: per-visitor rate limit (20 messages a minute).
+# [[ratelimits]]
+# name = "CHAT_LIMITER"
+# namespace_id = "1001"
+# simple = { limit = 20, period = 60 }

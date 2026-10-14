@@ -19,6 +19,13 @@ window.PAC_CONFIG = {
   // Change this to your custom domain (e.g. "https://primeacrecapital.com/") when you connect one.
   siteUrl: "https://primeacrehomebuyers.com/",
 
+  // Website chat assistant (the Cloudflare Worker in /worker). When this address is not
+  // reachable, the chat still works in a guided mode that collects the lead and a call time.
+  chatEndpoint: "https://chat.primeacrehomebuyers.com",
+
+  // Call hours the guided chat suggests (the AI assistant uses the Worker's own settings).
+  chatHours: { tz: "America/Chicago", days: [1, 2, 3, 4, 5, 6], start: 9, end: 19, noticeMinutes: 60 },
+
   // Pre-filled message when a visitor taps "Text us".
   smsText: "Hi, I'd like a cash offer on my house.",
 

@@ -85,6 +85,13 @@ Spanish: `es.html` is a full Spanish landing page, linked from the top bar.
    own once the DNS records resolve; then tick **Enforce HTTPS** under
    Settings → Pages. `www.yourdomain.com` redirects to the bare domain automatically.
 
+## Chat assistant (on every page)
+
+A chat bubble in the corner of every page answers seller questions, collects the property
+details and books a call into an open time slot, in English or Spanish. It works right away in a
+guided mode; deploy the small Cloudflare Worker in `worker/` and it becomes a full AI assistant
+(Claude). Setup, costs and settings: **[worker/README.md](worker/README.md)**.
+
 ## Getting found on Google (what actually moves the needle)
 
 A brand-new site does not rank #1 for "sell my house fast Phoenix" overnight. Those

@@ -409,6 +409,7 @@ def head(title, desc, path, jsonld, lang="en"):
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="%(fonts)s">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/chat.css">
 <script type="application/ld+json">%(jsonld)s</script>
 </head>
 <body>
@@ -1106,6 +1107,7 @@ def footer(lang="en"):
 def scripts():
     return """<script src="config.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/chat.js"></script>
 </body>
 </html>
 """
@@ -1420,6 +1422,7 @@ def page_privacy():
       <details open><summary>Information we collect</summary><p>When you request a cash offer we collect the property address and details you provide, your name, phone number and email address, and anything you add in the notes. We also collect standard web analytics such as pages visited and the device used.</p></details>
       <details open><summary>How we use it</summary><p>We use your information to evaluate the property, prepare and deliver a cash offer, and communicate with you about the sale by phone, text message or email. If you have agreed to text messages, you can opt out at any time by replying STOP.</p></details>
       <details open><summary>Sharing</summary><p>We do not sell your personal information. We may share it with the title company, closing attorney or local buying partner involved in purchasing your property, and with service providers who help us run this website and deliver messages. These parties may use it only to provide those services.</p></details>
+      <details open><summary>Website chat</summary><p>Our website chat is an AI assistant. What you type in the chat is processed by our AI provider (Anthropic) and our hosting provider (Cloudflare) so the assistant can reply, check open call times, and send the details you share to our team. Please don't share sensitive information such as Social Security, bank, or loan account numbers in the chat. Chat messages are not used to make decisions about you; a person from our team reviews every request.</p></details>
       <details open><summary>Your choices</summary><p>You can ask us to correct or delete your information, or to stop contacting you, at any time. We keep lead information only as long as needed to evaluate and complete a potential purchase and to meet legal requirements.</p></details>
       <details open><summary>Contact</summary><p>Questions about this policy can be sent to %s%s.</p></details>
     </div>
@@ -1446,6 +1449,10 @@ def artifact_build(out_path):
         config = f.read()
     with open(os.path.join(SITE, "assets", "app.js"), encoding="utf-8") as f:
         app = f.read()
+    with open(os.path.join(SITE, "assets", "chat.css"), encoding="utf-8") as f:
+        css += "\n" + f.read()
+    with open(os.path.join(SITE, "assets", "chat.js"), encoding="utf-8") as f:
+        app += "\n" + f.read()
 
     body = doc.split("<body>\n", 1)[1].rsplit('<script src="config.js"></script>', 1)[0]
     title = re.search(r"<title>(.*?)</title>", doc).group(1)

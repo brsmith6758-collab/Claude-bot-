@@ -506,6 +506,9 @@
     $$("[data-year]").forEach(function (el) { el.textContent = String(new Date().getFullYear()); });
   }
 
+  // Shared with the chat assistant (assets/chat.js).
+  window.PAC = { submitLead: submitLead, trackLead: trackLead, track: track };
+
   function init() {
     applyContact();
     initAnalytics();

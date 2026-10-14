@@ -1,0 +1,20 @@
+{
+  "name": "prime-acre-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Website chat assistant for Prime Acre Capital LLC (Cloudflare Worker + Claude)",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "bundle": "wrangler deploy --dry-run --outdir dist",
+    "test": "node --test --import ./test/register-stubs.mjs test/*.test.mjs",
+    "bundle:paste": "node scripts/bundle-paste.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.134.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.0"
+  }
+}
