@@ -626,3 +626,51 @@ test("several taken slots stacked at the start of a day are never offered", asyn
   assert.ok(offered.length > 0);
   for (const id of offered) assert.equal(env.LEADS.store.has(`slot:${id}`), false, `${id} is booked but was offered`);
 });
+
+test("resending a stop never uses up the cap, and calls+texts is confirmed exactly", async () => {
+  const env = envWith({ SEND_EMAIL: undefined });
+  const stop = (phone, channels) => ({ name: "Dana", phone, email: "", channels, note: "" });
+  let history = [];
+  let sig;
+  for (let i = 0; i < 6; i++) {
+    const out = await runTurn({ env, history, sig, message: "stop", context, nowMs: NOW,
+      client: fakeClient([msg([toolUse("do_not_contact", stop("602-555-0143", "all"))], "tool_use"), msg([text("Done.")])]) });
+    assert.equal(out.leads.length, 1, `resend ${i} goes back to the browser`);
+    ({ history, sig } = out);
+  }
+  const client = fakeClient([
+    msg([toolUse("do_not_contact", stop("480-555-0199", "calls")), toolUse("do_not_contact", stop("480-555-0199", "texts"))], "tool_use"),
+    msg([]),
+  ]);
+  const out = await runTurn({ env, history, sig, message: "and my other number: no calls or texts", context, nowMs: NOW, client });
+  assert.equal(out.leads.length, 2, "a new contact is still recorded after many resends");
+  assert.equal(out.ui.stopped, "calls+texts");
+  assert.equal(out.reply, "Done. We won't call or text you again.");
+});
+
+test("an odd number is recorded as given and the seller is asked to double-check it", async () => {
+  const env = envWith();
+  const client = fakeClient([
+    msg([toolUse("do_not_contact", { name: "Dana", phone: "602-555-014", email: "", channels: "all", note: "" })], "tool_use"),
+    (params) => {
+      const r = lastToolResult(params);
+      assert.equal(r.recorded, true);
+      assert.match(r.what_next, /double-check the number "602-555-014"/);
+      return msg([text("Done.")]);
+    },
+  ]);
+  const out = await runTurn({ env, history: [], message: "stop, 602-555-014", context, nowMs: NOW, client });
+  assert.equal(out.leads[0].phoneAsGiven, "602-555-014");
+  assert.ok(env.LEADS.store.has("dnc:phone:602555014"));
+});
+
+test("a later question that only mentions texting doesn't replace the consent record", async () => {
+  const env = envWith();
+  const ask = "Can Prime Acre Capital text you at this number about your offer? Msg & data rates may apply; reply STOP to opt out. Agreeing isn't required.";
+  const t1 = await runTurn({ env, history: [], message: "I'm Dana, 602-555-0143, 123 Main St Mesa", context, nowMs: NOW, client: fakeClient([msg([text(ask)])]) });
+  const t2 = await runTurn({ env, history: t1.history, sig: t1.sig, message: "yes", context, nowMs: NOW,
+    client: fakeClient([msg([text("Great. Should we text you the offer or email it?")])]) });
+  const out = await runTurn({ env, history: t2.history, sig: t2.sig, message: "email is fine", context, nowMs: NOW,
+    client: fakeClient([msg([toolUse("save_lead", { callback_preference: "email", ...lead })], "tool_use"), msg([text("Done.")])]) });
+  assert.deepEqual(out.leads[0].textingConsent, { agreed: true, question: ask, answer: "yes" });
+});

@@ -17,7 +17,7 @@ const MAX_HISTORY_MESSAGES = 100;
 const MAX_HISTORY_CHARS = 150000;
 const MAX_BOOKINGS_PER_CONVERSATION = 2;
 const MAX_BOOKINGS_PER_DAY = 3;    // per visitor network, when KV is bound
-const MAX_STOPS_PER_CONVERSATION = 4; // distinct contacts; more than that is abuse, not a seller
+const MAX_STOPS_PER_CONVERSATION = 8; // distinct contact+channel pairs; more than that is abuse, not a seller
 const MAX_STOPS_PER_DAY = 5;       // do-not-contact requests, per visitor network
 const MAX_TRANSCRIPT_CHARS = 6000;
 
@@ -147,6 +147,13 @@ export function cleanAssistantContent(content) {
   return content.filter((b, i) => i > last || b.type === "text");
 }
 
+function mergeStopped(a, b) {
+  if (!a || !b) return a || b;
+  const set = new Set([...a.split("+"), ...b.split("+")]);
+  if (set.has("all") || ["calls", "texts", "email"].every((c) => set.has(c))) return "all";
+  return ["calls", "texts", "email"].filter((c) => set.has(c)).join("+");
+}
+
 /** Keys for the contacts and channel a stop request covers: "p:<digits>:texts", "e:<email>:all". */
 function stopKeys(notice) {
   const keys = [];
@@ -161,7 +168,7 @@ function stopKeys(notice) {
  * and the contacts already stopped (so a repeat is recognised, and a new one is not).
  */
 function priorActions(history) {
-  const n = { bookings: 0, stops: 0, stopped: new Set() };
+  const n = { bookings: 0, stops: 0, stopped: new Set(), attempted: new Set() };
   const stopInputs = new Map();
   for (const m of history) {
     if (m.role === "assistant") {
@@ -178,6 +185,7 @@ function priorActions(history) {
           // Only a stop the Worker emailed itself is known to have reached the team. Otherwise
           // a repeat is sent again, so the browser gets another chance to deliver it.
           const { notice } = normalizeStop(stopInputs.get(b.tool_use_id) || {});
+          if (notice) for (const k of stopKeys(notice)) n.attempted.add(k);
           if (notice && r.team_notified === true) for (const k of stopKeys(notice)) n.stopped.add(k);
         }
       } catch { /* not ours */ }
@@ -206,7 +214,7 @@ export function transcriptText(messages, max = MAX_TRANSCRIPT_CHARS) {
 }
 
 // The disclosure the prompt requires in the texting question, in either language.
-const CONSENT_QUESTION = /(msg|messag\w*)\s*(&|and|\/)\s*data|mensajes y (de )?datos|reply stop|responda stop|text you|enviarle (mensajes de )?texto|mensajes de texto/i;
+const CONSENT_QUESTION = /(msg|messag\w*)\s*(&|and|\/)\s*data|mensajes y (de )?datos|reply stop|responda stop/i;
 
 /**
  * The texting question and the seller's reply, kept apart from the transcript so
@@ -267,7 +275,7 @@ async function runTool(name, input, ctx) {
     // about to be offered (a handful of KV reads), and pick again if any are taken.
     const stale = [];
     const free = new Set(); // times already checked and open
-    for (let round = 0; round < 5; round++) {
+    for (let round = 0; round < 8; round++) {
       const all = openSlots(nowMs, cfg, booked);
       last = all.length ? ymd(zonedParts(all[all.length - 1], sellerTz)) : sellerToday;
       picked = pickSlots(all, { sellerTz, day, partOfDay: part });
@@ -295,7 +303,11 @@ async function runTool(name, input, ctx) {
     picked = picked.filter((ms) => free.has(new Date(ms).toISOString()));
     if (stale.length) await soft(markBooked(env, stale, nowMs), undefined, "markBooked"); // heal the index, one write
     const available = picked.map((ms) => ({ slot_id: new Date(ms).toISOString(), label: slotLabel(ms, sellerTz, lang) }));
-    if (!available.length) note = "No open times in the next week. Offer to save a callback request instead.";
+    if (!available.length) {
+      note = stale.length
+        ? "Couldn't confirm open times right now. Offer to save a callback request instead."
+        : "No open times in the next week. Offer to save a callback request instead.";
+    }
     const weekday = new Intl.DateTimeFormat("en-US", { timeZone: sellerTz, weekday: "long" }).format(new Date(nowMs));
     return {
       content: {
@@ -433,11 +445,14 @@ async function runTool(name, input, ctx) {
     if (keys.every(covered)) {
       return { content: { recorded: true, duplicate: true, note: "Already recorded in this conversation. Just confirm it to the seller." } };
     }
-    if (ctx.prior.stops + ctx.stopsThisTurn >= MAX_STOPS_PER_CONVERSATION
+    // The cap counts distinct contacts and channels, so resending one that didn't get through never uses it up.
+    const fresh = keys.filter((k) => !ctx.attempted.has(k));
+    if ((fresh.length && ctx.attempted.size + fresh.length > MAX_STOPS_PER_CONVERSATION)
       || (await soft(bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY) {
       return { content: { error: `Too many requests from this chat. Ask the seller to email ${biz.email} with the number or email to remove, and say the team will take care of it.` }, isError: true };
     }
     ctx.stopsThisTurn++;
+    for (const k of keys) ctx.attempted.add(k);
     const full = {
       ...notice,
       type: "do_not_contact",
@@ -460,7 +475,14 @@ async function runTool(name, input, ctx) {
       email: "we won't email them again",
     }[notice.channels];
     return {
-      content: { recorded: true, team_notified: emailed, stopped: notice.channels, what_next: `Confirm in one sentence that ${promise}. Don't add anything else.` },
+      content: {
+        recorded: true,
+        team_notified: emailed,
+        stopped: notice.channels,
+        what_next: notice.phoneAsGiven
+          ? `Confirm in one sentence that ${promise}, and ask them to double-check the number "${notice.phoneAsGiven}"; if it was mistyped, record the right one too.`
+          : `Confirm in one sentence that ${promise}. Don't add anything else.`,
+      },
       lead: { ...full, delivered: emailed, stored },
       ui: { stopped: notice.channels },
     };
@@ -525,6 +547,7 @@ export async function runTurn({
     prior: priorActions(base), bookingsThisTurn: 0, bookingsThisResponse: 0, stopsThisTurn: 0,
   };
   ctx.stopped = new Set(ctx.prior.stopped);
+  ctx.attempted = new Set(ctx.prior.attempted);
   const firstNew = base.length;
 
   const api = client || new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
@@ -579,8 +602,8 @@ export async function runTurn({
         out = { content: { error: "Something went wrong on our side. Offer to save a callback request, or share our phone number." }, isError: true };
       }
       if (out.ui) {
-        // Two different stops in one reply: confirm the wider one.
-        const stopped = out.ui.stopped && ui.stopped && ui.stopped !== out.ui.stopped ? "all" : out.ui.stopped || ui.stopped;
+        // Several stops in one reply: confirm exactly the channels stopped ("calls+texts"), or "all".
+        const stopped = mergeStopped(ui.stopped, out.ui.stopped);
         Object.assign(ui, out.ui);
         if (stopped) ui.stopped = stopped;
       }
@@ -630,10 +653,13 @@ function fallbackText(lang, biz, ui, stop) {
     return lang === "es" ? "Listo, el equipo se comunicará con usted pronto." : "Got it. The team will reach out soon.";
   }
   if (ui.stopped) {
-    const es = { all: "No volveremos a contactarle.", calls: "No volveremos a llamarle.", texts: "No le enviaremos más mensajes de texto.", email: "No le enviaremos más correos." };
-    const en = { all: "We won't contact you again.", calls: "We won't call you again.", texts: "We won't text you again.", email: "We won't email you again." };
-    const k = en[ui.stopped] ? ui.stopped : "all";
-    return lang === "es" ? `Listo. ${es[k]}` : `Done. ${en[k]}`;
+    const parts = String(ui.stopped).split("+");
+    if (parts.includes("all")) return lang === "es" ? "Listo. No volveremos a contactarle." : "Done. We won't contact you again.";
+    const en = { calls: "call", texts: "text", email: "email" };
+    const es = { calls: "llamarle", texts: "enviarle mensajes de texto", email: "enviarle correos" };
+    return lang === "es"
+      ? `Listo. No volveremos a ${parts.map((c) => es[c]).join(" ni a ")}.`
+      : `Done. We won't ${parts.map((c) => en[c]).join(" or ")} you again.`;
   }
   console.warn("empty reply", stop);
   return lang === "es"

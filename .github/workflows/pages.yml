@@ -22,6 +22,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # The chat bubble's guided mode decides how stop requests and texting consent are read;
+      # its phrase checks must pass before the site goes live.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check the chat bubble
+        working-directory: worker
+        run: |
+          npm ci
+          node --test --import ./test/register-stubs.mjs test/chat-phrases.test.mjs
       - name: Push site/ to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

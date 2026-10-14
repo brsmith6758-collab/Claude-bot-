@@ -109,7 +109,9 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   chats, the most recent part).
 - **Stop requests**, when a seller asks in the chat to stop contacting them: "DO NOT CONTACT",
   "DO NOT CALL", "DO NOT TEXT" or "DO NOT EMAIL" emails that say exactly what to stop. A texts-only
-  request keeps their booked call; "all" or "calls" means cancel it.
+  request keeps their booked call; "all" or "calls" means cancel it. A "CONTACT REQUEST" email
+  carries the seller's own words (from the scripted mode) for you to read and follow; if it's
+  unclear, treat it as a stop. Guided leads may also carry "Seller's words about contact".
 - **"Call request (confirm the time)" emails** instead of "booked call" when a time couldn't be locked in
   (no KV storage, or a storage error). Call the seller to confirm it; they were told you would.
 - **KV storage** (if bound): Cloudflare → Storage & databases → Workers KV → `prime-acre-chat-leads`.
@@ -123,12 +125,14 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   and stays away from anything Fair Housing protects.
 - Asks before texting, with the standard wording (message and data rates, reply STOP, not required),
   and counts only a clear yes. Sellers who won't give a phone number can ask for email follow-up instead.
-- Records "stop contacting me" requests, in English or Spanish, and emails you a notice that names
-  what to stop (everything, calls, texts or email). In the scripted fallback mode, a clear request
-  ("STOP", "unsubscribe me", "stop calling me", "no me llamen") is acted on at once; anything that
-  only sounds like one ("don't call me before 5", "text me instead") gets a question with buttons
-  (stop all contact / just no calls / just no texts / keep going), so nothing is guessed.
-  "The bank won't stop calling me" is not an opt-out, and "no texts" just turns texting off.
+- Records "stop contacting me" requests, in English or Spanish. In AI mode the assistant works out
+  what to stop and emails you a DO NOT CONTACT / CALL / TEXT / EMAIL notice. The scripted fallback
+  mode never guesses what an opt-out means: a bare "STOP" (or "unsubscribe me", "leave me alone") is
+  a full stop; after a seller's details were sent, anything else that may be about contacting them
+  ("don't call me this week", "no texts please") reaches you word for word as a "CONTACT REQUEST"
+  to follow exactly; before that, the seller picks stop all / no calls / no texts / no email / keep
+  going with buttons, and their words travel with the lead. "The bank won't stop calling me" is
+  not treated as an opt-out.
 - Doesn't tell a seller who may owe more than the house is worth that the sale pays off the mortgage;
   points people facing foreclosure to free HUD-approved counselors.
 - Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone,

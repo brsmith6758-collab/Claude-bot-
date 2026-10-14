@@ -330,6 +330,8 @@ const last = async (page, back = 1) => (await bubbles(page)).at(-back);
   await page.click(".pac-launcher");
   await waitBot(page, 1);
   await say(page, "please stop texting me");
+  assert(/which one do you mean/.test(await last(page)), "a stop sentence gets the buttons");
+  await tap(page, "Just no texts");
   assert(/phone number or email should we stop/.test(await last(page)), "asks which number to stop contacting");
   await say(page, "602-555-0143");
   assert(posted.length === 1 && posted[0].type === "do_not_contact" && posted[0].phone === "(602) 555-0143", "do-not-contact notice posted with the number");
@@ -369,13 +371,16 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await page.goto(`${SITE}/index.html`);
   await guidedTo(page, "time");
   await say(page, "Please don't contact me before 5pm, I'm at work");
-  assert(/do you want us to stop contacting you/.test(await last(page)) && posted.length === 0, "a request that only sounds like an opt-out gets a question, not an action");
+  assert(/which one do you mean/.test(await last(page)) && posted.length === 0, "a request that only sounds like an opt-out gets a question, not an action");
   await tap(page, "No, keep going");
   assert(posted.length === 1 && posted[0].type !== "do_not_contact" && /before 5pm/.test(posted[0].callTime), "'No, keep going' uses it as the call time");
   // After the lead: an iPhone curly-apostrophe opt-out still reaches the team.
   await say(page, "Actually I changed my mind. Don\u2019t call me again.");
-  assert(posted.length === 2 && /^DO NOT CALL/.test(posted[1]._subject) && posted[1].phone === "(602) 555-0143", "a curly-apostrophe 'Don\u2019t call me again' after the lead sends a DO NOT CALL notice");
-  assert(/won't call you again/.test(await last(page)), "confirms the calls stop");
+  assert(posted.length === 2 && /^CONTACT REQUEST/.test(posted[1]._subject) && posted[1].phone === "(602) 555-0143" && /call me again/.test(posted[1].note),
+    "after the lead, a curly-apostrophe 'Don\u2019t call me again' reaches the team word for word");
+  assert(/passed your words to the team/.test(await last(page)), "seller is told it was passed on");
+  await say(page, "Don't call me this week, I'm traveling");
+  assert(posted.length === 3 && /^CONTACT REQUEST/.test(posted[2]._subject) && /this week/.test(posted[2].note), "a short-term request is passed on as written, not turned into a permanent stop");
   await ctx.close();
 }
 {
@@ -406,6 +411,7 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await page.goto(`${SITE}/index.html`);
   await guidedTo(page, "consent");
   await say(page, "stop contacting me");
+  await tap(page, "Stop all contact");
   assert(/couldn't send that/.test(await last(page)), "failed stop tells the seller how to reach us");
   await say(page, "did it work?");
   assert(!/won't contact you again/.test(await last(page)) && /couldn't send that/.test(await last(page)), "later replies don't claim the stop went through");
@@ -474,7 +480,7 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await page.goto(`${SITE}/index.html`);
   await guidedTo(page, "time", { consent: "Yes, texting is fine" });
   await say(page, "Don't call me, text me instead");
-  assert(/stop contacting you/.test(await last(page)), "a preference gets the question");
+  assert(/which one do you mean/.test(await last(page)), "a preference gets the question");
   await tap(page, "Just no calls", 2);
   assert(posted.length === 1 && posted[0].phone === "(602) 555-0143" && posted[0].smsConsent === true && /no calls/.test(posted[0].contactLimits) && /No calls/.test(posted[0].callTime), `lead sent for text follow-up, marked no calls: ${posted[0] && posted[0].contactLimits}`);
   assert(/not by phone/.test(await last(page)), "seller is told the team will text or email");
@@ -487,6 +493,7 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await page.click(".pac-launcher");
   await waitBot(page, 1);
   await say(page, "Stop calling me");
+  await tap(page, "Just no calls");
   await say(page, "The one you keep calling me on");
   assert(/need the phone number or email/.test(await last(page)) && posted.length === 0, "a vague answer is asked again, not turned into a sales pitch");
   await say(page, "602-555-0143");
@@ -508,7 +515,10 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
   await page.goto(`${SITE}/index.html`);
   await guidedTo(page, "consent");
-  await say(page, "Please don't email me", 2);
+  await say(page, "Please don't email me");
+  await say(page, "no email please");
+  assert(/tap one of the options/.test(await last(page)), "a typed answer to the buttons is never guessed at");
+  await tap(page, "Just no email", 2);
   assert(/Can we text you/.test(await last(page)), "the texting question is asked again");
   await tap(page, "Calls only, please");
   await say(page, "Can you call me at 3?");
@@ -535,6 +545,23 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await waitBot(page, 1);
   await say(page, "Can you take my house as-is?", 2);
   assert(/as-is in any condition/.test(await last(page, 2)), "'take my house as-is' gets the condition answer, not foreclosure");
+  await ctx.close();
+}
+
+{
+  // Phone numbers in any common format; typed replies to the buttons keep the seller's words with the lead.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "phone");
+  await say(page, "Don't text me, call me at 602 - 555 - 0143");
+  assert(/which one do you mean/.test(await last(page)), "asks which they mean");
+  await say(page, "no texts");
+  await say(page, "I said no texts");
+  assert(/noted your words/.test(await last(page, 2)) || /noted your words/.test(await last(page)), "after a second typed reply, their words are noted for the team");
+  await say(page, "602 - 555 - 0143");
+  await tap(page, "Yes, texting is fine");
+  await tap(page, "As soon as possible");
+  assert(posted.length === 1 && posted[0].phone === "(602) 555-0143" && /no texts/.test(posted[0].sellerContactWords), `spaced-out number accepted, words kept: ${posted[0] && posted[0].sellerContactWords}`);
   await ctx.close();
 }
 

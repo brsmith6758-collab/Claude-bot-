@@ -86,8 +86,8 @@ export function normalizeStop(input) {
   // A number that isn't a 10-digit US one (a foreign or mistyped number) is still recorded
   // exactly as given: a stop request must never be dropped over its format.
   const rawDigits = rawPhone.replace(/\D/g, "");
-  const phoneAsGiven = !phone && rawDigits.length >= 7 ? rawPhone : "";
-  if (!phone && !phoneAsGiven && !email) {
+  const phoneAsGiven = !phone && rawDigits ? rawPhone : "";
+  if (!phone && !email && rawDigits.length < 7) {
     return {
       error: rawDigits
         ? "That phone number looks incomplete. Ask the seller once for the full number (or an email address)."

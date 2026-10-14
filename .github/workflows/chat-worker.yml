@@ -10,7 +10,7 @@ name: Deploy chat assistant (Cloudflare Worker)
 on:
   push:
     branches: [main, "claude/**"]
-    paths: ["worker/**", ".github/workflows/chat-worker.yml"]
+    paths: ["worker/**", "site/assets/chat.js", ".github/workflows/chat-worker.yml"]
   workflow_dispatch:
 
 permissions:
