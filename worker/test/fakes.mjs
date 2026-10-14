@@ -3,7 +3,11 @@ export function fakeKV() {
   const store = new Map();
   return {
     store,
-    async get(k) { return store.has(k) ? store.get(k).value : null; },
+    async get(k, opts) {
+      const v = store.has(k) ? store.get(k).value : null;
+      const type = typeof opts === "string" ? opts : opts && opts.type;
+      return v !== null && type === "json" ? JSON.parse(v) : v;
+    },
     async put(k, value, opts = {}) { store.set(k, { value, metadata: opts.metadata }); },
     async list({ prefix = "" } = {}) {
       const keys = [...store.keys()].filter((k) => k.startsWith(prefix)).sort().map((name) => ({ name, metadata: store.get(name).metadata }));

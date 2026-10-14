@@ -16,7 +16,9 @@
   var STORE_KEY = "pac:chat:v1";
   var TEASE_KEY = "pac:chat:teased";
   var HOURS = cfg.chatHours || { tz: "America/Chicago", days: [1, 2, 3, 4, 5, 6], start: 9, end: 19, noticeMinutes: 60 };
-  function smallScreen() { return !!(window.matchMedia && window.matchMedia("(max-width: 560px), (max-height: 500px)").matches); }
+  // Keep in step with the full-screen rules in chat.css.
+  var SMALL_SCREEN = "(max-width: 560px), (max-height: 500px)";
+  function smallScreen() { return !!(window.matchMedia && window.matchMedia(SMALL_SCREEN).matches); }
 
   var T = {
     en: {
@@ -59,7 +61,8 @@
       gStopAsk: "Understood. What phone number or email should we stop contacting?",
       gStopDone: "Done. We won't contact you again. Sorry for the bother.",
       gStopFail: "I couldn't send that automatically. Please email " + (EMAIL || "us") + " with the number or email to remove, and we'll take care of it.",
-      gStale: "That time has already passed. Here are the next open options:",
+      gStale: "That time has already passed. Here are the next times you can request:",
+      gNoTimes: function (hours) { return "Our call hours are " + hours + ", which is early or late where you are. Tap 'As soon as possible' and the team will reach out at a good time for you."; },
       gFail: "I couldn't send that automatically. Please call or text " + PHONE + " and mention these details:",
       gAfter: "The team has your details and will reach out. For anything else, call or text " + PHONE + ".",
       gOffer: "Want me to set up a quick call so you can get a real number?",
@@ -72,7 +75,7 @@
       requested: "requested time",
       faq: [
         [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. The offer you accept is what you walk away with, minus anything owed on the property."],
-        [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
+        [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down|notice of default|sheriff|trustee sale|repossess|lose (my|the) (house|home)/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
         [/how (fast|quick|long|soon)|\bclos(e|ing)\b|\bdays?\b/i, "We can close in as little as 7 days once title is clear, or on a later date you pick."],
         [/condition|repair|as.?is|clean|damage|fix/i, "We buy houses as-is in any condition. No repairs, no cleaning, no showings. Leave behind anything you don't want."],
         [/legit|scam|trust|real|safe/i, "Fair question. You never pay us anything, and every closing goes through a licensed title company or closing attorney, so your money never passes through our hands. You can have your own attorney review the contract."],
@@ -122,7 +125,8 @@
       gStopAsk: "Entendido. ¿Qué número de teléfono o correo electrónico debemos dejar de contactar?",
       gStopDone: "Listo. No volveremos a contactarle. Disculpe la molestia.",
       gStopFail: "No pude enviar esto automáticamente. Por favor escriba a " + (EMAIL || "nuestro correo") + " con el número o correo que debemos quitar y nos encargamos.",
-      gStale: "Ese horario ya pasó. Estas son las próximas opciones:",
+      gStale: "Ese horario ya pasó. Estos son los próximos horarios que puede pedir:",
+      gNoTimes: function (hours) { return "Nuestro horario de llamadas es " + hours + ", que es temprano o tarde donde usted está. Elija 'Lo antes posible' y el equipo le contactará a una buena hora para usted."; },
       gFail: "No pude enviar esto automáticamente. Por favor llame o envíe un texto al " + PHONE + " con estos datos:",
       gAfter: "El equipo tiene sus datos y se comunicará con usted. Para cualquier otra cosa, llame o envíe un texto al " + PHONE + ".",
       gOffer: "¿Quiere que programemos una llamada rápida para darle un número real?",
@@ -543,7 +547,7 @@
       setChips(ui.slots.map(function (s) { return { label: s.label, value: s.label, slot: true }; }));
     }
     if (ui.booking) {
-      card({ type: "booking", when: ui.booking.when, calendarUrl: ui.booking.calendarUrl });
+      card({ type: "booking", when: ui.booking.when, calendarUrl: ui.booking.calendarUrl, requested: !!ui.booking.requested });
     }
   }
 
@@ -557,12 +561,13 @@
       return;
     }
     var mapped = {
-      _subject: (lead.appointment ? "Booked call " + lead.appointment.ownerLabel + ": " : "New seller lead (chat): ") + [lead.address, lead.city, lead.state].filter(Boolean).join(", "),
+      _subject: (lead.appointment ? (lead.appointment.reserved === false ? "Call request (confirm the time) " : "Booked call ") + lead.appointment.ownerLabel + ": " : "New seller lead (chat): ") + [lead.address, lead.city, lead.state].filter(Boolean).join(", "),
       address: lead.address, city: lead.city, state: lead.state, zip: lead.zip,
       name: lead.name, phone: lead.phone, email: lead.email, smsConsent: lead.smsConsent,
       propertyType: lead.propertyType, condition: lead.condition, occupancy: lead.occupancy,
       timeline: lead.timeline, reason: lead.reason, askingPrice: lead.askingPrice, notes: lead.notes,
-      callTime: lead.appointment ? lead.appointment.ownerLabel + " (seller: " + lead.appointment.sellerLabel + ")" : lead.callbackPreference,
+      callTime: lead.appointment ? lead.appointment.ownerLabel + " (seller: " + lead.appointment.sellerLabel + ")" + (lead.appointment.reserved === false ? " - requested, please confirm" : "") : lead.callbackPreference,
+      textingQuestion: lead.textingConsent ? lead.textingConsent.question : "", textingAnswer: lead.textingConsent ? lead.textingConsent.answer : "",
       addToCalendar: lead.appointment ? lead.appointment.ownerCalendarUrl : "",
       source: "website-chat", page: lead.page, submittedAt: lead.submittedAt, market: lead.state || "Nationwide",
       transcript: lead.transcript || ""
@@ -583,9 +588,10 @@
   function isQuestion(text) {
     return /\?\s*$/.test(text) || /^(how|what|when|why|who|where|do|does|did|can|could|is|are|will|would|should|qu[eé]|c[oó]mo|cu[aá]ndo|por qu[eé]|d[oó]nde|puede|tiene|hay)\b/i.test(text.trim());
   }
-  function looksLikeTime(text) {
-    return /\d|\b(am|pm|a\.m|p\.m|morning|afternoon|evening|tonight|today|tomorrow|noon|mon|tue|wed|thu|fri|sat|sun|asap|now|any ?time|weekend|ma[nñ]ana|tarde|noche|hoy|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|cuando sea|lo antes)/i.test(text);
-  }
+  // A day or time someone would actually type: "Friday at 10", "tomorrow afternoon", "3pm".
+  // Whole words only, so "money", "amount" or "Am I..." don't count, and no bare digits.
+  var TIME_RE = /(^|[^\wáéíóúñ])(\d{1,2}(:\d{2})?\s*(am|pm|a\.m\.?|p\.m\.?)|\d{1,2}:\d{2}|(at|around|after|before|by|a las|despu[eé]s de las|antes de las)\s+\d{1,2}|noon|midday|morning|afternoon|evening|tonight|today|tomorrow|asap|any ?time|weekend|weekday|mon(day)?|tue(s(day)?)?|wed(nesday)?|thu(rs(day)?)?|fri(day)?|sat(urday)?|sun(day)?|ma[nñ]ana|mediod[ií]a|tarde|noche|hoy|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|fin de semana|cuando sea|lo antes)(?![\wáéíóúñ])/i;
+  function looksLikeTime(text) { return TIME_RE.test(text); }
   function extractPhone(text) {
     var m = String(text).match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
     if (!m) return null;
@@ -601,7 +607,7 @@
   }
 
   // A reply made only of yes-words ("yes", "sure, go ahead", "sí, claro") is a clear yes.
-  var YES_RE = /^(?:y|yes|yeah|yep|yup|sure|ok|okay|of course|go ahead|s[ií]|claro|por supuesto|est[aá] bien|adelante)(?:[\s,.!]+(?:yes|yeah|sure|ok|okay|of course|go ahead|please|that'?s fine|is fine|fine|text me|s[ií]|claro|por supuesto|est[aá] bien|adelante|por favor))*[\s.!]*$/i;
+  var YES_RE = /^(?:y|yes|yeah|yep|yup|sure|ok|okay|of course|go ahead|s[ií]|claro(?: que s[ií])?|por supuesto|est[aá] bien|adelante)(?:[\s,.!]+(?:yes|yeah|sure|ok|okay|of course|go ahead|please|thanks|thank you|that'?s fine|is fine|fine|text me|s[ií]|claro|por supuesto|est[aá] bien|adelante|por favor|gracias))*[\s.!]*$/i;
 
   // "Stop contacting me", in the words people actually use. Narrow on purpose:
   // "don't call me before 5" is a preference, not an opt-out.
@@ -663,6 +669,16 @@
     var o2 = off(utc);
     return o2 === o1 ? utc : guess - o2;
   }
+  function hoursText() {
+    try {
+      var loc = LANG === "es" ? "es-US" : "en-US";
+      var fmt = function (h) { return new Intl.DateTimeFormat(loc, { hour: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 1, h))); };
+      var zone = new Intl.DateTimeFormat(loc, { timeZone: HOURS.tz, timeZoneName: "short" }).formatToParts(new Date())
+        .filter(function (p) { return p.type === "timeZoneName"; })[0];
+      return fmt(HOURS.start) + "–" + fmt(HOURS.end) + (zone ? " " + zone.value : "");
+    } catch (e) { return HOURS.start + ":00–" + HOURS.end + ":00"; }
+  }
+
   function suggestTimes() {
     var out = [];
     try {
@@ -780,7 +796,7 @@
         // Only a clear yes counts. "OK but calls only" or anything unclear is not consent.
         var said = text.trim();
         var yes = said === T.gConsentChips[0] || YES_RE.test(said);
-        var no = said === T.gConsentChips[1] || /\b(no|not|nope|don'?t|do not|never|only|solo|nunca|sin)\b/i.test(said);
+        var no = said === T.gConsentChips[1] || /\b(no|not|nope|nah|don'?t|do not|never|only|solo|nunca|sin|prefiero llamadas)\b/i.test(said);
         if (!yes && !no && !g.consentAsked) {
           g.consentAsked = true;
           bot(T.gConsentAgain);
@@ -790,8 +806,9 @@
         data.smsConsent = yes && !no;
         data.consentReply = said.slice(0, 200);
         g.step = "time";
-        bot(T.gTime);
-        setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
+        var times = suggestTimes();
+        bot(times.length ? T.gTime : T.gNoTimes(hoursText()));
+        setChips([{ label: T.gTimeAsap }].concat(times));
         break;
       case "time":
         var chosen = (lastChips || []).filter(function (c) { return c && c.ms && c.label === text; })[0];
@@ -801,8 +818,9 @@
           setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
           break;
         }
-        if (!chosen && text !== T.gTimeAsap && !looksLikeTime(text)) {
-          if (isQuestion(text)) bot(faqAnswer(text) || T.gQuestion);
+        var asked = !chosen && text !== T.gTimeAsap && isQuestion(text) && (faqAnswer(text) || !looksLikeTime(text));
+        if (!chosen && text !== T.gTimeAsap && (asked || !looksLikeTime(text))) {
+          if (asked) bot(faqAnswer(text) || T.gQuestion);
           bot(T.gTimeHint);
           setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
           break;
@@ -816,7 +834,7 @@
         var ph = extractPhone(text);
         var ce = ph ? "" : extractEmail(text);
         var nm = text.replace(ph ? ph.raw : ce, "").replace(/[,;:.]+/g, " ").replace(/\b(my name is|i'?m|this is|me llamo|soy|call me|ll[aá]menme|please|por favor|at|al)\b/gi, " ").replace(/\s+/g, " ").trim();
-        if (nm) data.name = nm.slice(0, 120);
+        if (nm && !isQuestion(nm)) data.name = nm.slice(0, 120);
         if (!ph && ce) { data.email = ce; data.address = data.address || T.notGiven; finishEmailOnly(); return; }
         if (!ph) { bot(T.gCallbackName); break; }
         data.phone = ph.formatted;
@@ -911,9 +929,23 @@
     else if (state.open) { state.open = false; save(); }
   }
 
+  function watchScreenSize() {
+    var mq = window.matchMedia && window.matchMedia(SMALL_SCREEN);
+    if (!mq) return;
+    var onChange = function () {
+      if (!state.open) return;
+      lockScroll(false); // clear any earlier inert and aria-modal
+      lockScroll(true);  // re-apply only if the panel is full screen now
+      if (smallScreen() && !panel.contains(document.activeElement)) input.focus({ preventScroll: true });
+    };
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+  }
+
   function init() {
     build();
     restore();
+    watchScreenSize();
     scheduleTeaser();
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && state.open) closePanel(true);

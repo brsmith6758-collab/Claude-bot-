@@ -43,8 +43,9 @@ and uses AI mode as soon as it answers.
    `ANTHROPIC_API_KEY`, value = your key from step 1. **Deploy**.
 4. **Settings → Domains & Routes → Add → Custom domain**: `chat.primeacrehomebuyers.com` → **Add**.
    Cloudflare creates the DNS record and certificate itself (allow a few minutes).
-5. Recommended, for lead storage and no double-booked call times: open **Storage & databases → Workers KV
-   → Create instance**, name it exactly `prime-acre-chat-leads`, **Create**.
+5. Strongly recommended, for lead storage and real bookings: open **Storage & databases → Workers KV
+   → Create instance**, name it exactly `prime-acre-chat-leads`, **Create**. Without it the assistant
+   can't lock a time in, so every chosen time is sent to you as a *request* to confirm with the seller.
    Then on the Worker open **Bindings → Add binding → KV namespace** (on some accounts it is
    **Settings → Bindings → Add**), variable name `LEADS`, pick that namespace, and confirm.
 
@@ -107,6 +108,8 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   to the texting question).
 - **"DO NOT CONTACT" emails** when a seller asks in the chat to stop calls, texts or emails.
   Take them off your lists and cancel any call they booked.
+- **"Call request (confirm the time)" emails** instead of "booked call" when a time couldn't be locked in
+  (no KV storage, or a storage error). Call the seller to confirm it; they were told you would.
 - **KV storage** (if bound): Cloudflare → Storage & databases → Workers KV → `prime-acre-chat-leads`.
   Keys starting `lead:` are leads, `slot:` are booked call times, and `dnc:` are stop requests.
 
@@ -121,16 +124,20 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
 - Records "stop contacting me" requests and emails you a DO NOT CONTACT notice.
 - Doesn't tell a seller who may owe more than the house is worth that the sale pays off the mortgage;
   points people facing foreclosure to free HUD-approved counselors.
-- Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone.
+- Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone,
+  and only calls a time "booked" when it was actually locked in.
 - Limits abuse in code: one booking per reply, two per conversation, three per visitor per day,
   one upcoming call per phone number, and a signed conversation history nobody can forge.
 - Replies in Spanish to Spanish speakers and on the Spanish page.
 
 Known limits:
 
-- If two sellers pick the same time within a few seconds of each other, both can be confirmed.
-  You get both lead emails and can call one of them at a nearby time. (Fully preventing it needs a
-  Cloudflare Durable Object, which the dashboard path cannot set up.)
+- If two sellers pick the same time within about a minute of each other, both can be confirmed
+  (Cloudflare KV takes up to a minute to show a new booking everywhere). You get both lead emails and
+  can call one of them at a nearby time. Fully preventing it needs a database with atomic writes
+  (Cloudflare D1 or a Durable Object), which needs extra Cloudflare setup and token permissions;
+  on a small site's traffic this is rare.
+- A storage error never loses a lead: the booking still reaches you, marked as a time to confirm.
 - Path B (GitHub) deploys real per-visitor and site-wide rate limits. Path A (dashboard) relies on a
   lighter built-in limiter, so the Anthropic monthly spend limit from step 1 matters more there.
 

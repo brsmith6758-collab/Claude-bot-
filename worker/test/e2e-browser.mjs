@@ -232,6 +232,25 @@ async function waitBot(page, n) {
   await ctx.close();
 }
 
+{
+  // The site form's texting box starts unchecked, and its note doesn't claim text consent.
+  const { ctx, page } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  assert(!(await page.isChecked("#f-sms")), "lead form texting box is not pre-checked");
+  assert(/by text only if you checked the box above/.test(await page.textContent("#offer")), "form note ties texts to the checkbox");
+  // Resizing with the chat open keeps the modal state in step with the layout.
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  assert(await page.getAttribute("#pac-panel", "aria-modal") === null, "desktop panel is not modal");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => document.querySelector("#pac-panel").getAttribute("aria-modal") === "true");
+  assert(await page.$eval(".site-header", (e) => !!e.closest("[inert]")), "shrinking to phone size makes the page behind the chat inert");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.waitForFunction(() => document.querySelector("#pac-panel").getAttribute("aria-modal") === null);
+  assert(await page.$eval(".site-header", (e) => !e.closest("[inert]")), "growing back to desktop gives the page back");
+  await ctx.close();
+}
+
 // ---------------------------------------------------------------- consent, email-only, stop requests
 const botCount = (page) => page.$$eval(".pac-msg.bot", (els) => els.length);
 async function say(page, text, n = 1) {
@@ -291,6 +310,11 @@ const last = async (page, back = 1) => (await bubbles(page)).at(-back);
   assert(/Just to be sure/.test(await last(page)), "an unclear answer is asked again");
   await say(page, "ok but calls only");
   assert(/good time for a quick call/.test(await last(page)), "moves on to the call time");
+  await say(page, "How much money will you offer?", 2);
+  await say(page, "Can you close in 7 days?", 2);
+  await say(page, "Am I obligated to sell?", 2);
+  assert(posted.length === 0 && /day and time/.test(await last(page)), "questions at the call-time step are answered, never sent as the call time");
+  assert((await bubbles(page)).some((b) => /7 days once title is clear/.test(b)), "the closing question got its answer");
   const before = await botCount(page);
   await page.click(".pac-chip.slot >> nth=0");
   await waitBot(page, before + 1);

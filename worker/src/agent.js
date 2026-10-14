@@ -183,6 +183,43 @@ export function transcriptText(messages, max = MAX_TRANSCRIPT_CHARS) {
   return out.length > max ? `...${out.slice(out.length - max)}` : out;
 }
 
+/**
+ * The texting question and the seller's reply, kept apart from the transcript so
+ * the transcript's length cap can never drop it: the last assistant message that
+ * asks about texting (it carries "STOP"), and the seller message that follows.
+ */
+export function consentExchange(messages) {
+  const texts = [];
+  for (const m of messages) {
+    const t = (m.content || []).filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
+    if (t) texts.push({ role: m.role, text: m.role === "user" ? t.replace(CONTEXT_PREFIX, "") : t });
+  }
+  for (let i = texts.length - 1; i >= 0; i--) {
+    if (texts[i].role === "assistant" && /\bSTOP\b/.test(texts[i].text)) {
+      const reply = texts.slice(i + 1).find((x) => x.role === "user");
+      return { question: texts[i].text.slice(0, 600), answer: reply ? reply.text.slice(0, 600) : "" };
+    }
+  }
+  return null;
+}
+
+function textingRecord(messages, lead) {
+  if (!lead.phone) return null;
+  const x = consentExchange(messages);
+  return { agreed: lead.smsConsent, question: x ? x.question : "", answer: x ? x.answer : "" };
+}
+
+/** Await a storage check; on error log it, flag the turn, and use the fallback value. */
+async function soft(ctx, promise, fallback, what) {
+  try {
+    return await promise;
+  } catch (e) {
+    console.error(`${what} failed`, e && e.message);
+    ctx.storageTrouble = true;
+    return fallback;
+  }
+}
+
 // ---------------------------------------------------------------- tools
 
 function validDay(s) {
@@ -194,7 +231,7 @@ async function runTool(name, input, ctx) {
   const cfg = biz.cfg;
 
   if (name === "get_call_times") {
-    const booked = await bookedSlots(env, nowMs);
+    const booked = await bookedSlots(env, nowMs); // never throws
     const all = openSlots(nowMs, cfg, booked);
     const today = zonedParts(nowMs, sellerTz);
     const sellerToday = ymd(today);
@@ -240,7 +277,8 @@ async function runTool(name, input, ctx) {
     if (ctx.prior.bookings + ctx.bookingsThisTurn >= MAX_BOOKINGS_PER_CONVERSATION) {
       return { content: { error: `This conversation already has a booking. Tell the seller the team has their details, and that they can call or text ${biz.phone} to change anything.` }, isError: true };
     }
-    if ((await bookingsToday(env, ctx.clientKey, nowMs)) >= MAX_BOOKINGS_PER_DAY) {
+    // Storage checks fail open: a KV error must never cost a seller their booking.
+    if ((await soft(ctx, bookingsToday(env, ctx.clientKey, nowMs), 0, "bookingsToday")) >= MAX_BOOKINGS_PER_DAY) {
       return { content: { error: `No more bookings can be made from this connection today. Ask the seller to call or text ${biz.phone}.` }, isError: true };
     }
     ctx.bookingsThisResponse++;
@@ -257,13 +295,13 @@ async function runTool(name, input, ctx) {
         ctx.bookingsThisResponse--;
         return { content: { error: "That slot_id is not an open time. Call get_call_times and use one of its slot_id values." }, isError: true };
       }
-      const existing = await phoneBooking(env, lead.phone, nowMs);
+      const existing = await soft(ctx, phoneBooking(env, lead.phone, nowMs), null, "phoneBooking");
       if (existing) {
         ctx.bookingsThisResponse--;
         const when = slotLabel(Date.parse(existing.start), sellerTz, lang);
         return { content: { error: `This phone number already has a call booked for ${when}. Tell the seller, and that they can call or text ${biz.phone} to change it.` }, isError: true };
       }
-      if (await isSlotTaken(env, iso)) {
+      if (await soft(ctx, isSlotTaken(env, iso), false, "isSlotTaken")) {
         ctx.bookingsThisResponse--;
         return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
       }
@@ -289,12 +327,12 @@ async function runTool(name, input, ctx) {
         }),
       };
       try {
-        const r = await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone });
+        const r = await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone }, nowMs);
         if (r === "taken") {
           ctx.bookingsThisResponse--;
           return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
         }
-        appointment.reserved = r === "reserved";
+        appointment.reserved = r === "reserved" && !ctx.storageTrouble;
       } catch (e) {
         console.error("reserveSlot failed", e && e.message);
         appointment.reserved = false; // the lead still goes out; the owner confirms the time
@@ -310,6 +348,7 @@ async function runTool(name, input, ctx) {
       lang,
       submittedAt: new Date(nowMs).toISOString(),
       transcript: transcriptText(ctx.messages),
+      textingConsent: textingRecord(ctx.messages, lead),
     };
     let stored = false;
     let emailed = false;
@@ -318,14 +357,23 @@ async function runTool(name, input, ctx) {
     try { await countBooking(env, ctx.clientKey, nowMs); } catch (e) { console.error("countBooking failed", e && e.message); }
     ctx.bookingsThisTurn++;
 
+    const confirmed = !appointment || appointment.reserved;
     const content = appointment
-      ? { booked: true, when: appointment.sellerLabel, call_length_minutes: cfg.slotMinutes, what_next: "The team reviews the property before the call; a written cash offer typically follows within 24 hours of the review." }
+      ? {
+        booked: true,
+        when: appointment.sellerLabel,
+        time_confirmed: confirmed,
+        call_length_minutes: cfg.slotMinutes,
+        what_next: confirmed
+          ? "The team reviews the property before the call; a written cash offer typically follows within 24 hours of the review."
+          : "The time is requested but could not be locked in, so the team will confirm it with the seller by phone. Tell the seller exactly that; don't call it confirmed.",
+      }
       : { saved: true, what_next: `The team will ${lead.phone ? "reach out" : "follow up by email"} during business hours (${biz.hoursLabel}).` };
     return {
       content,
       lead: { ...full, delivered: emailed, stored },
       ui: appointment
-        ? { booking: { when: appointment.sellerLabel, calendarUrl: appointment.sellerCalendarUrl } }
+        ? { booking: { when: appointment.sellerLabel, calendarUrl: appointment.sellerCalendarUrl, requested: !confirmed } }
         : { saved: true },
     };
   }
@@ -334,7 +382,7 @@ async function runTool(name, input, ctx) {
     if (ctx.stopsThisTurn >= 1 || ctx.prior.stops + ctx.stopsThisTurn >= MAX_STOPS_PER_CONVERSATION) {
       return { content: { recorded: true, note: "Already recorded in this conversation. Just confirm it to the seller." } };
     }
-    if ((await bookingsToday(env, ctx.clientKey, nowMs, "dn")) >= MAX_STOPS_PER_DAY) {
+    if ((await soft(ctx, bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY) {
       return { content: { error: `Too many requests from this connection today. Ask the seller to email ${biz.email} with the number or email to remove.` }, isError: true };
     }
     const { notice, error } = normalizeStop(input);
@@ -450,7 +498,7 @@ export async function runTurn({
     const u = response.usage || {};
     console.log(JSON.stringify({ evt: "model", model: response.model, stop: lastStop, in: u.input_tokens, cacheRead: u.cache_read_input_tokens, cacheWrite: u.cache_creation_input_tokens, out: u.output_tokens }));
 
-    if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") {
+    if (["refusal", "max_tokens", "model_context_window_exceeded"].includes(response.stop_reason)) {
       // Never store a declined or cut-off response. Keep what was booked; otherwise undo the turn.
       if (leads.length) break;
       const reply = response.stop_reason === "refusal" ? refusalText(lang, biz) : fallbackText(lang, biz, {}, lastStop);
@@ -507,6 +555,11 @@ function refusalText(lang, biz) {
 }
 
 function fallbackText(lang, biz, ui, stop) {
+  if (ui.booking && ui.booking.requested) {
+    return lang === "es"
+      ? `Pedí su llamada para ${ui.booking.when}. El equipo le confirmará la hora por teléfono.`
+      : `I've requested your call for ${ui.booking.when}. The team will confirm the time with you by phone.`;
+  }
   if (ui.booking) {
     return lang === "es" ? `Listo, su llamada quedó para ${ui.booking.when}.` : `You're all set for ${ui.booking.when}.`;
   }

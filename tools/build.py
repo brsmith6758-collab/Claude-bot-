@@ -580,13 +580,13 @@ def how():
 
 def situations():
     items = [
-        ("clock", "Facing foreclosure", "Behind on payments or already have a sale date? A cash sale before the auction can pay off the lender and help you avoid a foreclosure on your record."),
+        ("clock", "Facing foreclosure", "Behind on payments or already have a sale date? When the price covers what you owe, a cash sale before the auction can pay off the lender and help you avoid a foreclosure on your record."),
         ("doc", "Inherited a house", "Probate, out-of-state heirs, a house full of belongings. Take what you want and leave the rest to us."),
         ("key", "Tired of being a landlord", "Problem tenants, late rent, constant repairs. We buy with tenants in place and honor the lease."),
         ("users", "Divorce or separation", "A clean, fast sale with one number everyone can agree on, and a closing date that works for both of you."),
         ("arrow", "Relocating or job change", "Close before you leave town, with a date that matches your move instead of a listing calendar."),
         ("tool", "Major repairs or code violations", "Roof, foundation, mold, fire or water damage, open permits. We buy it exactly as it is."),
-        ("dollar", "Behind on taxes or liens", "Back taxes, HOA liens and judgments are paid off from the sale at closing. You don't bring money to the table."),
+        ("dollar", "Behind on taxes or liens", "Back taxes, HOA liens and judgments are paid off from the sale at closing, so when the price covers them you don't bring money to the table."),
         ("house", "Vacant or unwanted property", "A second home, a lot, or a house that's been sitting for years. Turn it into cash without a renovation first."),
     ]
     cards = "".join("""
@@ -809,7 +809,7 @@ FAQ_ITEMS = [
     ("Do I have to accept the offer?",
      "No. Every offer is free and no-obligation. If a listing or another buyer would get you more, we'll tell you so."),
     ("I still have a mortgage. Can you still buy?",
-     "Yes. The mortgage, along with any liens or back taxes, is paid off from the sale proceeds at closing. If you owe close to what the house is worth, we'll talk through your options honestly."),
+     "Yes. When the sale price covers it, the mortgage, along with any liens or back taxes, is paid off from the sale proceeds at closing. If you owe close to or more than the house is worth, we'll go over the numbers with you honestly: the lender may need to approve the sale, and a free HUD-approved housing counselor (800-569-4287) can help too."),
     ("What kinds of property do you buy?",
      "Single-family homes, condos, townhouses, duplexes and small multifamily, mobile homes with land, and vacant lots. In Arizona, Florida, Tennessee, North Carolina, and nationwide through our buying partners."),
 ]
@@ -1265,13 +1265,13 @@ def page_es():
     <div class="card step"><span class="num">%d</span>%s<h3>%s</h3><p>%s</p><span class="when">%s</span></div>""" % (
         i + 1, icon(k, "ico"), esc(a), esc(b), esc(c)) for i, (k, a, b, c) in enumerate(steps))
     sits = [
-        ("clock", "Enfrentando una ejecución hipotecaria", "¿Atrasado en los pagos o ya tiene fecha de subasta? Una venta en efectivo antes de la subasta puede pagar al banco y ayudarle a evitar una ejecución hipotecaria en su historial."),
+        ("clock", "Enfrentando una ejecución hipotecaria", "¿Atrasado en los pagos o ya tiene fecha de subasta? Cuando el precio cubre lo que debe, una venta en efectivo antes de la subasta puede pagar al banco y ayudarle a evitar una ejecución hipotecaria en su historial."),
         ("doc", "Heredó una casa", "Sucesión, herederos fuera del estado, una casa llena de pertenencias. Llévese lo que quiera y déjenos el resto."),
         ("key", "Cansado de ser arrendador", "Inquilinos problemáticos, rentas atrasadas, reparaciones constantes. Compramos con inquilinos adentro y respetamos el contrato."),
         ("users", "Divorcio o separación", "Una venta rápida y limpia con un solo número con el que todos puedan estar de acuerdo, y una fecha de cierre que funcione para ambos."),
         ("arrow", "Mudanza o cambio de trabajo", "Cierre antes de irse de la ciudad, con una fecha que coincida con su mudanza y no con el calendario de un agente."),
         ("tool", "Reparaciones mayores o infracciones de código", "Techo, cimientos, moho, daños por fuego o agua, permisos abiertos. La compramos exactamente como está."),
-        ("dollar", "Atrasado en impuestos o con gravámenes", "Impuestos atrasados, gravámenes de la HOA y sentencias se pagan de la venta al cierre. Usted no pone dinero."),
+        ("dollar", "Atrasado en impuestos o con gravámenes", "Impuestos atrasados, gravámenes de la HOA y sentencias se pagan de la venta al cierre, así que cuando el precio los cubre usted no pone dinero."),
         ("house", "Propiedad vacía o no deseada", "Una segunda casa, un terreno o una casa que lleva años desocupada. Conviértala en efectivo sin renovarla primero."),
     ]
     sit_cards = "".join("""
@@ -1301,7 +1301,7 @@ def page_es():
         ("¿Hay algún cargo?", "No. Sin comisiones, sin cargos por servicio, y nosotros pagamos los gastos de cierre habituales. La oferta que acepte es la cantidad con la que se va, menos lo que deba sobre la propiedad, como una hipoteca o gravámenes."),
         ("¿En qué condición tiene que estar la casa?", "En cualquiera. Compramos casas con daños por fuego o agua, techos en mal estado, problemas de cimientos, moho, acumulación de objetos y remodelaciones sin terminar. Deje todo lo que no quiera llevarse."),
         ("¿Qué tan rápido pueden cerrar?", "En tan solo 7 días una vez que el título esté limpio. Si necesita más tiempo, elija la fecha que le convenga. Cerramos a través de una compañía de títulos o un abogado con licencia, y usted recibe su dinero al cierre."),
-        ("Todavía tengo hipoteca. ¿Pueden comprar de todos modos?", "Sí. La hipoteca, junto con cualquier gravamen o impuesto atrasado, se paga con el dinero de la venta al cierre. Si debe casi lo que vale la casa, hablaremos de sus opciones con honestidad."),
+        ("Todavía tengo hipoteca. ¿Pueden comprar de todos modos?", "Sí. Cuando el precio de venta la cubre, la hipoteca, junto con cualquier gravamen o impuesto atrasado, se paga con el dinero de la venta al cierre. Si debe casi lo mismo o más de lo que vale la casa, revisaremos los números con usted honestamente: el prestamista puede tener que aprobar la venta, y un consejero de vivienda aprobado por HUD (800-569-4287) puede ayudarle gratis."),
         ("¿Tengo que aceptar la oferta?", "No. Cada oferta es gratis y sin compromiso. Si poner la casa en venta u otro comprador le daría más, se lo diremos."),
     ]
     fds = "".join("""

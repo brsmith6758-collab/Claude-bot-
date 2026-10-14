@@ -64,7 +64,7 @@
 .pac-teaser-close:hover { background: var(--pac-soft); }
 @media (max-width: 560px) { .pac-teaser { right: 14px; max-width: calc(100vw - 28px - 40px); } }
 
-/* panel */
+/* panel (the full-screen breakpoint below must match SMALL_SCREEN in chat.js) */
 .pac-panel {
   position: fixed; right: 20px; bottom: var(--pac-bottom); z-index: 61;
   width: 390px; max-width: calc(100vw - 40px);

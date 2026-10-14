@@ -126,7 +126,7 @@ export const TOOLS = [
   {
     name: "save_lead",
     description:
-      "Send the seller's details to the team without booking a specific time: for 'call me as soon as possible', a preferred window, or text/email only. Requires the seller's name, a phone number or an email address, and the property address (or at least its city or ZIP).",
+      "Send the seller's details to the team without booking a specific time: for 'call me as soon as possible', a preferred window, or text/email only. Requires the seller's name and a phone number or an email address. Include the property address, city, or ZIP if they shared any.",
     strict: true,
     input_schema: {
       type: "object",

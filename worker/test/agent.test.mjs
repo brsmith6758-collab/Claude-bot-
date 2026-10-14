@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runTurn, checkHistory, cleanAssistantContent, signHistory, HistoryError } from "../src/agent.js";
 import { fakeKV, fakeMailer, fakeClient, msg, thinking, text, toolUse } from "./fakes.mjs";
+import { resetSlotCache } from "../src/leads.js";
 
 const NOW = Date.UTC(2026, 9, 14, 15, 10); // Wed Oct 14 2026, 10:10 AM Central
 const context = { page: "/sell-my-house-fast-mesa-az.html", lang: "en", localTime: "Wed Oct 14 2026 8:10 AM", timeZone: "America/Phoenix" };
@@ -391,4 +392,84 @@ test("a stop request is recorded, emailed, and never counted as a lead", async (
   assert.match(raw, /Subject: DO NOT CONTACT: Dana \(602\) 555-0143/);
   assert.ok(!env.LEADS.store.has(`bk:203.0.113.9:2026-10-14`), "stop requests don't use up booking limits");
   assert.equal(env.LEADS.store.get(`dn:203.0.113.9:2026-10-14`).value, "1");
+});
+
+test("a KV outage never costs a booking: it goes out as a request the team confirms", async () => {
+  resetSlotCache();
+  const env = envWith();
+  const broken = async () => { throw new Error("KV GET failed: 503"); };
+  env.LEADS.get = broken;
+  let offered;
+  const client = fakeClient([
+    msg([toolUse("get_call_times", { day: "", part_of_day: "any" })], "tool_use"),
+    (params) => {
+      offered = lastToolResult(params);
+      return msg([toolUse("book_call", { slot_id: offered.available[0].slot_id, ...lead })], "tool_use");
+    },
+    (params) => {
+      const r = lastToolResult(params);
+      assert.equal(r.booked, true);
+      assert.equal(r.time_confirmed, false, "a time that couldn't be checked is not called confirmed");
+      assert.match(r.what_next, /team will confirm/);
+      return msg([text("I've requested that time; the team will confirm it by phone.")]);
+    },
+  ]);
+  const out = await runTurn({ env, history: [], message: "book me", context, nowMs: NOW, client, clientKey: "198.51.100.7" });
+  assert.ok(offered.available.length > 0, "times are still offered when the slot index can't be read");
+  assert.equal(out.leads.length, 1);
+  assert.equal(out.leads[0].delivered, true);
+  assert.equal(out.ui.booking.requested, true);
+  const raw = env.SEND_EMAIL.sent[0].raw;
+  const body = Buffer.from(raw.split("\r\n\r\n")[1].replace(/\r\n/g, ""), "base64").toString();
+  assert.match(body, /^CALL REQUESTED \(the time could not be locked in/);
+  assert.match(raw, /Subject: Call request \(confirm the time\)/);
+});
+
+test("without lead storage, a chosen time is a request, not a confirmed booking", async () => {
+  const env = envWith({ LEADS: undefined });
+  const client = fakeClient([
+    msg([toolUse("book_call", { slot_id: "2026-10-14T16:30:00.000Z", ...lead })], "tool_use"),
+    msg([text("Requested.")]),
+  ]);
+  const out = await runTurn({ env, history: [], message: "book 9:30", context, nowMs: NOW, client });
+  assert.equal(JSON.parse(client.calls[1].messages.at(-1).content[0].content).time_confirmed, false);
+  assert.equal(out.ui.booking.requested, true);
+});
+
+test("booked times are kept in one index key (no KV list) and leave the offered times", async () => {
+  resetSlotCache();
+  const env = envWith();
+  env.LEADS.list = async () => { throw new Error("list must not be used"); };
+  const client = fakeClient([
+    msg([toolUse("book_call", { slot_id: "2026-10-14T16:30:00.000Z", ...lead })], "tool_use"),
+    msg([text("Booked.")]),
+  ]);
+  await runTurn({ env, history: [], message: "book 9:30", context, nowMs: NOW, client });
+  assert.deepEqual(JSON.parse(env.LEADS.store.get("slots:index").value), ["2026-10-14T16:30:00.000Z"]);
+  resetSlotCache();
+  const client2 = fakeClient([msg([toolUse("get_call_times", { day: "", part_of_day: "any" })], "tool_use"), msg([text("ok")])]);
+  await runTurn({ env, history: [], message: "times?", context, nowMs: NOW, client: client2 });
+  const offered = JSON.parse(client2.calls[1].messages.at(-1).content[0].content);
+  assert.ok(!offered.available.some((s) => s.slot_id === "2026-10-14T16:30:00.000Z"), "the booked time is not offered again");
+});
+
+test("the texting question and answer are kept with the lead", async () => {
+  const env = envWith();
+  const ask = "Can Prime Acre Capital text you at this number about your offer? Msg & data rates may apply; reply STOP to opt out. Agreeing isn't required.";
+  const t1 = await runTurn({ env, history: [], message: "I'm Dana, 602-555-0143, 123 Main St Mesa", context, nowMs: NOW, client: fakeClient([msg([text(ask)])]) });
+  const client = fakeClient([
+    msg([toolUse("save_lead", { callback_preference: "ASAP", ...lead })], "tool_use"),
+    msg([text("Done.")]),
+  ]);
+  const out = await runTurn({ env, history: t1.history, sig: t1.sig, message: "yes, texts are fine", context, nowMs: NOW, client });
+  assert.deepEqual(out.leads[0].textingConsent, { agreed: true, question: ask, answer: "yes, texts are fine" });
+  const body = Buffer.from(env.SEND_EMAIL.sent[0].raw.split("\r\n\r\n")[1].replace(/\r\n/g, ""), "base64").toString();
+  assert.match(body, /Their answer: "yes, texts are fine"/);
+});
+
+test("a context-window stop is never stored", async () => {
+  const client = fakeClient([msg([text("partial")], "model_context_window_exceeded")]);
+  const out = await runTurn({ env: envWith(), history: [], message: "hi", context, nowMs: NOW, client });
+  assert.deepEqual(out.history, []);
+  assert.match(out.reply, /say that again/);
 });

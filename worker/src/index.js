@@ -110,7 +110,9 @@ async function readJson(request) {
 // A 400 from the API that a fresh history can fix (thinking signature, tool pairing).
 // Anything else (billing, configuration) means the AI is unavailable right now.
 function historyProblem(e) {
-  return /signature|thinking|tool_use|tool_result|messages\.\d+/i.test(String((e && e.message) || ""));
+  // The API's own message (e.error.error.message), not the SDK's wrapper text.
+  const apiMessage = e && e.error && e.error.error && e.error.error.message;
+  return /signature|thinking|tool_use|tool_result|messages\.\d+/i.test(String(apiMessage || (e && e.message) || ""));
 }
 
 async function handleChat(request, env, origin) {

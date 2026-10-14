@@ -6,7 +6,7 @@
   "description": "Website chat assistant for Prime Acre Capital LLC (Cloudflare Worker + Claude)",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "echo 'Deploy through the GitHub Action or README Path A. A plain wrangler deploy drops the lead storage binding.' && exit 1",
     "bundle": "wrangler deploy --dry-run --outdir dist",
     "test": "node --test --import ./test/register-stubs.mjs test/*.test.mjs",
     "bundle:paste": "node scripts/bundle-paste.mjs"

@@ -49,7 +49,7 @@ export function normalizeLead(input, { kind = "book" } = {}) {
       return { error: "Needs a phone number or an email address. Ask once; if the seller won't share either, give them our phone number instead and don't ask again." };
     }
   }
-  if (!address && !city && !zip) return { error: "Missing where the property is. Ask for the address, or at least the city or ZIP." };
+  if (kind === "book" && !address && !city && !zip) return { error: "Missing where the property is. Ask for the address, or at least the city or ZIP." };
   const state = clip(input.state, 2).toUpperCase();
   return {
     lead: {
@@ -115,23 +115,38 @@ export async function storeLead(env, lead) {
   return true;
 }
 
-// Booked slots are listed at most every 20 seconds per isolate: KV list operations
-// are limited (1,000 a day on the free plan) and every "show me times" would use one.
+// Upcoming booked slots live in one index key, read at most every 20 seconds per
+// isolate. KV list is avoided on purpose: the free plan allows 1,000 lists a day,
+// and every "show me times" would use one. The index is a hint for offering
+// times; the per-slot key checked in book_call is what guards a booking.
+const INDEX_KEY = "slots:index";
 let slotCache = { at: 0, set: null, env: null };
 
-/** Reserved call slots, as a Set of ISO strings. */
+/** Reserved call slots, as a Set of ISO strings. Never throws: on a KV error it reuses the last list. */
 export async function bookedSlots(env, nowMs = Date.now()) {
   if (!env.LEADS) return new Set();
   if (slotCache.set && slotCache.env === env.LEADS && nowMs - slotCache.at < 20000) return slotCache.set;
-  const booked = new Set();
-  let cursor;
-  do {
-    const page = await env.LEADS.list({ prefix: "slot:", cursor });
-    for (const k of page.keys) booked.add(k.name.slice(5));
-    cursor = page.list_complete ? undefined : page.cursor;
-  } while (cursor);
+  let booked;
+  try {
+    const list = await env.LEADS.get(INDEX_KEY, { type: "json" });
+    booked = new Set(Array.isArray(list) ? list.filter((x) => typeof x === "string") : []);
+  } catch (e) {
+    console.error("slot index read failed", e && e.message);
+    booked = slotCache.set && slotCache.env === env.LEADS ? slotCache.set : new Set();
+  }
   slotCache = { at: nowMs, set: booked, env: env.LEADS };
   return booked;
+}
+
+async function addToIndex(env, iso, nowMs) {
+  const now = new Date(nowMs).toISOString();
+  let list = [];
+  try {
+    const v = await env.LEADS.get(INDEX_KEY, { type: "json" });
+    if (Array.isArray(v)) list = v;
+  } catch { /* rebuild from this booking */ }
+  const next = [...new Set([...list.filter((x) => typeof x === "string" && x > now), iso])].sort().slice(-500);
+  await env.LEADS.put(INDEX_KEY, JSON.stringify(next));
 }
 
 /** Test hook: forget the cached slot list. */
@@ -181,7 +196,7 @@ export async function isSlotTaken(env, iso) {
  * KV has no compare-and-set; writing a token and reading it back catches most races in
  * the same location, not all. The owner sees every booking by email either way.
  */
-export async function reserveSlot(env, iso, startMs, holder) {
+export async function reserveSlot(env, iso, startMs, holder, nowMs = Date.now()) {
   if (!env.LEADS) return "unstored";
   const expiration = Math.floor(startMs / 1000) + 60 * 60 * 24 * 3;
   const token = crypto.randomUUID();
@@ -192,6 +207,7 @@ export async function reserveSlot(env, iso, startMs, holder) {
   } catch { /* unreadable: keep ours */ }
   await env.LEADS.put(`phone:${digitsOf(holder.phone)}`, JSON.stringify({ start: iso }), { expiration: Math.floor(startMs / 1000) + 3600 });
   if (slotCache.set && slotCache.env === env.LEADS) slotCache.set.add(iso);
+  try { await addToIndex(env, iso, nowMs); } catch (e) { console.error("slot index write failed", e && e.message); }
   return "reserved";
 }
 
@@ -231,12 +247,16 @@ export function buildMime({ from, fromName, to, replyTo, subject, text, domain }
 export function leadEmailText(lead) {
   const row = (label, value) => (value ? `${label}: ${value}` : null);
   const lines = [
-    lead.appointment ? `CALL BOOKED: ${lead.appointment.ownerLabel} (seller's time: ${lead.appointment.sellerLabel})` : `CALLBACK REQUEST: ${lead.callbackPreference || "as soon as possible"}`,
+    lead.appointment
+      ? `${lead.appointment.reserved === false ? "CALL REQUESTED (the time could not be locked in: confirm it with the seller)" : "CALL BOOKED"}: ${lead.appointment.ownerLabel} (seller's time: ${lead.appointment.sellerLabel})`
+      : `CALLBACK REQUEST: ${lead.callbackPreference || "as soon as possible"}`,
     "",
     row("Name", lead.name),
     row("Phone", lead.phone),
     row("Email", lead.email),
     lead.phone ? row("Texts OK", lead.smsConsent ? "yes" : "no - call or email only") : row("Contact", "email only (no phone given)"),
+    lead.textingConsent && lead.textingConsent.question ? row("Texting question", `"${lead.textingConsent.question}"`) : null,
+    lead.textingConsent && lead.textingConsent.question ? row("Their answer", `"${lead.textingConsent.answer || "(no reply)"}"`) : null,
     "",
     row("Property", [lead.address, lead.city, [lead.state, lead.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")),
     row("Type", lead.propertyType),
@@ -290,7 +310,7 @@ async function emailOwner(env, { subject, text, replyTo }) {
 export async function emailLead(env, lead) {
   const where = [lead.address, lead.city, lead.state].filter(Boolean).join(", ");
   const subject = lead.appointment
-    ? `New booked call ${lead.appointment.ownerLabel}: ${where}`
+    ? `${lead.appointment.reserved === false ? "Call request (confirm the time)" : "New booked call"} ${lead.appointment.ownerLabel}: ${where}`
     : `New seller lead (${lead.phone ? "callback" : "email follow-up"}): ${where}`;
   return emailOwner(env, { subject, text: leadEmailText(lead), replyTo: lead.email });
 }
