@@ -3,6 +3,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import worker from "../src/index.js";
+import { clientKey } from "../src/net.js";
 
 const seen = [];
 let server;
@@ -19,6 +20,10 @@ before(async () => {
       if (last.includes("trigger400")) {
         res.writeHead(400, { "content-type": "application/json" });
         return res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "messages.1.content.0: Invalid `signature`" } }));
+      }
+      if (last.includes("triggerBilling")) {
+        res.writeHead(400, { "content-type": "application/json" });
+        return res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "Your credit balance is too low to access the Anthropic API." } }));
       }
       if (last.includes("trigger401")) {
         res.writeHead(401, { "content-type": "application/json" });
@@ -87,6 +92,25 @@ test("errors map to what the chat bubble expects", async () => {
   assert.equal(forged.status, 409);
   const noKey = await chat({ message: "hi" }, ORIGIN, {});
   assert.equal(noKey.status, 503);
+  const billing = await chat({ message: "triggerBilling", history: [] });
+  assert.equal(billing.status, 503, "billing problems switch the bubble to guided mode, without wiping the chat");
+  assert.deepEqual(await billing.json(), { error: "ai_unavailable" });
+  const unsigned = await chat({ message: "hi", history: [{ role: "user", content: [{ type: "text", text: "x" }] }] });
+  assert.equal(unsigned.status, 409, "a history without the Worker's signature is refused");
+  const chunked = await worker.fetch(new Request("https://x/chat", {
+    method: "POST", headers: { Origin: ORIGIN, "Content-Type": "application/json" },
+    body: new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(JSON.stringify({ message: "hi", pad: "\u4e2d".repeat(70000) }))); c.close(); } }),
+    duplex: "half",
+  }), env());
+  assert.equal(chunked.status, 400, "the size cap counts bytes even without Content-Length");
   const big = await worker.fetch(new Request("https://x/chat", { method: "POST", headers: { Origin: ORIGIN, "Content-Type": "application/json" }, body: JSON.stringify({ message: "hi", history: [{ role: "user", content: [{ type: "text", text: "y".repeat(210000) }] }] }) }), env());
   assert.equal(big.status, 400);
+});
+
+test("rate-limit keys group IPv6 by /64", () => {
+  assert.equal(clientKey("203.0.113.9"), "203.0.113.9");
+  assert.equal(clientKey("2001:db8:abcd:12:1:2:3:4"), "2001:db8:abcd:12::/64");
+  assert.equal(clientKey("2001:0db8:abcd:0012:ffff::1"), "2001:db8:abcd:12::/64");
+  assert.equal(clientKey("2001:db8::1"), "2001:db8:0:0::/64");
+  assert.equal(clientKey(null), "unknown");
 });

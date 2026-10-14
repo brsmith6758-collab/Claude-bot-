@@ -5,9 +5,17 @@ import { buildSystemPrompt, TOOLS, contextLine } from "./prompt.js";
 import {
   scheduleConfig, openSlots, pickSlots, slotLabel, isValidTimeZone, calendarLink, stateTimeZone,
 } from "./slots.js";
-import { normalizeLead, storeLead, emailLead, bookedSlots, isSlotTaken, reserveSlot } from "./leads.js";
+import {
+  normalizeLead, storeLead, emailLead, bookedSlots, isSlotTaken, reserveSlot, phoneBooking, bookingsToday, countBooking,
+} from "./leads.js";
 
 const MAX_MODEL_CALLS = 5;
+const MAX_TOKENS = 16000;          // room for thinking plus the reply (non-streaming default)
+const TURN_BUDGET_MS = 45000;      // the browser gives up at 60 s
+const MAX_HISTORY_MESSAGES = 100;
+const MAX_HISTORY_CHARS = 150000;
+const MAX_BOOKINGS_PER_CONVERSATION = 2;
+const MAX_BOOKINGS_PER_DAY = 3;    // per visitor network, when KV is bound
 
 const ZONE_NAMES = {
   "America/Chicago": "Central time",
@@ -60,17 +68,25 @@ function systemPrompt(biz) {
 const USER_BLOCKS = new Set(["text", "tool_result"]);
 const ASSISTANT_BLOCKS = new Set(["text", "thinking", "redacted_thinking", "tool_use", "fallback"]);
 
-/**
- * The browser holds the conversation and sends it back each turn. Accept only
- * shapes this Worker produces: user/assistant turns with text, tool and thinking
- * blocks. No system turns, images, or documents. Returns the array unchanged.
- */
-export class HistoryError extends Error {}
+/** A history the Worker will not use. `code` is "reset" (start over) or "too_long". */
+export class HistoryError extends Error {
+  constructor(message, code = "reset") {
+    super(message);
+    this.code = code;
+  }
+}
 
+/**
+ * The browser holds the conversation and sends it back each turn, signed (see
+ * signHistory). Besides the signature, accept only shapes this Worker produces:
+ * user/assistant turns with text, tool and thinking blocks. No system turns,
+ * images, or documents. Returns the array unchanged.
+ */
 export function checkHistory(history) {
-  const fail = (why) => { throw new HistoryError(why); };
+  const fail = (why, code) => { throw new HistoryError(why, code); };
   if (!Array.isArray(history)) fail("history must be an array");
-  if (history.length > 80) fail("conversation too long");
+  if (history.length > MAX_HISTORY_MESSAGES) fail("conversation too long", "too_long");
+  if (JSON.stringify(history).length > MAX_HISTORY_CHARS) fail("conversation too long", "too_long");
   history.forEach((msg, i) => {
     if (!msg || typeof msg !== "object") fail(`message ${i} is not an object`);
     if (i === 0 && msg.role !== "user") fail("first message must be from the user");
@@ -85,6 +101,38 @@ export function checkHistory(history) {
   return history;
 }
 
+// The history is signed with a key derived from the Worker's secret, so a visitor
+// cannot send the model forged turns or fake tool results.
+const keyCache = new Map();
+async function historyKey(env) {
+  const secret = env.HISTORY_SECRET || env.ANTHROPIC_API_KEY || "";
+  if (!keyCache.has(secret)) {
+    const raw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`prime-acre-chat-history-v1:${secret}`));
+    keyCache.set(secret, await crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]));
+  }
+  return keyCache.get(secret);
+}
+
+function b64url(buf) {
+  let s = "";
+  for (const b of new Uint8Array(buf)) s += String.fromCharCode(b);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export async function signHistory(env, history) {
+  const key = await historyKey(env);
+  return b64url(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(JSON.stringify(history))));
+}
+
+export async function verifyHistory(env, history, sig) {
+  if (!Array.isArray(history) || history.length === 0) return true;
+  if (typeof sig !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(sig)) return false;
+  const bin = atob(sig.replace(/-/g, "+").replace(/_/g, "/") + "=");
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  const key = await historyKey(env);
+  return crypto.subtle.verify("HMAC", key, bytes, new TextEncoder().encode(JSON.stringify(history)));
+}
+
 /**
  * After a server-side fallback the docs say to omit thinking, redacted_thinking
  * and tool_use blocks that come before the last `fallback` block.
@@ -93,6 +141,22 @@ export function cleanAssistantContent(content) {
   const last = content.map((b) => b.type).lastIndexOf("fallback");
   if (last < 0) return content;
   return content.filter((b, i) => i > last || b.type === "text");
+}
+
+/** Bookings and callback requests that already succeeded in this conversation. */
+function priorBookings(history) {
+  let n = 0;
+  for (const m of history) {
+    if (m.role !== "user") continue;
+    for (const b of m.content) {
+      if (b.type !== "tool_result" || b.is_error) continue;
+      try {
+        const r = JSON.parse(b.content);
+        if (r.booked === true || r.saved === true) n++;
+      } catch { /* not ours */ }
+    }
+  }
+  return n;
 }
 
 // ---------------------------------------------------------------- tools
@@ -106,7 +170,7 @@ async function runTool(name, input, ctx) {
   const cfg = biz.cfg;
 
   if (name === "get_call_times") {
-    const booked = await bookedSlots(env);
+    const booked = await bookedSlots(env, nowMs);
     const all = openSlots(nowMs, cfg, booked);
     const day = validDay(input.day);
     const part = ["morning", "afternoon", "evening"].includes(input.part_of_day) ? input.part_of_day : "any";
@@ -117,21 +181,28 @@ async function runTool(name, input, ctx) {
       picked = pickSlots(all, { sellerTz });
     }
     const available = picked.map((ms) => ({ slot_id: new Date(ms).toISOString(), label: slotLabel(ms, sellerTz, lang) }));
+    if (!available.length) note = "No open times in the next week. Offer to save a callback request instead.";
     return {
-      content: {
-        seller_time_zone: sellerTz,
-        business_hours: biz.hoursLabel,
-        available,
-        ...(note ? { note } : {}),
-        ...(available.length ? {} : { note: "No open times in the next week. Offer to save a callback request instead." }),
-      },
+      content: { seller_time_zone: sellerTz, business_hours: biz.hoursLabel, available, ...(note ? { note } : {}) },
       ui: available.length ? { slots: available } : undefined,
     };
   }
 
   if (name === "book_call" || name === "save_lead") {
+    // Limits enforced in code, whatever the conversation says.
+    if (ctx.bookingsThisResponse >= 1) {
+      return { content: { error: "Only one booking or callback request can be made at a time. Confirm this one with the seller first." }, isError: true };
+    }
+    if (ctx.priorBookings + ctx.bookingsThisTurn >= MAX_BOOKINGS_PER_CONVERSATION) {
+      return { content: { error: `This conversation already has a booking. Tell the seller the team has their details, and that they can call or text ${biz.phone} to change anything.` }, isError: true };
+    }
+    if ((await bookingsToday(env, ctx.clientKey, nowMs)) >= MAX_BOOKINGS_PER_DAY) {
+      return { content: { error: `No more bookings can be made from this connection today. Ask the seller to call or text ${biz.phone}.` }, isError: true };
+    }
+    ctx.bookingsThisResponse++;
+
     const { lead, error } = normalizeLead(input);
-    if (error) return { content: { error }, isError: true };
+    if (error) { ctx.bookingsThisResponse--; return { content: { error }, isError: true }; }
 
     let appointment;
     if (name === "book_call") {
@@ -139,19 +210,25 @@ async function runTool(name, input, ctx) {
       const iso = Number.isFinite(ms) ? new Date(ms).toISOString() : "";
       const legit = iso && openSlots(nowMs, cfg).includes(ms);
       if (!legit) {
+        ctx.bookingsThisResponse--;
         return { content: { error: "That slot_id is not an open time. Call get_call_times and use one of its slot_id values." }, isError: true };
       }
+      const existing = await phoneBooking(env, lead.phone, nowMs);
+      if (existing) {
+        ctx.bookingsThisResponse--;
+        const when = slotLabel(Date.parse(existing.start), sellerTz, lang);
+        return { content: { error: `This phone number already has a call booked for ${when}. Tell the seller, and that they can call or text ${biz.phone} to change it.` }, isError: true };
+      }
       if (await isSlotTaken(env, iso)) {
+        ctx.bookingsThisResponse--;
         return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
       }
-      const sellerLabel = slotLabel(ms, sellerTz, lang);
-      const ownerLabel = slotLabel(ms, cfg.tz, "en");
       appointment = {
         start: iso,
         minutes: cfg.slotMinutes,
-        sellerLabel,
+        sellerLabel: slotLabel(ms, sellerTz, lang),
         sellerTimeZone: sellerTz,
-        ownerLabel,
+        ownerLabel: slotLabel(ms, cfg.tz, "en"),
         ownerCalendarUrl: calendarLink({
           startMs: ms,
           minutes: cfg.slotMinutes,
@@ -167,7 +244,12 @@ async function runTool(name, input, ctx) {
             : `We'll call you at ${lead.phone} about your property. Questions: ${biz.phone}`,
         }),
       };
-      await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone });
+      try {
+        appointment.reserved = await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone });
+      } catch (e) {
+        console.error("reserveSlot failed", e && e.message);
+        appointment.reserved = false; // the lead still goes out; the owner confirms the time
+      }
     }
 
     const full = {
@@ -183,6 +265,8 @@ async function runTool(name, input, ctx) {
     let emailed = false;
     try { stored = await storeLead(env, full); } catch (e) { console.error("storeLead failed", e && e.message); }
     try { emailed = await emailLead(env, full); } catch (e) { console.error("emailLead failed", e && e.message); }
+    try { await countBooking(env, ctx.clientKey, nowMs); } catch (e) { console.error("countBooking failed", e && e.message); }
+    ctx.bookingsThisTurn++;
 
     const content = appointment
       ? { booked: true, when: appointment.sellerLabel, call_length_minutes: cfg.slotMinutes, what_next: "The team reviews the property before the call; a written cash offer typically follows within 24 hours of the review." }
@@ -215,7 +299,7 @@ function requestParams(env, system, messages) {
   if (useFallback) betas.unshift("server-side-fallback-2026-07-01");
   return {
     model,
-    max_tokens: 4096,
+    max_tokens: MAX_TOKENS,
     system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
     tools: TOOLS,
     tool_choice: { type: "auto" },
@@ -229,43 +313,63 @@ function requestParams(env, system, messages) {
 }
 
 /**
- * Run one turn. Returns { reply, history, ui, leads, refused }.
- * Throws Anthropic.APIError subclasses for API failures (the caller maps them).
+ * Run one turn. Returns { reply, history, sig, ui, leads, refused }.
+ * Throws HistoryError for a history it will not use, and Anthropic.APIError
+ * subclasses for API failures that happened before anything was booked.
  */
-export async function runTurn({ env, history, message, context, nowMs = Date.now(), client }) {
+export async function runTurn({
+  env, history, sig, message, context, clientKey = "", nowMs = Date.now(), client, budgetMs = TURN_BUDGET_MS,
+}) {
+  const startedAt = Date.now();
   const biz = businessInfo(env);
   const lang = context.lang === "es" ? "es" : "en";
   const sellerTz = sellerTimeZone(context, biz);
   const page = String(context.page || "/").slice(0, 200);
-  const ctx = { env, biz, sellerTz, lang, page, nowMs };
 
   const base = checkHistory(history);
+  if (!(await verifyHistory(env, base, sig))) throw new HistoryError("history signature does not match");
+  const ctx = {
+    env, biz, sellerTz, lang, page, nowMs, clientKey,
+    priorBookings: priorBookings(base), bookingsThisTurn: 0, bookingsThisResponse: 0,
+  };
+
   const text = base.length === 0
     ? `${contextLine({ page, lang, localTime: context.localTime, timeZone: sellerTz })}\n${message}`
     : message;
   const messages = [...base, { role: "user", content: [{ type: "text", text }] }];
   const firstNew = base.length;
 
-  const api = client || new Anthropic({
-    apiKey: env.ANTHROPIC_API_KEY,
-    baseURL: env.ANTHROPIC_BASE_URL || undefined,
-    timeout: 30000,
-    maxRetries: 1,
-  });
+  const api = client || new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
   const system = systemPrompt(biz);
+  const finish = async (out) => ({ ...out, sig: await signHistory(env, out.history) });
 
   const ui = {};
   const leads = [];
   let lastStop = "";
   for (let call = 0; call < MAX_MODEL_CALLS; call++) {
-    const response = await api.beta.messages.create(requestParams(env, system, messages));
+    const remaining = budgetMs - (Date.now() - startedAt);
+    if (call > 0 && remaining < 8000) { lastStop = "deadline"; break; }
+
+    let response;
+    try {
+      response = await api.beta.messages.create(requestParams(env, system, messages), {
+        timeout: Math.max(5000, Math.min(30000, remaining)),
+        maxRetries: remaining > 35000 ? 1 : 0,
+      });
+    } catch (e) {
+      // A booking already happened this turn: report it rather than lose it.
+      if (leads.length) { console.error("model call failed after a booking", e && e.message); lastStop = "error"; break; }
+      throw e;
+    }
     lastStop = response.stop_reason;
     const u = response.usage || {};
     console.log(JSON.stringify({ evt: "model", model: response.model, stop: lastStop, in: u.input_tokens, cacheRead: u.cache_read_input_tokens, cacheWrite: u.cache_creation_input_tokens, out: u.output_tokens }));
 
-    if (response.stop_reason === "refusal") {
-      if (leads.length) break; // keep what was already booked this turn
-      return { reply: refusalText(lang, biz), history: base, ui: {}, leads: [], refused: true };
+    if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") {
+      // Never store a declined or cut-off response. Keep what was booked; otherwise undo the turn.
+      if (leads.length) break;
+      const reply = response.stop_reason === "refusal" ? refusalText(lang, biz) : fallbackText(lang, biz, {}, lastStop);
+      return finish({ reply, history: base, ui: {}, leads: [], refused: response.stop_reason === "refusal" });
     }
 
     const content = cleanAssistantContent(response.content);
@@ -273,6 +377,7 @@ export async function runTurn({ env, history, message, context, nowMs = Date.now
     if (response.stop_reason !== "tool_use") break;
 
     const results = [];
+    ctx.bookingsThisResponse = 0;
     for (const block of content) {
       if (block.type !== "tool_use") continue;
       let out;
@@ -301,13 +406,13 @@ export async function runTurn({ env, history, message, context, nowMs = Date.now
     .filter(Boolean)
     .join("\n\n");
 
-  return {
+  return finish({
     reply: reply || fallbackText(lang, biz, ui, lastStop),
     history: messages,
     ui,
     leads,
     refused: false,
-  };
+  });
 }
 
 function refusalText(lang, biz) {

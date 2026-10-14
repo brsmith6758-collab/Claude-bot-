@@ -28,6 +28,7 @@
       chips: ["I want a cash offer", "How does it work?", "Book a call", "Talk to a person"],
       person: "You can call or text us at " + PHONE + " any time. Or leave your name and number here and we'll call you.",
       trouble: "I'm having trouble connecting right now. You can try again, or call or text " + PHONE + ".",
+      fresh: "This chat got long, so I'm starting a fresh page. Anything you already booked is saved with the team.",
       tryAgain: "Try again",
       switching: "Let me take your details the quick way so the team can reach you.",
       booked: "Call booked", addCal: "Add to my calendar", call: "Call", text: "Text",
@@ -77,6 +78,7 @@
       chips: ["Quiero una oferta en efectivo", "¿Cómo funciona?", "Programar una llamada", "Hablar con una persona"],
       person: "Puede llamarnos o enviarnos un texto al " + PHONE + " cuando quiera. O deje aquí su nombre y número y le llamamos.",
       trouble: "Tengo problemas para conectarme. Puede intentarlo de nuevo, o llamar o enviar un texto al " + PHONE + ".",
+      fresh: "Esta conversación se hizo larga, así que empiezo una nueva. Lo que ya programó está guardado con el equipo.",
       tryAgain: "Intentar de nuevo",
       switching: "Permítame tomar sus datos de forma rápida para que el equipo se comunique con usted.",
       booked: "Llamada programada", addCal: "Agregar a mi calendario", call: "Llamar", text: "Texto",
@@ -121,7 +123,7 @@
   function load() {
     try { return JSON.parse(window.sessionStorage.getItem(STORE_KEY)) || null; } catch (e) { return null; }
   }
-  var state = load() || { v: 1, mode: "", history: [], transcript: [], chips: [], g: { step: "intent", data: {} }, open: false };
+  var state = load() || { v: 1, mode: "", history: [], sig: "", transcript: [], chips: [], g: { step: "intent", data: {} }, open: false };
   function save() {
     try { window.sessionStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
   }
@@ -435,14 +437,14 @@
       headers: { "Content-Type": "application/json" },
       credentials: "omit",
       signal: ctrl ? ctrl.signal : undefined,
-      body: JSON.stringify({ message: text, history: state.history, context: context() })
+      body: JSON.stringify({ message: text, history: state.history, sig: state.sig || "", context: context() })
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; });
     }).then(function (res) {
       window.clearTimeout(timer);
       if (res.status === 200 && res.body && typeof res.body.reply === "string") {
         failures = 0;
-        state.history = Array.isArray(res.body.history) ? res.body.history : state.history;
+        if (Array.isArray(res.body.history)) { state.history = res.body.history; state.sig = res.body.sig || ""; }
         setBusy(false);
         bot(res.body.reply);
         handleUi(res.body.ui || {});
@@ -451,8 +453,9 @@
         return;
       }
       var err = res.body && res.body.error;
-      if (res.status === 409 && err === "reset" && !isRetry) {
-        state.history = []; save();
+      if ((err === "reset" || err === "too_long") && !isRetry) {
+        state.history = []; state.sig = ""; save();
+        if (err === "too_long") bot(T.fresh);
         return aiSend(text, true);
       }
       if (err === "ai_unavailable") return switchToGuided();

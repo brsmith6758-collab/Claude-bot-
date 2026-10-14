@@ -69,17 +69,57 @@ export async function storeLead(env, lead) {
   return true;
 }
 
+// Booked slots are listed at most every 20 seconds per isolate: KV list operations
+// are limited (1,000 a day on the free plan) and every "show me times" would use one.
+let slotCache = { at: 0, set: null, env: null };
+
 /** Reserved call slots, as a Set of ISO strings. */
-export async function bookedSlots(env) {
+export async function bookedSlots(env, nowMs = Date.now()) {
+  if (!env.LEADS) return new Set();
+  if (slotCache.set && slotCache.env === env.LEADS && nowMs - slotCache.at < 20000) return slotCache.set;
   const booked = new Set();
-  if (!env.LEADS) return booked;
   let cursor;
   do {
     const page = await env.LEADS.list({ prefix: "slot:", cursor });
     for (const k of page.keys) booked.add(k.name.slice(5));
     cursor = page.list_complete ? undefined : page.cursor;
   } while (cursor);
+  slotCache = { at: nowMs, set: booked, env: env.LEADS };
   return booked;
+}
+
+/** Test hook: forget the cached slot list. */
+export function resetSlotCache() {
+  slotCache = { at: 0, set: null, env: null };
+}
+
+const digitsOf = (phone) => String(phone || "").replace(/\D/g, "").slice(-10);
+
+/** The future call already booked for this phone number, if any: { start } or null. */
+export async function phoneBooking(env, phone, nowMs) {
+  if (!env.LEADS) return null;
+  const raw = await env.LEADS.get(`phone:${digitsOf(phone)}`);
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    return Date.parse(v.start) > nowMs ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Bookings and callback requests made today from one visitor network. */
+export async function bookingsToday(env, clientKey, nowMs) {
+  if (!env.LEADS || !clientKey) return 0;
+  const day = new Date(nowMs).toISOString().slice(0, 10);
+  return parseInt((await env.LEADS.get(`bk:${clientKey}:${day}`)) || "0", 10) || 0;
+}
+
+export async function countBooking(env, clientKey, nowMs) {
+  if (!env.LEADS || !clientKey) return;
+  const day = new Date(nowMs).toISOString().slice(0, 10);
+  const n = (await bookingsToday(env, clientKey, nowMs)) + 1;
+  await env.LEADS.put(`bk:${clientKey}:${day}`, String(n), { expirationTtl: 60 * 60 * 26 });
 }
 
 export async function isSlotTaken(env, iso) {
@@ -88,9 +128,12 @@ export async function isSlotTaken(env, iso) {
 }
 
 export async function reserveSlot(env, iso, startMs, holder) {
-  if (!env.LEADS) return;
+  if (!env.LEADS) return false;
   const expiration = Math.floor(startMs / 1000) + 60 * 60 * 24 * 3;
   await env.LEADS.put(`slot:${iso}`, JSON.stringify(holder), { expiration, metadata: holder });
+  await env.LEADS.put(`phone:${digitsOf(holder.phone)}`, JSON.stringify({ start: iso }), { expiration: Math.floor(startMs / 1000) + 3600 });
+  if (slotCache.set && slotCache.env === env.LEADS) slotCache.set.add(iso);
+  return true;
 }
 
 // ---------------------------------------------------------------- email

@@ -76,19 +76,10 @@ jobs:
       - name: Deploy
         if: steps.gate.outputs.ready == 'true'
         run: |
-          cp wrangler.toml wrangler.base.toml
-          printf '\n[[ratelimits]]\nname = "CHAT_LIMITER"\nnamespace_id = "1001"\nsimple = { limit = 20, period = 60 }\n' >> wrangler.toml
           if [ "${{ vars.EMAIL_BINDING }}" = "true" ]; then
             printf '\n[[send_email]]\nname = "SEND_EMAIL"\ndestination_address = "brsmith6758@gmail.com"\n' >> wrangler.toml
           fi
-          if ! npx wrangler deploy; then
-            echo "::warning::Deploy with the rate limiter failed; retrying without it."
-            cp wrangler.base.toml wrangler.toml
-            if [ "${{ vars.EMAIL_BINDING }}" = "true" ]; then
-              printf '\n[[send_email]]\nname = "SEND_EMAIL"\ndestination_address = "brsmith6758@gmail.com"\n' >> wrangler.toml
-            fi
-            npx wrangler deploy
-          fi
+          npx wrangler deploy
           printf '%s' "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY
 
       - name: Check it answers

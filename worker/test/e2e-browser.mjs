@@ -91,7 +91,7 @@ async function waitBot(page, n) {
   await waitBot(page, 1);
   await sendText(page, "Hi, I inherited a house in Mesa");
   await waitBot(page, 2);
-  await sendText(page, "I'm Dana Lee, 602-555-0143, 123 Main St Mesa AZ");
+  await sendText(page, "I'm Dana Lee, 602-555-0177, 123 Main St Mesa AZ");
   await waitBot(page, 3);
   await sendText(page, "Can we book a call?");
   await waitBot(page, 4);
