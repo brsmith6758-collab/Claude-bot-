@@ -150,7 +150,8 @@ export function cleanAssistantContent(content) {
 /** Keys for the contacts and channel a stop request covers: "p:<digits>:texts", "e:<email>:all". */
 function stopKeys(notice) {
   const keys = [];
-  if (notice.phone) keys.push(`p:${notice.phone.replace(/\D/g, "")}:${notice.channels}`);
+  const phone = notice.phone || notice.phoneAsGiven;
+  if (phone) keys.push(`p:${phone.replace(/\D/g, "")}:${notice.channels}`);
   if (notice.email) keys.push(`e:${notice.email.toLowerCase()}:${notice.channels}`);
   return keys;
 }
@@ -174,8 +175,10 @@ function priorActions(history) {
         if (r.booked === true || r.saved === true) n.bookings++;
         if (r.recorded === true && !r.duplicate) {
           n.stops++;
+          // Only a stop the Worker emailed itself is known to have reached the team. Otherwise
+          // a repeat is sent again, so the browser gets another chance to deliver it.
           const { notice } = normalizeStop(stopInputs.get(b.tool_use_id) || {});
-          if (notice) for (const k of stopKeys(notice)) n.stopped.add(k);
+          if (notice && r.team_notified === true) for (const k of stopKeys(notice)) n.stopped.add(k);
         }
       } catch { /* not ours */ }
     }
@@ -203,7 +206,7 @@ export function transcriptText(messages, max = MAX_TRANSCRIPT_CHARS) {
 }
 
 // The disclosure the prompt requires in the texting question, in either language.
-const CONSENT_QUESTION = /(msg|message)s?\s*(&|and)\s*data rates|tarifas de mensajes y datos/i;
+const CONSENT_QUESTION = /(msg|messag\w*)\s*(&|and|\/)\s*data|mensajes y (de )?datos|reply stop|responda stop|text you|enviarle (mensajes de )?texto|mensajes de texto/i;
 
 /**
  * The texting question and the seller's reply, kept apart from the transcript so
@@ -217,7 +220,7 @@ export function consentExchange(messages) {
     if (t) texts.push({ role: m.role, text: m.role === "user" ? t.replace(CONTEXT_PREFIX, "") : t });
   }
   for (let i = texts.length - 1; i >= 0; i--) {
-    if (texts[i].role !== "assistant" || !CONSENT_QUESTION.test(texts[i].text)) continue;
+    if (texts[i].role !== "assistant" || !CONSENT_QUESTION.test(texts[i].text) || !texts[i].text.includes("?")) continue;
     const reply = texts.slice(i + 1).find((x) => x.role === "user");
     if (reply) return { question: texts[i].text.slice(0, 600), answer: reply.text.slice(0, 600) };
   }
@@ -262,7 +265,9 @@ async function runTool(name, input, ctx) {
     let last;
     // The index is only a hint; the per-slot keys are the truth. Check the few times
     // about to be offered (a handful of KV reads), and pick again if any are taken.
-    for (let round = 0; round < 3; round++) {
+    const stale = [];
+    const free = new Set(); // times already checked and open
+    for (let round = 0; round < 5; round++) {
       const all = openSlots(nowMs, cfg, booked);
       last = all.length ? ymd(zonedParts(all[all.length - 1], sellerTz)) : sellerToday;
       picked = pickSlots(all, { sellerTz, day, partOfDay: part });
@@ -280,15 +285,15 @@ async function runTool(name, input, ctx) {
         picked = pickSlots(all, { sellerTz, sellerHours: null });
         if (picked.length) note = "These are the only open times, and they are early or late in the seller's time zone; mention that.";
       }
-      const isos = picked.map((ms) => new Date(ms).toISOString());
-      const taken = await Promise.all(isos.map((iso) => soft(isSlotTaken(env, iso), false, "isSlotTaken")));
-      const stale = isos.filter((_, i) => taken[i]);
-      if (!stale.length) break;
-      for (const iso of stale) {
-        booked.add(iso);
-        await soft(markBooked(env, iso, nowMs), undefined, "markBooked"); // heal the index
-      }
+      const unknown = picked.map((ms) => new Date(ms).toISOString()).filter((iso) => !free.has(iso));
+      if (!unknown.length) break;
+      const taken = await Promise.all(unknown.map((iso) => soft(isSlotTaken(env, iso), false, "isSlotTaken")));
+      unknown.forEach((iso, i) => { if (taken[i]) { booked.add(iso); stale.push(iso); } else free.add(iso); });
+      if (!taken.some(Boolean)) break;
     }
+    // Only times checked and found open are ever offered (at most ~30 KV reads, even after a big backlog).
+    picked = picked.filter((ms) => free.has(new Date(ms).toISOString()));
+    if (stale.length) await soft(markBooked(env, stale, nowMs), undefined, "markBooked"); // heal the index, one write
     const available = picked.map((ms) => ({ slot_id: new Date(ms).toISOString(), label: slotLabel(ms, sellerTz, lang) }));
     if (!available.length) note = "No open times in the next week. Offer to save a callback request instead.";
     const weekday = new Intl.DateTimeFormat("en-US", { timeZone: sellerTz, weekday: "long" }).format(new Date(nowMs));
@@ -433,7 +438,6 @@ async function runTool(name, input, ctx) {
       return { content: { error: `Too many requests from this chat. Ask the seller to email ${biz.email} with the number or email to remove, and say the team will take care of it.` }, isError: true };
     }
     ctx.stopsThisTurn++;
-    for (const k of keys) ctx.stopped.add(k);
     const full = {
       ...notice,
       type: "do_not_contact",
@@ -448,6 +452,7 @@ async function runTool(name, input, ctx) {
     try { stored = await storeStop(env, full); } catch (e) { console.error("storeStop failed", e && e.message); }
     try { emailed = await emailStop(env, full); } catch (e) { console.error("emailStop failed", e && e.message); }
     try { await countBooking(env, ctx.clientKey, nowMs, "dn"); } catch (e) { console.error("count stop failed", e && e.message); }
+    if (emailed) for (const k of keys) ctx.stopped.add(k);
     const promise = {
       all: "we won't call, text, or email them again",
       calls: "we won't call them again",
@@ -455,7 +460,7 @@ async function runTool(name, input, ctx) {
       email: "we won't email them again",
     }[notice.channels];
     return {
-      content: { recorded: true, stopped: notice.channels, what_next: `Confirm in one sentence that ${promise}. Don't add anything else.` },
+      content: { recorded: true, team_notified: emailed, stopped: notice.channels, what_next: `Confirm in one sentence that ${promise}. Don't add anything else.` },
       lead: { ...full, delivered: emailed, stored },
       ui: { stopped: notice.channels },
     };
@@ -573,7 +578,12 @@ export async function runTurn({
         console.error("tool failed", block.name, e && e.message);
         out = { content: { error: "Something went wrong on our side. Offer to save a callback request, or share our phone number." }, isError: true };
       }
-      if (out.ui) Object.assign(ui, out.ui);
+      if (out.ui) {
+        // Two different stops in one reply: confirm the wider one.
+        const stopped = out.ui.stopped && ui.stopped && ui.stopped !== out.ui.stopped ? "all" : out.ui.stopped || ui.stopped;
+        Object.assign(ui, out.ui);
+        if (stopped) ui.stopped = stopped;
+      }
       if (out.lead) leads.push(out.lead);
       results.push({
         type: "tool_result",

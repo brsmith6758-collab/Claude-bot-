@@ -57,14 +57,20 @@
       gTimeAsap: "As soon as possible",
       gSending: "One moment…",
       gDone: function (when, sms) { return "Thanks! " + (when ? "I've asked the team to call you around " + when + ". They'll confirm by " + (sms ? "call or text" : "phone") + ". " : "The team will reach out shortly. ") + "They review the property first, and a written cash offer typically follows within 24 hours of the review. If anything changes, call or text " + PHONE + "."; },
-      gDoneEmail: function (email) { return "Thanks! The team will email you at " + email + ". They review the property first, and a written cash offer typically follows within 24 hours of the review."; },
+      gDoneEmail: function (email, hasAddress) { return "Thanks! The team will email you at " + email + "." + (hasAddress ? " They review the property first, and a written cash offer typically follows within 24 hours of the review." : ""); },
       emailOnly: "Email follow-up only",
       gStopAsk: "Understood. What phone number or email should we stop contacting?",
       gStopDoneFor: function (ch) { return "Done. " + ({ calls: "We won't call you again.", texts: "We won't text you again.", email: "We won't email you again." }[ch] || "We won't contact you again. Sorry for the bother."); },
       gNoTexts: "Got it, no texts. The team will call you.",
       gNoTextsMid: "Got it, we won't text you.",
       gNoEmailMid: "Got it, we won't email you.",
-      gNoCalls: "Got it, we won't call you. If you'd like your offer by email instead, what's the best email address? If you'd rather we didn't contact you at all, just say stop.",
+      gNoCallsMid: "Got it, no calls. The team will follow up by text or email instead.",
+      gNoCallsEmail: "Since we won't call, what's the best email for your offer?",
+      noCallsTime: "No calls, please (text or email only)",
+      gDoneNoCalls: "Thanks! The team will follow up by text or email, not by phone. They review the property first, and a written cash offer typically follows within 24 hours of the review.",
+      gStopConfirm: "Just to be sure: do you want us to stop contacting you?",
+      gStopAsk2: "To take you off our list I need the phone number or email we have for you. You can also email " + (EMAIL || "us") + ".",
+      cStopAll: "Stop all contact", cNoCalls: "Just no calls", cNoTexts: "Just no texts", cKeepGoing: "No, keep going",
       gNeutral: "You can call or text us at " + PHONE + " any time.",
       gTimeConfirm: function (t) { return "Just to check: should the team call you around \u201c" + t + "\u201d?"; },
       gTimeConfirmChips: ["Yes, that works", "Pick another time"],
@@ -83,7 +89,7 @@
       requested: "requested time",
       faq: [
         [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. The offer you accept is what you walk away with, minus anything owed on the property."],
-        [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down|notice of default|sheriff|trustee sale|repossess|lose (my|the) (house|home)|(bank|lender) (is )?(taking|going to take|trying to take)|tak(e|ing) my (house|home)/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
+        [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down|notice of default|sheriff|trustee sale|repossess|lose (my|the) (house|home)|(bank|lender|they)( is| are)? (taking|going to take|trying to take) (my|the) (house|home)/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
         [/how (fast|quick|long|soon)|\bclos(e|ing)\b|\bdays?\b/i, "We can close in as little as 7 days once title is clear, or on a later date you pick."],
         [/condition|repair|as.?is|clean|damage|fix/i, "We buy houses as-is in any condition. No repairs, no cleaning, no showings. Leave behind anything you don't want."],
         [/legit|scam|trust|real|safe/i, "Fair question. You never pay us anything, and every closing goes through a licensed title company or closing attorney, so your money never passes through our hands. You can have your own attorney review the contract."],
@@ -129,14 +135,20 @@
       gTimeAsap: "Lo antes posible",
       gSending: "Un momento…",
       gDone: function (when, sms) { return "¡Gracias! " + (when ? "Le pedí al equipo que le llame alrededor de " + when + ". Le confirmarán por " + (sms ? "llamada o texto" : "teléfono") + ". " : "El equipo se comunicará pronto. ") + "Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión. Si algo cambia, llame o envíe un texto al " + PHONE + "."; },
-      gDoneEmail: function (email) { return "¡Gracias! El equipo le escribirá a " + email + ". Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión."; },
+      gDoneEmail: function (email, hasAddress) { return "¡Gracias! El equipo le escribirá a " + email + "." + (hasAddress ? " Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión." : ""); },
       emailOnly: "Solo seguimiento por correo electrónico",
       gStopAsk: "Entendido. ¿Qué número de teléfono o correo electrónico debemos dejar de contactar?",
       gStopDoneFor: function (ch) { return "Listo. " + ({ calls: "No volveremos a llamarle.", texts: "No le enviaremos más mensajes de texto.", email: "No le enviaremos más correos." }[ch] || "No volveremos a contactarle. Disculpe la molestia."); },
       gNoTexts: "Entendido, sin mensajes de texto. El equipo le llamará.",
       gNoTextsMid: "Entendido, no le enviaremos mensajes de texto.",
       gNoEmailMid: "Entendido, no le enviaremos correos.",
-      gNoCalls: "Entendido, no le llamaremos. Si prefiere recibir su oferta por correo, ¿cuál es su correo electrónico? Si prefiere que no le contactemos en absoluto, solo diga stop.",
+      gNoCallsMid: "Entendido, sin llamadas. El equipo le contactará por texto o correo.",
+      gNoCallsEmail: "Como no le llamaremos, ¿cuál es su correo electrónico para la oferta?",
+      noCallsTime: "Sin llamadas, por favor (solo texto o correo)",
+      gDoneNoCalls: "¡Gracias! El equipo le contactará por texto o correo, no por teléfono. Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión.",
+      gStopConfirm: "Para estar seguros: ¿quiere que dejemos de contactarle?",
+      gStopAsk2: "Para quitarle de nuestra lista necesito el número de teléfono o correo que tenemos suyo. También puede escribir a " + (EMAIL || "nuestro correo") + ".",
+      cStopAll: "No me contacten más", cNoCalls: "Solo sin llamadas", cNoTexts: "Solo sin textos", cKeepGoing: "No, sigamos",
       gNeutral: "Puede llamarnos o enviarnos un texto al " + PHONE + " cuando quiera.",
       gTimeConfirm: function (t) { return "Para confirmar: ¿el equipo le llama alrededor de \u201c" + t + "\u201d?"; },
       gTimeConfirmChips: ["Sí, está bien", "Elegir otro horario"],
@@ -553,12 +565,13 @@
     setBusy(false);
     state.mode = "guided";
     showMode();
-    var stopping = !!(pending && classifyStop(pending));
-    if (state.leadSent || state.optedOut) {
+    var stopping = !!(pending && stopSignal(pending).weak);
+    if (state.leadSent || state.optedOut || state.stopFailed) {
       // The team already has this seller's details (or they asked us to stop): don't collect them again.
       state.g = { step: "done", data: state.g && state.g.data ? state.g.data : {} };
       save();
       if (stopping) { guided(pending); return; }
+      if (state.stopFailed) { bot(T.gStopFail); return; }
       if (state.optedOut) { bot(T.gStopDoneFor("all")); return; }
       bot(T.gAfter);
       card({ type: "contact" });
@@ -631,6 +644,7 @@
   // "Now" only as an answer ("now", "right now", "call me now"), not "do you pay cash now?".
   var NOW_RE = /^(right )?now\b|\bright now\b|\b(call|ll[aá]men)(me)? (me )?(right )?now\b/i;
   function looksLikeTime(text) { var t = plain(text); return TIME_RE.test(t) || NOW_RE.test(t); }
+  var CONFIRM_RE = /^(y|yes|yeah|yep|yup|sure|ok|okay|correct|right|that's right|thats right|exactly|perfect|great|sounds good|that works|works for me|good|fine|s[ií]|claro|correcto|perfecto|exacto|as[ií] es|est[aá] bien|de acuerdo)\b/i;
   function extractPhone(text) {
     var m = String(text).match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
     if (!m) return null;
@@ -647,56 +661,83 @@
 
   // Curly quotes (iPhone "smart punctuation") and spacing, made plain for matching.
   function plain(text) {
-    return String(text).replace(/[\u2018\u2019\u02bc\u00b4`]/g, "'").replace(/\s+/g, " ").trim();
+    return String(text).replace(/[‘’ʼ´`]/g, "'").replace(/\s+/g, " ").trim();
+  }
+  // Plain, lower case and without accents, for matching English and Spanish alike.
+  function norm(text) {
+    var t = plain(text);
+    if (t.normalize) t = t.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    return t.toLowerCase();
   }
 
-  // A reply made only of yes-words ("yes", "sure, go ahead", "sí, claro", "yes, no problem") is a clear yes.
-  var YES_RE = /^(?:y|yes|yeah|yep|yup|sure|ok|okay|of course|go ahead|s[ií]|claro(?: que s[ií])?|por supuesto|est[aá] bien|adelante)(?:[\s,.!]+(?:yes|yeah|sure|ok|okay|of course|go ahead|please|thanks|thank you|that's fine|thats fine|is fine|fine|text me|no problem|no worries|that works|works for me|sounds good|s[ií]|claro(?: que s[ií])?|por supuesto|est[aá] bien|adelante|por favor|gracias|no hay problema))*[\s.!]*$/i;
+  // A reply made only of yes-words ("yes", "sure, go ahead", "sí, claro", "yes, I don't mind") is a clear yes.
+  var YES_RE = /^(?:y|yes|yeah|yep|yup|sure|ok|okay|of course|go ahead|s[ií]|claro(?: que s[ií])?|por supuesto|est[aá] bien|adelante|de acuerdo)(?:[\s,.!]+(?:yes|yeah|sure|ok|okay|of course|go ahead|please|thanks|thank you|that's fine|thats fine|is fine|fine|text me|no problem|not a problem|no worries|that works|works for me|sounds good|perfect|great|why not|(?:i )?don't mind|(?:i )?dont mind|s[ií]|claro(?: que s[ií])?|por supuesto|est[aá] bien|adelante|por favor|gracias|no hay problema|no me molesta|perfecto|de acuerdo))*[\s.!]*$/i;
+  var LEAD_YES = /^(y|yes|yeah|yep|yup|sure|ok|okay|of course|s[ií]|claro)\b/i;
   var NO_RE = /\b(no|not|nope|nah|don't|dont|do not|never|only|solo|nunca|sin|prefiero llamadas)\b/i;
+  var OK_NEGATIONS = /\b(no problem|not a problem|no worries|no hay problema|(i )?don't mind|(i )?dont mind|why not|no me molesta)\b/gi;
 
   // ------------------------------------------------------------ stop requests
-  // A request for US to stop contacting them, and nothing else: "the bank won't stop
-  // calling me", "don't call me before 5" or "remove me from the deed" are not opt-outs.
-  // Each clause is checked on its own, so "don't call me, text me instead" stops calls only.
-  var STOP_ONLY = /^(please |just |ok |okay )?(stop|stop all|stop it|stop now|stop please|stop already|quit|end|cancel|revoke|unsubscribe|opt[- ]?out|opt me out|remove me|leave me alone|cancelar|alto|basta|ya basta|parar?|d[eé]jenme en paz)( please| por favor| now| it)?[\s.!]*$/i;
-  var LEAD_IN = "^(?:(?:please|pls|plz|just|and|so|then|now|ok|okay|can you|could you|would you|will you|i want you to|i need you to|i'd like you to|y'all|you guys|guys)\\s+)*";
-  var TIME_AFTER = "(?!\\s*(?:before|after|until|till|til|at|on|between|during|in the|this|today|tonight|tomorrow|while|when|antes|despu[eé]s|hasta|entre|a las|por la|en la|hoy|ma[nñ]ana)\\b)";
-  var STOP_PATTERNS = [
-    [new RegExp(LEAD_IN + "(?:stop|quit|cease)\\s+(calling|phoning|texting|messaging|contacting|emailing|e-mailing|bothering|harassing)\\b", "i")],
-    [new RegExp(LEAD_IN + "(?:do not|don't|dont|never|no longer)\\s+(call|phone|text|message|contact|email|e-mail|bother)\\s+me\\b" + TIME_AFTER, "i")],
-    [/\bno more (calls|phone calls|texts|text messages|messages|emails|e-mails|contact)\b/i],
-    [/\b(?:remove|take) (?:me|my (?:number|phone|email|info|information|name)) (?:from|off) (?:your|the|this|all) (?:(call|text|texting|email|mailing|contact) )?(?:list|lists|database)\b/i],
-    [new RegExp("^(?:(?:por favor|ya|y|pues)\\s+)*(?:no me (llamen|llamen m[aá]s|escriban|manden|env[ií]en|contacten|molesten|vuelvan a \\w+)|dejen de (llamar\\w*|escribir\\w*|mandar\\w*|enviar\\w*|contactar\\w*|molestar\\w*))\\b" + TIME_AFTER, "i")]
+  // Guided mode can't understand free text the way the AI does, so it never guesses:
+  // an unmistakable request ("STOP", "unsubscribe me", "stop calling me", "no me
+  // llamen") is acted on at once; anything that only sounds like one ("don't call me
+  // before 5", "text me instead", "can I opt out after I sign?") gets a question with
+  // buttons. A misread costs one tap, never a lost lead or a missed opt-out.
+  var STOP_KW = { stop: 1, quit: 1, end: 1, cancel: 1, unsubscribe: 1, unsub: 1, revoke: 1, alto: 1, basta: 1, cancelar: 1, parar: 1, para: 1 };
+  var STOP_FILLER = {};
+  ("please pls plz thanks thank you now i im i'm said just ok okay not interested no already it all me hey hi again yes yeah si " +
+    "ya por favor gracias estoy interesado interesada sir maam ma'am so seriously the this number from list lists your of my off out " +
+    "and que lo le les dije que").split(" ").forEach(function (w) { STOP_FILLER[w] = 1; });
+  var STOP_VOCAB = /\b(stop|unsubscribe|opt[- ]?(me )?out|revoke|remove (me|my)|delete (me|my)|take me off|take my (number|name|info)|leave me (alone|be)|harass\w*|not interested|no more (call|phone|text|message|email|e-mail|contact)\w*|(don't|dont|do not|never|no longer) (call|phone|text|message|contact|email|e-mail|bother)|i don't want (any )?(more )?(calls|texts|messages|emails|contact)|dejen de|dejenme|no me (llamen|escriban|manden|envien|contacten|molesten|vuelvan)|ni me (llamen|escriban|manden|envien)|no mas (llamadas|mensajes|textos|correos)|ya no (me|quiero)|(borr|quit)(en|ar) mi|no estoy interesad)/;
+  var STOP_STRONG = [
+    /\b(stop|quit|cease)\s+(calling|phoning|texting|messaging|contacting|emailing|e-mailing|bothering|harassing|sending)\b/,
+    /\b(don't|dont|do not|never|no longer)\s+(call|phone|text|message|contact|email|e-mail|bother)((\s*,\s*|\s+or\s+|\s+and\s+)(call|phone|text|message|contact|email|e-mail))*\s+me\b/,
+    /\bno more\s+(calls|phone calls|texts|text messages|messages|emails|e-mails|contact)\b/,
+    /\bi (don't|dont|do not) want (any )?(more )?(calls|phone calls|texts|text messages|messages|emails|contact)\b/,
+    /\b(unsubscribe|opt (me )?out|opt-out)\b/,
+    /\b(remove|delete|take)\s+(me|my (number|phone|info|information|email|name|data))(\s+(off|from)(\s+(all|of))?(\s+(your|the|this|our))?(\s+(list|lists|database|system|records|calls|texts|call list|text list|calling list|texting list|mailing list|contact list)))?\s*(please|now|thanks|thank you)?\s*$/,
+    /\btake me off\b/,
+    /\bleave me alone\b/,
+    /\bno me (llamen|escriban|manden|envien|contacten|molesten)\b/,
+    /\bdejen de (llamar|escribir|mandar|enviar|contactar|molestar)\w*/,
+    /\bdejenme en paz\b/,
+    /\bno mas (llamadas|mensajes|textos|correos)\b/,
+    /\bya no (me )?(llamen|manden|escriban|envien|contacten)\b|\bya no quiero (que me (llamen|escriban|contacten|manden)|(mas )?(llamadas|mensajes|textos|correos))\b/,
+    /\b(borr|quit)(en|ar) mi (numero|informacion|telefono|correo)\b/
   ];
-  function channelOf(word, clause) {
-    var w = String(word || "").toLowerCase();
-    if (/^(call|calls|calling|phone|phoning|phone calls|llam)/.test(w)) return "calls";
-    if (/^(text|texts|texting|message|messages|messaging|text messages|mand|envi)/.test(w)) return /e-?mail|correo/i.test(clause) ? "all" : "texts";
-    if (/^(e-?mail|emails|e-mails|e-mailing|emailing)/.test(w)) return "email";
-    if (/^escrib/.test(w)) return /mensaje|texto/i.test(clause) ? "texts" : /correo/i.test(clause) ? "email" : "all";
-    return "all";
-  }
-  /** "" when the message isn't a stop request, else the channel to stop: all, calls, texts or email. */
-  function classifyStop(text) {
-    var t = plain(text);
-    if (STOP_ONLY.test(t)) return "all";
-    var found = {};
-    t.split(/[.!?;,:\u00a1\u00bf]+|\s+but\s+|\s+pero\s+/i).forEach(function (clause) {
-      clause = clause.trim();
-      if (!clause) return;
-      for (var i = 0; i < STOP_PATTERNS.length; i++) {
-        var m = STOP_PATTERNS[i][0].exec(clause);
-        if (!m) continue;
-        var ch = channelOf(m.slice(1).filter(Boolean)[0], clause);
-        // "stop calling and texting me" names more than one channel.
-        if (ch === "calls" && /\b(text|texting|texts|message)/i.test(clause)) ch = "all";
-        if (ch === "texts" && /\b(call|calling|calls)\b/i.test(clause)) ch = "all";
-        found[ch] = true;
-      }
-    });
-    var keys = Object.keys(found);
-    if (!keys.length) return "";
-    return keys.length === 1 ? keys[0] : "all";
+  // A time or a preference next to the request makes it a preference, not an opt-out.
+  var STOP_QUALIFIER = /\b(before|after|until|till|early|late|later|instead|rather|prefer\w*|only|text me|call me|email me|message me|is (fine|ok|okay)|are (fine|ok|okay)|at work|mejor|en vez|prefiero|antes|despues|hasta|temprano|al trabajo|esta bien|solo|solamente)\b/;
+  var CH = { calls: /\b(call\w*|phon\w*|llam\w*)\b/, texts: /\b(text\w*|messag\w*|sms|mensaj\w*|textos?)\b/, email: /\b(e-?mail\w*|correos?)\b/ };
+
+  /** { weak, strong, channel: all|calls|texts|email, bare } for a message; weak=false means "not a stop". */
+  function stopSignal(text) {
+    var none = { weak: false, strong: false, channel: "", bare: false };
+    var t = " " + norm(text) + " ";
+    // "The bank won't stop calling me" is about someone else; "stop by anytime" isn't a stop.
+    t = t.replace(/\b(won't|wont|will not|doesn't|doesnt|does not|didn't|didnt|can't|cant|cannot|keeps? on|keeps?|kept|never) stop\b/g, " ")
+      .replace(/\b(stop (by|in|over)|bus stop|stop sign|non-?stop|one-? ?stop)\b/g, " ");
+    var raw = t.split(/[^a-z0-9']+/).filter(Boolean);
+    var words = t.replace(/\b(leave me (alone|be)|dejenme en paz|no me molesten|opt[- ]?(me )?out|take me off|remove me)\b/g, " stop ")
+      .split(/[^a-z0-9']+/).filter(Boolean);
+    var kw = false;
+    var onlyFiller = words.length > 0;
+    words.forEach(function (w) { if (STOP_KW[w]) kw = true; else if (!STOP_FILLER[w]) onlyFiller = false; });
+    if (kw && onlyFiller) {
+      // A bare STOP (the texting keyword) is told apart from "stop all" or "leave me alone".
+      return { weak: true, strong: true, channel: "all", bare: /^(please )?(stop|alto|para|parar)( please| por favor)?$/.test(raw.join(" ")) };
+    }
+    var clauses = t.split(/[.!?;,:]+|\sbut\s|\spero\s/);
+    var hits = clauses.filter(function (c) { return STOP_STRONG.some(function (re) { return re.test(c); }); });
+    if (!hits.length && !STOP_VOCAB.test(t)) return none;
+    // Qualifiers are looked for outside the request itself ("don't call me" is not a "call me" preference).
+    var rest = t.replace(/\b(don't|dont|do not|never|no longer)\s+(call|phone|text|message|contact|email|e-mail|bother)((\s*,\s*|\s+or\s+|\s+and\s+)(call|phone|text|message|contact|email|e-mail))*\s+me\b/g, " ")
+      .replace(/\b(stop|quit|cease)\s+(calling|phoning|texting|messaging|contacting|emailing|e-mailing|bothering|harassing|sending)( me)?\b/g, " ");
+    var plainText = plain(text);
+    var asks = /\?\s*$/.test(plainText) || (/^(can|could|would|will|may|might|how|what|when|why|where|is|are|do you|does|did|should|puedo|puede|pueden|como|cuando|por que)\b/i.test(norm(text)));
+    var strong = hits.length > 0 && !asks && !STOP_QUALIFIER.test(rest) && !TIME_RE.test(plainText);
+    // "my phone" or "this number" names the contact, not a channel.
+    var scope = hits.join(" ").replace(/\b(my|this|that|your|the|mi|este|ese)\s+(phone number|cell phone|phone|cell|number|telefono|numero|celular)\b/g, " ");
+    var named = ["calls", "texts", "email"].filter(function (k) { return CH[k].test(scope); });
+    return { weak: true, strong: strong, channel: named.length === 1 ? named[0] : "all", bare: false };
   }
 
   function chatTranscript() {
@@ -748,54 +789,71 @@
     });
   }
 
-  // A stop request typed anywhere in the guided chat.
-  function handleStop(channel, text) {
+  var COLLECTING = /^(address|condition|timeline|name|phone|email|consent|time|timeConfirm|callback)$/;
+
+  function onStopSignal(sig, text) {
     var g = state.g;
     var d = g.data;
-    var bare = STOP_ONLY.test(plain(text));
-    // Answering the texting question with STOP or "don't text me" declines texts; the call goes ahead.
-    if (g.step === "consent" && (channel === "texts" || bare)) {
-      d.smsConsent = false;
-      d.consentReply = text.slice(0, 200);
-      askTime(T.gNoTexts);
+    if (!sig.strong) { askStopConfirm(text); return; }
+    // STOP (the keyword the disclosure gives) or "don't text me" answers the texting question: no texts, the call goes ahead.
+    if (g.step === "consent" && (sig.bare || sig.channel === "texts")) { declineTexts(text); return; }
+    applyStop(sig.channel, text);
+  }
+
+  function declineTexts(text) {
+    var d = state.g.data;
+    d.smsConsent = false;
+    d.noTexts = true;
+    d.consentReply = String(text).slice(0, 200);
+    askTime(T.gNoTexts, [{ label: T.cStopAll }]);
+  }
+
+  function askStopConfirm(text) {
+    var g = state.g;
+    g.stopPending = String(text).slice(0, 300);
+    g.resumeStep = g.step;
+    g.step = "stopConfirm";
+    bot(T.gStopConfirm);
+    setChips([T.cStopAll, T.cNoCalls, T.cNoTexts, T.cKeepGoing]);
+  }
+
+  function applyStop(channel, text) {
+    var g = state.g;
+    var d = g.data;
+    // While a lead is still being collected, "no texts/calls/email" is just how they want to hear back.
+    if (!state.leadSent && COLLECTING.test(g.step) && channel !== "all") {
+      if (channel === "texts") { d.noTexts = true; d.smsConsent = false; bot(T.gNoTextsMid); }
+      else if (channel === "email") { d.noEmail = true; bot(T.gNoEmailMid); }
+      else { d.noCalls = true; bot(T.gNoCallsMid); }
+      resumeWith(text);
       return;
     }
-    var midFlow = !state.leadSent && !/^(intent|faq|done)$/.test(g.step);
-    // Before anything was sent, "no texts" or "no email" just changes how we follow up.
-    if (midFlow && channel === "texts") {
-      d.noTexts = true;
-      d.smsConsent = false;
-      d.consentReply = d.consentReply || text.slice(0, 200);
-      bot(T.gNoTextsMid);
-      reprompt();
-      return;
-    }
-    if (midFlow && channel === "email") {
-      d.noEmail = true;
-      bot(T.gNoEmailMid);
-      reprompt();
-      return;
-    }
-    // Before anything was sent, "don't call me" moves the follow-up to email.
-    if (midFlow && channel === "calls" && g.step !== "email") {
-      d.noCalls = true;
-      g.step = "email";
-      bot(T.gNoCalls);
-      return;
-    }
-    // Anything else: send it with what we know, or ask once for the number.
     var c = state.contact || {};
     var phone = d.phone || c.phone || "";
     var email = d.email || c.email || "";
     if (phone || email) { guidedStop(phone, email, text, channel); return; }
+    if (g.step !== "stop") g.resumeStep = g.step;
     g.step = "stop";
     g.stopTries = 0;
     g.stopChannel = channel;
-    g.stopWords = text.slice(0, 300);
+    g.stopWords = String(text).slice(0, 300);
     bot(T.gStopAsk);
+    setChips([T.cKeepGoing]);
   }
 
-  // Ask the current step's question again (after a side remark such as "no texts please").
+  // After a side request, carry on: use what the message held for this step, or ask the step's question again.
+  function resumeWith(text) {
+    var step = state.g.step;
+    if ((step === "phone" && extractPhone(text)) || (step === "email" && extractEmail(text)) ||
+      ((step === "time" || step === "timeConfirm") && looksLikeTime(text) && !state.g.data.noCalls)) {
+      if (step === "timeConfirm") state.g.step = "time";
+      guided(text, true);
+      return;
+    }
+    reprompt();
+  }
+
+  // Ask the current step's question again.
   function reprompt() {
     var g = state.g;
     switch (g.step) {
@@ -806,18 +864,42 @@
       case "phone": bot(T.gPhone(String(g.data.name || "").split(/\s+/)[0])); break;
       case "email": bot(T.gEmail); break;
       case "callback": bot(T.gCallbackName); break;
+      case "consent":
+        if (g.data.noTexts) { askTime(); break; }
+        bot(T.gConsent); setChips(T.gConsentChips); break;
+      case "stop": bot(T.gStopAsk); setChips([T.cKeepGoing]); break;
       case "time":
       case "timeConfirm": askTime(); break;
     }
   }
 
-  function askTime(lead) {
+  function askTime(lead, extra) {
+    var d = state.g.data;
+    if (lead) bot(lead);
+    if (d.noCalls) { finishNoCalls(); return; }
     state.g.step = "time";
     var times = suggestTimes();
-    if (lead) bot(lead);
     bot(times.length ? T.gTime : T.gNoTimes(hoursText()));
-    setChips([{ label: T.gTimeAsap }].concat(times));
+    setChips([{ label: T.gTimeAsap }].concat(times, extra || []));
   }
+
+  // "No calls": send the lead for text or email follow-up (asking for an email if neither is possible).
+  function finishNoCalls() {
+    var d = state.g.data;
+    if (!d.phone && !d.email) { state.g.step = "phone"; reprompt(); return; }
+    if (!d.email && !(d.phone && d.smsConsent)) { state.g.step = "email"; bot(T.gNoCallsEmail); return; }
+    d.callTime = T.noCallsTime;
+    state.g.step = "sending";
+    save();
+    finishGuided();
+  }
+
+  var SELL_RE = /\b(i want (an |a )?(cash )?offer|(i )?(want|need|would like|'d like) to sell|sell my (house|home|property)|make me an offer|quiero (vender|una oferta)|vender mi casa)\b/;
+  // Spanish names like María, García or Peña keep their accented letters: filler is removed by whole word.
+  var NAME_FILLER = {};
+  ("my name is i'm im this me llamo soy call llamenme llámenme please por favor at al email e-mail just mi correo es escribanme " +
+    "escríbanme a you can puede it's its number phone numero número telefono teléfono and y or o reach me hi hello hola thanks gracias")
+    .split(" ").forEach(function (w) { NAME_FILLER[w] = 1; });
 
   function wantsOffer(text) {
     return /offer|sell|book|call|yes|let'?s|oferta|vender|llamada|programar|sí|adelante/i.test(text);
@@ -884,15 +966,22 @@
     });
   }
 
-  function guided(text) {
+  function guided(text, skipStop) {
     var g = state.g;
     var data = g.data;
     var answer;
-    var stopWhat = /^(stop|stopping|sending)$/.test(g.step) ? "" : classifyStop(text);
-    if (stopWhat) {
-      handleStop(stopWhat, text);
+    if (text === T.cStopAll && !/^(stopping|sending|stopConfirm)$/.test(g.step)) {
+      applyStop("all", text);
       save();
       return;
+    }
+    if (!skipStop && !/^(stop|stopping|sending|stopConfirm)$/.test(g.step)) {
+      var sig = stopSignal(text);
+      if (sig.weak) {
+        onStopSignal(sig, text);
+        save();
+        return;
+      }
     }
     switch (g.step) {
       case "intent":
@@ -945,14 +1034,13 @@
           bot(T.gEmail);
           break;
         }
-        var digits = text.replace(/\D/g, "");
-        if (digits.length === 11 && digits.charAt(0) === "1") digits = digits.slice(1);
-        if (digits.length !== 10 || /^[01]/.test(digits)) {
+        var ph0 = extractPhone(text);
+        if (!ph0) {
           bot(T.gPhoneBad);
           setChips([T.gEmailInstead, T.chips[3]]);
           break;
         }
-        data.phone = "(" + digits.slice(0, 3) + ") " + digits.slice(3, 6) + "-" + digits.slice(6);
+        data.phone = ph0.formatted;
         if (data.noTexts) { askTime(); break; }
         g.step = "consent";
         bot(T.gConsent);
@@ -960,18 +1048,26 @@
         break;
       case "email":
         var em = extractEmail(text);
-        if (!em && /^(no|nope|nah|no thanks|no gracias)\b/i.test(plain(text))) { bot(T.gNeutral); g.step = "done"; break; }
+        if (!em && /^(no|nope|nah|no thanks|no gracias)\b/i.test(plain(text))) {
+          // No email: still send what we have if there's a phone number.
+          if (data.phone) { data.callTime = data.noCalls ? T.noCallsTime : T.gTimeAsap; g.step = "sending"; save(); finishGuided(); return; }
+          bot(T.gNeutral);
+          g.step = "done";
+          break;
+        }
         if (!em) { bot(T.gEmailBad); setChips([T.chips[3]]); break; }
         data.email = em;
+        if (data.phone) { data.callTime = data.noCalls ? T.noCallsTime : data.callTime || T.gTimeAsap; g.step = "sending"; save(); finishGuided(); return; }
         finishEmailOnly();
         return;
       case "consent":
-        // Only a clear yes counts. "OK but calls only" or anything unclear is not consent.
+        // Only a clear yes counts. "OK but calls only" is a no; anything unclear is asked once more.
         var said = text.trim();
         var p = plain(said);
         var yes = said === T.gConsentChips[0] || YES_RE.test(p);
-        var no = said === T.gConsentChips[1] || NO_RE.test(p.replace(/\b(no problem|no worries|no hay problema)\b/gi, ""));
-        if ((yes === no) && !g.consentAsked) { // unclear, or both: ask once with the buttons
+        var no = said === T.gConsentChips[1] || NO_RE.test(p.replace(OK_NEGATIONS, ""));
+        var mixed = !yes && no && LEAD_YES.test(p); // "Yes, I don't want..." / "Sure, not now"
+        if ((yes === no || mixed) && !g.consentAsked) {
           g.consentAsked = true;
           bot(T.gConsentAgain);
           setChips(T.gConsentChips);
@@ -1014,15 +1110,20 @@
         return;
       case "timeConfirm":
         var tp = plain(text);
-        if (text === T.gTimeConfirmChips[0] || YES_RE.test(tp)) {
+        if (text === T.gTimeConfirmChips[0] || (CONFIRM_RE.test(tp) && !/\b(no|not|but|pero)\b/i.test(tp))) {
           data.callTime = g.pendingTime;
-        } else if (looksLikeTime(text) && !isQuestion(text)) {
-          data.callTime = text.slice(0, 120);
-        } else {
-          if (text !== T.gTimeConfirmChips[1] && !/^(no|nope|nah)\b/i.test(tp) && isQuestion(text)) bot(faqAnswer(text) || T.gQuestion);
+        } else if (text === T.gTimeConfirmChips[1] || /^(no|nope|nah|another|different|otro|otra)\b/i.test(tp)) {
           g.step = "time";
           bot(T.gTimeHint);
           setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
+          break;
+        } else if (looksLikeTime(text) && !isQuestion(text)) {
+          data.callTime = text.slice(0, 120);
+        } else {
+          // Not a yes or a no: answer if it's a question, then ask again (the time is kept).
+          if (isQuestion(text)) bot(faqAnswer(text) || T.gQuestion);
+          bot(T.gTimeConfirm(g.pendingTime));
+          setChips(T.gTimeConfirmChips);
           break;
         }
         g.step = "sending";
@@ -1032,10 +1133,9 @@
       case "callback":
         var ph = extractPhone(text);
         var ce = ph ? "" : extractEmail(text);
-        var nm = plain(text.replace(ph ? ph.raw : ce, "")).replace(/[,;:.]+/g, " ")
-          .replace(/\b(my name is|i'm|im|this is|me llamo|soy|call me|ll[aá]menme|please|por favor|at|al|my e-?mail is|e-?mail me|just|mi correo es|escr[ií]banme|a|me|is|es|you can|puede)\b/gi, " ")
-          .replace(/\s+/g, " ").trim();
-        if (nm && !isQuestion(nm) && !data.name) data.name = nm.slice(0, 120);
+        var nm = plain(text.replace(ph ? ph.raw : ce, "")).split(/[\s,;:.!]+/)
+          .filter(function (w) { return w && !NAME_FILLER[w.toLowerCase()]; }).join(" ");
+        if (nm && !isQuestion(text) && !data.name) data.name = nm.slice(0, 120);
         if (!ph && ce) { data.email = ce; data.address = data.address || T.notGiven; finishEmailOnly(); return; }
         if (!ph) { bot(T.gCallbackName); break; }
         data.phone = ph.formatted;
@@ -1045,20 +1145,42 @@
         bot(T.gConsent);
         setChips(T.gConsentChips);
         break;
+      case "stopConfirm":
+        var pending = g.stopPending || text;
+        var sp0 = plain(text);
+        g.step = g.resumeStep || "intent";
+        if (text === T.cStopAll || (YES_RE.test(sp0) && !NO_RE.test(sp0.replace(OK_NEGATIONS, "")))) { applyStop("all", pending); break; }
+        if (text === T.cNoTexts) {
+          if (g.step === "consent") { declineTexts(pending); break; }
+          applyStop("texts", pending);
+          break;
+        }
+        if (text === T.cNoCalls) { applyStop("calls", pending); break; }
+        if (text === T.cKeepGoing || /^(no|nope|nah|keep going|continue|go on|sigamos|seguir|no gracias)\b/i.test(sp0)) {
+          save();
+          guided(pending, true); // it wasn't a stop: handle the original message normally
+          return;
+        }
+        // They typed something new instead. A clear stop is acted on; anything else carries on.
+        var s2 = stopSignal(text);
+        if (s2.strong) { onStopSignal(s2, text); break; }
+        save();
+        guided(text, true);
+        return;
       case "stop":
         var sp = extractPhone(text);
         var se = extractEmail(text);
         if (sp || se) { guidedStop(sp ? sp.formatted : "", se, (g.stopWords ? g.stopWords + " / " : "") + text, g.stopChannel); return; }
-        if (!classifyStop(text) && (wantsOffer(text) || isQuestion(text))) {
-          // They came to sell after all (or the "stop" was about something else): back to the offer.
-          if (isQuestion(text)) bot(faqAnswer(text) || T.gQuestion);
-          g.step = "address";
-          bot(T.gAddress);
+        if (text === T.cKeepGoing || (SELL_RE.test(norm(text)) && !stopSignal(text).weak)) {
+          // A clear change of mind: back to where they were (or to the offer).
+          g.step = COLLECTING.test(g.resumeStep || "") ? g.resumeStep : "address";
+          reprompt();
           break;
         }
         g.stopTries = (g.stopTries || 0) + 1;
         if (g.stopTries >= 2) { state.stopFailed = true; bot(T.gStopFail); g.step = "done"; break; }
-        bot(T.gStopAsk);
+        bot(T.gStopAsk2);
+        setChips([T.cKeepGoing]);
         break;
       case "sending":
       case "stopping":
@@ -1097,14 +1219,22 @@
     var d = state.g.data;
     var asap = d.callTime === T.gTimeAsap;
     var emailOnly = !d.phone && !!d.email;
+    var noCalls = !emailOnly && !!d.noCalls;
+    var address = d.address || T.notGiven;
+    var limits = [
+      d.noCalls && "no calls (asked in the chat)",
+      d.noTexts && "no texts (asked in the chat)",
+      d.phone && !d.noTexts && !d.smsConsent && "no texting consent",
+      d.noEmail && "no email (asked in the chat)"
+    ].filter(Boolean).join(", ");
     var lead = {
-      _subject: "New seller lead (chat" + (emailOnly ? ", email only" : asap ? "" : ", call requested " + d.callTime) + "): " + d.address,
-      address: d.address, city: "", state: d.state || "", zip: "",
-      name: d.name, phone: d.phone || "", email: d.email || "", smsConsent: !!d.smsConsent,
-      textingQuestion: d.phone && !d.noTexts ? T.gConsent : "", textingAnswer: d.phone ? (d.consentReply || "") : "",
-      contactLimits: [d.noCalls && "no calls", (d.noTexts || !d.smsConsent) && "no texts", d.noEmail && "no email"].filter(Boolean).join(", ") + (d.noCalls || d.noTexts || d.noEmail ? " (asked in the chat)" : ""),
-      condition: d.condition, timeline: d.timeline,
-      callTime: emailOnly ? T.emailOnly : d.callTime + (asap ? "" : " (requested, please confirm)"),
+      _subject: "New seller lead (chat" + (emailOnly ? ", email only" : noCalls ? ", no calls" : asap ? "" : ", call requested " + d.callTime) + "): " + address,
+      address: address, city: "", state: d.state || "", zip: "",
+      name: d.name || "", phone: d.phone || "", email: d.email || "", smsConsent: !!d.smsConsent,
+      textingQuestion: d.phone && d.consentReply !== undefined ? T.gConsent : "", textingAnswer: d.phone ? (d.consentReply || "") : "",
+      contactLimits: limits,
+      condition: d.condition || "", timeline: d.timeline || "",
+      callTime: emailOnly ? T.emailOnly : noCalls ? T.noCallsTime : d.callTime + (asap ? "" : " (requested, please confirm)"),
       source: "website-chat-guided", page: window.location.pathname, lang: LANG,
       submittedAt: new Date().toISOString(), market: d.state || "Nationwide",
       transcript: chatTranscript()
@@ -1116,7 +1246,8 @@
       if (r && r.ok) {
         if (pac().trackLead) pac().trackLead({ source: "website-chat-guided", market: lead.market, state: lead.state });
         state.leadSent = true;
-        if (emailOnly) bot(T.gDoneEmail(d.email));
+        if (emailOnly) bot(T.gDoneEmail(d.email, !!d.address && d.address !== T.notGiven));
+        else if (noCalls) bot(T.gDoneNoCalls);
         else {
           if (!asap) card({ type: "booking", when: d.callTime, requested: true });
           bot(T.gDone(asap ? "" : d.callTime, !!d.smsConsent));

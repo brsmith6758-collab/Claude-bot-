@@ -369,7 +369,9 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await page.goto(`${SITE}/index.html`);
   await guidedTo(page, "time");
   await say(page, "Please don't contact me before 5pm, I'm at work");
-  assert(posted.length === 1 && posted[0].type !== "do_not_contact" && /before 5pm/.test(posted[0].callTime), "'don't contact me before 5pm' becomes the requested call time, not an opt-out");
+  assert(/do you want us to stop contacting you/.test(await last(page)) && posted.length === 0, "a request that only sounds like an opt-out gets a question, not an action");
+  await tap(page, "No, keep going");
+  assert(posted.length === 1 && posted[0].type !== "do_not_contact" && /before 5pm/.test(posted[0].callTime), "'No, keep going' uses it as the call time");
   // After the lead: an iPhone curly-apostrophe opt-out still reaches the team.
   await say(page, "Actually I changed my mind. Don\u2019t call me again.");
   assert(posted.length === 2 && /^DO NOT CALL/.test(posted[1]._subject) && posted[1].phone === "(602) 555-0143", "a curly-apostrophe 'Don\u2019t call me again' after the lead sends a DO NOT CALL notice");
@@ -454,6 +456,85 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
     assert(m.log >= 60 && m.footBottom <= m.panelBottom + 1, `landscape ${path}: conversation keeps room (log ${m.log}px) and the footer fits`);
     await page.evaluate(() => sessionStorage.clear());
   }
+  await ctx.close();
+}
+
+{
+  // "Stop all" at the texting question is a full stop: no lead goes out.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "consent");
+  await say(page, "Stop all");
+  assert(posted.length === 1 && /^DO NOT CONTACT/.test(posted[0]._subject), "'Stop all' at the texting question files a full stop and no lead");
+  await ctx.close();
+}
+{
+  // "Don't call me, text me instead": asked, then "Just no calls" sends the lead for text follow-up.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "time", { consent: "Yes, texting is fine" });
+  await say(page, "Don't call me, text me instead");
+  assert(/stop contacting you/.test(await last(page)), "a preference gets the question");
+  await tap(page, "Just no calls", 2);
+  assert(posted.length === 1 && posted[0].phone === "(602) 555-0143" && posted[0].smsConsent === true && /no calls/.test(posted[0].contactLimits) && /No calls/.test(posted[0].callTime), `lead sent for text follow-up, marked no calls: ${posted[0] && posted[0].contactLimits}`);
+  assert(/not by phone/.test(await last(page)), "seller is told the team will text or email");
+  await ctx.close();
+}
+{
+  // The 'which number' step keeps the stop until it has a number (or a clear change of mind).
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "Stop calling me");
+  await say(page, "The one you keep calling me on");
+  assert(/need the phone number or email/.test(await last(page)) && posted.length === 0, "a vague answer is asked again, not turned into a sales pitch");
+  await say(page, "602-555-0143");
+  assert(posted.length === 1 && /^DO NOT CALL/.test(posted[0]._subject), "then the DO NOT CALL notice goes out");
+  await ctx.close();
+}
+{
+  // After a lead: other common opt-out wording is honoured.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "time");
+  await tap(page, "As soon as possible");
+  await say(page, "Please unsubscribe me");
+  assert(posted.length === 2 && /^DO NOT CONTACT/.test(posted[1]._subject), "'Please unsubscribe me' after a lead sends the notice");
+  await ctx.close();
+}
+{
+  // Texting question: "don't email me" asks the texting question again; "Sounds good" confirms a time.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "consent");
+  await say(page, "Please don't email me", 2);
+  assert(/Can we text you/.test(await last(page)), "the texting question is asked again");
+  await tap(page, "Calls only, please");
+  await say(page, "Can you call me at 3?");
+  await say(page, "Sounds good");
+  assert(posted.length === 1 && posted[0].smsConsent === false && /at 3/.test(posted[0].callTime) && /no email/.test(posted[0].contactLimits), "'Sounds good' confirms the time; no consent and no email recorded correctly");
+  await ctx.close();
+}
+{
+  // Spanish names keep their accents; "take my house" questions get the right FAQ.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/es.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await tap(page, "Hablar con una persona", 0);
+  await page.waitForSelector(".pac-card");
+  await say(page, "Me llamo María García, 602-555-0143");
+  await tap(page, "Sí, textos está bien");
+  await tap(page, "Lo antes posible");
+  assert(posted.length === 1 && posted[0].name === "María García", `name kept with accents: ${posted[0] && posted[0].name}`);
+  await page.goto(`${SITE}/index.html`);
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "Can you take my house as-is?", 2);
+  assert(/as-is in any condition/.test(await last(page, 2)), "'take my house as-is' gets the condition answer, not foreclosure");
   await ctx.close();
 }
 

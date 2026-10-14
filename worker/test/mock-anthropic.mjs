@@ -78,7 +78,13 @@ http.createServer((req, res) => {
       res.writeHead(200, { "content-type": "application/json" });
       return res.end(JSON.stringify(requests));
     }
-    const body = JSON.parse(raw || "{}");
+    let body;
+    try { body = JSON.parse(raw || "{}"); } catch { body = {}; }
+    if (!Array.isArray(body.messages)) {
+      // Anything that isn't a Messages API call (a health probe, a stray GET) gets a 400, not a crash.
+      res.writeHead(400, { "content-type": "application/json" });
+      return res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "messages: Field required" } }));
+    }
     requests.push({ headers: req.headers, body });
     for (const [i, m] of (body.messages || []).entries()) {
       if (m.role === "assistant" && !issued.has(JSON.stringify(m.content))) {

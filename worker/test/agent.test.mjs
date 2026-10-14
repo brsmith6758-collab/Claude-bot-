@@ -572,3 +572,57 @@ test("a ZIP-only booking still gets a usable calendar title and subject", async 
   assert.equal(title, "Seller call: Dana Lee (85201)");
   assert.match(env.SEND_EMAIL.sent[0].raw, /Subject: New booked call .*: 85201/);
 });
+
+test("without Worker email, a repeated stop is sent again so the browser can retry it", async () => {
+  const env = envWith({ SEND_EMAIL: undefined });
+  const stop = { name: "Dana", phone: "602-555-0143", email: "", channels: "all", note: "" };
+  const t1 = await runTurn({ env, history: [], message: "STOP", context, nowMs: NOW, client: fakeClient([msg([toolUse("do_not_contact", stop)], "tool_use"), msg([text("Done.")])]) });
+  assert.equal(t1.leads.length, 1);
+  assert.equal(t1.leads[0].delivered, false);
+  const client = fakeClient([
+    msg([toolUse("do_not_contact", stop)], "tool_use"),
+    (params) => { const r = lastToolResult(params); assert.ok(r.recorded && !r.duplicate, "not waved through as a duplicate"); return msg([text("Done.")]); },
+  ]);
+  const t2 = await runTurn({ env, history: t1.history, sig: t1.sig, message: "I said stop", context, nowMs: NOW, client });
+  assert.equal(t2.leads.length, 1, "the notice goes back to the browser for another try");
+});
+
+test("a non-US number with an email is recorded, and two stops in one reply confirm the wider one", async () => {
+  const env = envWith();
+  const client = fakeClient([
+    msg([
+      toolUse("do_not_contact", { name: "Ana", phone: "602-555-0143", email: "", channels: "all", note: "" }),
+      toolUse("do_not_contact", { name: "Ana", phone: "+52 55 1234 5678", email: "ana@example.com", channels: "texts", note: "" }),
+    ], "tool_use"),
+    msg([]),
+  ]);
+  const out = await runTurn({ env, history: [], message: "stop everything, and no texts to my Mexican number", context: { ...context, lang: "es" }, nowMs: NOW, client });
+  assert.equal(out.leads.length, 2);
+  assert.equal(out.leads[1].phoneAsGiven, "+52 55 1234 5678");
+  assert.ok(env.LEADS.store.has("dnc:email:ana@example.com"));
+  assert.equal(out.ui.stopped, "all");
+  assert.equal(out.reply, "Listo. No volveremos a contactarle.");
+});
+
+test("a paraphrased texting question still makes the consent record", async () => {
+  const env = envWith();
+  const ask = "Is it OK if we text you at this number? Standard msg/data rates may apply; reply STOP to opt out.";
+  const t1 = await runTurn({ env, history: [], message: "I'm Dana, 602-555-0143, 123 Main St Mesa", context, nowMs: NOW, client: fakeClient([msg([text(ask)])]) });
+  const out = await runTurn({ env, history: t1.history, sig: t1.sig, message: "sure", context, nowMs: NOW,
+    client: fakeClient([msg([toolUse("save_lead", { callback_preference: "ASAP", ...lead })], "tool_use"), msg([text("Done.")])]) });
+  assert.equal(out.leads[0].textingConsent.question, ask);
+  assert.equal(out.leads[0].textingConsent.answer, "sure");
+});
+
+test("several taken slots stacked at the start of a day are never offered", async () => {
+  resetSlotCache();
+  const env = envWith();
+  for (const iso of ["2026-10-15T14:00:00.000Z", "2026-10-15T14:30:00.000Z", "2026-10-15T15:00:00.000Z", "2026-10-15T15:30:00.000Z", "2026-10-15T16:00:00.000Z", "2026-10-15T16:30:00.000Z", "2026-10-15T17:00:00.000Z"]) {
+    await env.LEADS.put(`slot:${iso}`, JSON.stringify({ token: "old" }));
+  }
+  const client = fakeClient([msg([toolUse("get_call_times", { day: "2026-10-15", part_of_day: "any" })], "tool_use"), msg([text("ok")])]);
+  await runTurn({ env, history: [], message: "Thursday?", context, nowMs: NOW, client });
+  const offered = JSON.parse(client.calls[1].messages.at(-1).content[0].content).available.map((x) => x.slot_id);
+  assert.ok(offered.length > 0);
+  for (const id of offered) assert.equal(env.LEADS.store.has(`slot:${id}`), false, `${id} is booked but was offered`);
+});

@@ -83,14 +83,19 @@ export function normalizeStop(input) {
   const rawPhone = clip(input.phone, 40);
   const phone = normalizePhone(rawPhone);
   const email = cleanEmail(input.email);
-  if (!phone && /\d/.test(rawPhone)) {
-    return { error: "That phone number is not a valid 10-digit US number. Ask the seller to confirm it once." };
-  }
-  if (!phone && !email) {
-    return { error: "Needs the phone number or email address to stop contacting. Ask the seller once which one." };
+  // A number that isn't a 10-digit US one (a foreign or mistyped number) is still recorded
+  // exactly as given: a stop request must never be dropped over its format.
+  const rawDigits = rawPhone.replace(/\D/g, "");
+  const phoneAsGiven = !phone && rawDigits.length >= 7 ? rawPhone : "";
+  if (!phone && !phoneAsGiven && !email) {
+    return {
+      error: rawDigits
+        ? "That phone number looks incomplete. Ask the seller once for the full number (or an email address)."
+        : "Needs the phone number or email address to stop contacting. Ask the seller once which one.",
+    };
   }
   const channels = ["all", "calls", "texts", "email"].includes(input.channels) ? input.channels : "all";
-  return { notice: { name: clip(input.name, 120), phone: phone || "", email, channels, note: clip(input.note, 500) } };
+  return { notice: { name: clip(input.name, 120), phone: phone || "", phoneAsGiven, email, channels, note: clip(input.note, 500) } };
 }
 
 function randomId() {
@@ -103,7 +108,7 @@ function randomId() {
 export async function storeStop(env, notice) {
   if (!env.LEADS) return false;
   const value = JSON.stringify(notice);
-  if (notice.phone) await env.LEADS.put(`dnc:phone:${digitsOf(notice.phone)}`, value);
+  if (notice.phone || notice.phoneAsGiven) await env.LEADS.put(`dnc:phone:${String(notice.phone || notice.phoneAsGiven).replace(/\D/g, "")}`, value);
   if (notice.email) await env.LEADS.put(`dnc:email:${notice.email.toLowerCase()}`, value);
   return true;
 }
@@ -142,21 +147,22 @@ export async function bookedSlots(env, nowMs = Date.now()) {
   return booked;
 }
 
-/** Record a slot found taken (e.g. booked before the index existed): cache and index. */
-export async function markBooked(env, iso, nowMs = Date.now()) {
-  if (!env.LEADS) return;
-  if (slotCache.set && slotCache.env === env.LEADS) slotCache.set.add(iso);
-  await addToIndex(env, iso, nowMs);
+/** Record slots found taken (e.g. booked before the index existed): cache, and one index write. */
+export async function markBooked(env, isos, nowMs = Date.now()) {
+  if (!env.LEADS || !isos.length) return;
+  if (slotCache.set && slotCache.env === env.LEADS) for (const iso of isos) slotCache.set.add(iso);
+  await addToIndex(env, isos, nowMs);
 }
 
-async function addToIndex(env, iso, nowMs) {
+async function addToIndex(env, isoOrList, nowMs) {
+  const add = Array.isArray(isoOrList) ? isoOrList : [isoOrList];
   const now = new Date(nowMs).toISOString();
   let list = [];
   try {
     const v = await env.LEADS.get(INDEX_KEY, { type: "json" });
     if (Array.isArray(v)) list = v;
   } catch { /* rebuild from this booking */ }
-  const next = [...new Set([...list.filter((x) => typeof x === "string" && x > now), iso])].sort().slice(-500);
+  const next = [...new Set([...list.filter((x) => typeof x === "string" && x > now), ...add])].sort().slice(-500);
   await env.LEADS.put(INDEX_KEY, JSON.stringify(next));
 }
 
@@ -303,6 +309,7 @@ export function stopEmailText(notice) {
     "",
     row("Name", notice.name),
     row("Phone", notice.phone),
+    row("Phone (as given)", notice.phoneAsGiven),
     row("Email", notice.email),
     row("Their words", notice.note),
     "",
@@ -336,7 +343,7 @@ export async function emailLead(env, lead) {
 
 /** Email the owner a do-not-contact notice, when email is configured. */
 export async function emailStop(env, notice) {
-  const who = [notice.name, notice.phone, notice.email].filter(Boolean).join(" ");
+  const who = [notice.name, notice.phone || notice.phoneAsGiven, notice.email].filter(Boolean).join(" ");
   const w = STOP_WORDING[notice.channels] || STOP_WORDING.all;
   return emailOwner(env, { subject: `${w.subject}: ${who}`, text: stopEmailText(notice) });
 }

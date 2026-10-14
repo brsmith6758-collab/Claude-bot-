@@ -54,7 +54,11 @@ test("stop requests need a phone or email and produce a clear notice", () => {
   assert.doesNotMatch(text, /cancel any call/);
   assert.match(text, /CONVERSATION\nSeller: stop texting me/);
   assert.match(stopEmailText({ ...notice, channels: "all" }), /^DO NOT CONTACT: .*\n.*cancel any call they booked/);
-  assert.match(normalizeStop({ name: "", phone: "602-555-014", email: "ana@x.com", channels: "texts", note: "" }).error, /not a valid/, "a mistyped number is never dropped silently");
+  const odd = normalizeStop({ name: "", phone: "+52 55 1234 5678", email: "ana@x.com", channels: "all", note: "" }).notice;
+  assert.equal(odd.phoneAsGiven, "+52 55 1234 5678", "a non-US or mistyped number is kept as given, never dropped");
+  assert.equal(odd.email, "ana@x.com");
+  assert.match(stopEmailText({ ...odd }), /Phone \(as given\): \+52 55 1234 5678/);
+  assert.match(normalizeStop({ name: "", phone: "555", email: "", channels: "all", note: "" }).error, /incomplete/);
 });
 
 test("email message is valid MIME with a decodable body", () => {
