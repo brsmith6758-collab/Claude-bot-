@@ -50,8 +50,11 @@ test("stop requests need a phone or email and produce a clear notice", () => {
   assert.equal(notice.channels, "texts");
   assert.equal(normalizeStop({ name: "", phone: "", email: "a@b.co", channels: "bogus", note: "" }).notice.channels, "all");
   const text = stopEmailText({ ...notice, page: "/", submittedAt: "x", transcript: "Seller: stop texting me" });
-  assert.match(text, /^DO NOT CONTACT: stop all texts/);
+  assert.match(text, /^DO NOT TEXT: Stop texting this person\.\nRemove them from your text list\. Calls and email are still OK, and keep any call they booked\./);
+  assert.doesNotMatch(text, /cancel any call/);
   assert.match(text, /CONVERSATION\nSeller: stop texting me/);
+  assert.match(stopEmailText({ ...notice, channels: "all" }), /^DO NOT CONTACT: .*\n.*cancel any call they booked/);
+  assert.match(normalizeStop({ name: "", phone: "602-555-014", email: "ana@x.com", channels: "texts", note: "" }).error, /not a valid/, "a mistyped number is never dropped silently");
 });
 
 test("email message is valid MIME with a decodable body", () => {

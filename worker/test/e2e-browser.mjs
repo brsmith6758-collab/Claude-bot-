@@ -333,7 +333,127 @@ const last = async (page, back = 1) => (await bubbles(page)).at(-back);
   assert(/phone number or email should we stop/.test(await last(page)), "asks which number to stop contacting");
   await say(page, "602-555-0143");
   assert(posted.length === 1 && posted[0].type === "do_not_contact" && posted[0].phone === "(602) 555-0143", "do-not-contact notice posted with the number");
-  assert(/won't contact you again/.test(await last(page)), "confirms");
+  assert(/^DO NOT TEXT/.test(posted[0]._subject) && /keep any call they booked/.test(posted[0].action), "a texts-only stop says only that, and keeps any call");
+  assert(/won't text you again/.test(await last(page)), "confirms exactly what will stop");
+  await ctx.close();
+}
+
+// ---------------------------------------------------------------- stop requests: what is and isn't one
+async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls only, please" } = {}) {
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await tap(page, "I want a cash offer");
+  await say(page, "9 Pine St, Mesa AZ");
+  if (step === "condition") return;
+  await tap(page, "Move-in ready");
+  await tap(page, "As soon as possible");
+  await say(page, "Dana Lee");
+  if (step === "phone") return;
+  await say(page, phone);
+  if (step === "consent") return;
+  await tap(page, consent);
+}
+{
+  // Everyday sentences are not opt-outs; a time preference is a time.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "The bank won't stop calling me about the late payments. Can you help?");
+  assert(!/stop contacting/.test(await last(page)), "'the bank won't stop calling me' is not treated as a stop request");
+  await page.goto(`${SITE}/index.html`);
+  await ctx.close();
+}
+{
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "time");
+  await say(page, "Please don't contact me before 5pm, I'm at work");
+  assert(posted.length === 1 && posted[0].type !== "do_not_contact" && /before 5pm/.test(posted[0].callTime), "'don't contact me before 5pm' becomes the requested call time, not an opt-out");
+  // After the lead: an iPhone curly-apostrophe opt-out still reaches the team.
+  await say(page, "Actually I changed my mind. Don\u2019t call me again.");
+  assert(posted.length === 2 && /^DO NOT CALL/.test(posted[1]._subject) && posted[1].phone === "(602) 555-0143", "a curly-apostrophe 'Don\u2019t call me again' after the lead sends a DO NOT CALL notice");
+  assert(/won't call you again/.test(await last(page)), "confirms the calls stop");
+  await ctx.close();
+}
+{
+  // STOP in answer to the texting question declines texts; the call request still goes through.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "consent");
+  await say(page, "STOP", 2);
+  assert(/no texts/i.test(await last(page, 2)) && /good time for a quick call/.test(await last(page)), "STOP at the texting question means no texts, and the flow goes on");
+  await say(page, "Evenings");
+  assert(posted.length === 1 && posted[0].type !== "do_not_contact" && posted[0].smsConsent === false && posted[0].callTime.startsWith("Evenings"), "lead sent with no texting consent and 'Evenings' accepted as the time");
+  await ctx.close();
+}
+{
+  // A typed time inside a question is confirmed first.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "time");
+  await say(page, "Can you call at 3pm?");
+  assert(/Just to check: should the team call you around/.test(await last(page)) && posted.length === 0, "a time asked as a question is confirmed, not sent");
+  await tap(page, "Yes, that works");
+  assert(posted.length === 1 && /3pm/.test(posted[0].callTime), "confirmed time is sent");
+  await ctx.close();
+}
+{
+  // A stop that fails to send is never reported as done; the stop step has a way out.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9", formsubmit: "fail" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "consent");
+  await say(page, "stop contacting me");
+  assert(/couldn't send that/.test(await last(page)), "failed stop tells the seller how to reach us");
+  await say(page, "did it work?");
+  assert(!/won't contact you again/.test(await last(page)) && /couldn't send that/.test(await last(page)), "later replies don't claim the stop went through");
+  await ctx.close();
+}
+{
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "stop");
+  await say(page, "I want to sell my house");
+  assert(/address of the property/.test(await last(page)), "someone who then wants an offer leaves the stop step");
+  await say(page, "ok");
+  assert(!/team has your details/.test((await bubbles(page)).join(" ")), "never claims the team has details it doesn't");
+  assert(posted.length === 0, "nothing posted");
+  await ctx.close();
+}
+{
+  // AI mode: if the browser fallback for a stop fails, the seller is told how to reach us.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:8899", formsubmit: "fail" });
+  await page.route("http://127.0.0.1:8899/health", (r) => r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: '{"ok":true,"ai":true}' }));
+  await page.route("http://127.0.0.1:8899/chat", (r) => r.fulfill({
+    status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" },
+    body: JSON.stringify({ reply: "Done. We won't contact you again.", history: [], sig: "", ui: { stopped: "all" }, leads: [{ type: "do_not_contact", name: "Dana", phone: "(602) 555-0143", email: "", channels: "all", note: "STOP", delivered: false }] }),
+  }));
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await sendText(page, "STOP, my number is 602-555-0143");
+  await page.waitForFunction(() => [...document.querySelectorAll(".pac-msg.bot")].some((e) => /couldn't send that/.test(e.textContent)), null, { timeout: 15000 });
+  assert(posted.length === 1 && /^DO NOT CONTACT/.test(posted[0]._subject), "AI-mode stop fallback was attempted, and its failure is shown to the seller");
+  await ctx.close();
+}
+{
+  // Phones in landscape keep room for the conversation.
+  const { ctx, page } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.setViewportSize({ width: 568, height: 320 });
+  for (const path of ["index.html", "es.html"]) {
+    await page.goto(`${SITE}/${path}`);
+    await page.click(".pac-launcher");
+    await waitBot(page, 1);
+    const m = await page.evaluate(() => {
+      const p = document.querySelector("#pac-panel").getBoundingClientRect();
+      const f = document.querySelector(".pac-foot").getBoundingClientRect();
+      return { log: document.querySelector(".pac-log").offsetHeight, footBottom: f.bottom, panelBottom: p.bottom };
+    });
+    assert(m.log >= 60 && m.footBottom <= m.panelBottom + 1, `landscape ${path}: conversation keeps room (log ${m.log}px) and the footer fits`);
+    await page.evaluate(() => sessionStorage.clear());
+  }
   await ctx.close();
 }
 

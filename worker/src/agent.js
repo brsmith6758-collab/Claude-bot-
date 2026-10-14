@@ -7,7 +7,7 @@ import {
 } from "./slots.js";
 import {
   normalizeLead, normalizeStop, storeLead, storeStop, emailLead, emailStop, bookedSlots, isSlotTaken, reserveSlot,
-  phoneBooking, bookingsToday, countBooking,
+  phoneBooking, bookingsToday, countBooking, markBooked, leadPlace,
 } from "./leads.js";
 
 const MAX_MODEL_CALLS = 5;
@@ -17,7 +17,7 @@ const MAX_HISTORY_MESSAGES = 100;
 const MAX_HISTORY_CHARS = 150000;
 const MAX_BOOKINGS_PER_CONVERSATION = 2;
 const MAX_BOOKINGS_PER_DAY = 3;    // per visitor network, when KV is bound
-const MAX_STOPS_PER_CONVERSATION = 2;
+const MAX_STOPS_PER_CONVERSATION = 4; // distinct contacts; more than that is abuse, not a seller
 const MAX_STOPS_PER_DAY = 5;       // do-not-contact requests, per visitor network
 const MAX_TRANSCRIPT_CHARS = 6000;
 
@@ -147,17 +147,36 @@ export function cleanAssistantContent(content) {
   return content.filter((b, i) => i > last || b.type === "text");
 }
 
-/** Successful tool results in this conversation: bookings/callbacks, and stop requests. */
+/** Keys for the contacts and channel a stop request covers: "p:<digits>:texts", "e:<email>:all". */
+function stopKeys(notice) {
+  const keys = [];
+  if (notice.phone) keys.push(`p:${notice.phone.replace(/\D/g, "")}:${notice.channels}`);
+  if (notice.email) keys.push(`e:${notice.email.toLowerCase()}:${notice.channels}`);
+  return keys;
+}
+
+/**
+ * Successful tool results in this conversation: bookings/callbacks, stop requests,
+ * and the contacts already stopped (so a repeat is recognised, and a new one is not).
+ */
 function priorActions(history) {
-  const n = { bookings: 0, stops: 0 };
+  const n = { bookings: 0, stops: 0, stopped: new Set() };
+  const stopInputs = new Map();
   for (const m of history) {
-    if (m.role !== "user") continue;
+    if (m.role === "assistant") {
+      for (const b of m.content) if (b.type === "tool_use" && b.name === "do_not_contact") stopInputs.set(b.id, b.input || {});
+      continue;
+    }
     for (const b of m.content) {
       if (b.type !== "tool_result" || b.is_error) continue;
       try {
         const r = JSON.parse(b.content);
         if (r.booked === true || r.saved === true) n.bookings++;
-        if (r.recorded === true) n.stops++;
+        if (r.recorded === true && !r.duplicate) {
+          n.stops++;
+          const { notice } = normalizeStop(stopInputs.get(b.tool_use_id) || {});
+          if (notice) for (const k of stopKeys(notice)) n.stopped.add(k);
+        }
       } catch { /* not ours */ }
     }
   }
@@ -183,10 +202,13 @@ export function transcriptText(messages, max = MAX_TRANSCRIPT_CHARS) {
   return out.length > max ? `...${out.slice(out.length - max)}` : out;
 }
 
+// The disclosure the prompt requires in the texting question, in either language.
+const CONSENT_QUESTION = /(msg|message)s?\s*(&|and)\s*data rates|tarifas de mensajes y datos/i;
+
 /**
  * The texting question and the seller's reply, kept apart from the transcript so
- * the transcript's length cap can never drop it: the last assistant message that
- * asks about texting (it carries "STOP"), and the seller message that follows.
+ * the transcript's length cap can never drop it: the last assistant message with
+ * the texting disclosure that the seller has answered, and that answer.
  */
 export function consentExchange(messages) {
   const texts = [];
@@ -195,10 +217,9 @@ export function consentExchange(messages) {
     if (t) texts.push({ role: m.role, text: m.role === "user" ? t.replace(CONTEXT_PREFIX, "") : t });
   }
   for (let i = texts.length - 1; i >= 0; i--) {
-    if (texts[i].role === "assistant" && /\bSTOP\b/.test(texts[i].text)) {
-      const reply = texts.slice(i + 1).find((x) => x.role === "user");
-      return { question: texts[i].text.slice(0, 600), answer: reply ? reply.text.slice(0, 600) : "" };
-    }
+    if (texts[i].role !== "assistant" || !CONSENT_QUESTION.test(texts[i].text)) continue;
+    const reply = texts.slice(i + 1).find((x) => x.role === "user");
+    if (reply) return { question: texts[i].text.slice(0, 600), answer: reply.text.slice(0, 600) };
   }
   return null;
 }
@@ -209,13 +230,13 @@ function textingRecord(messages, lead) {
   return { agreed: lead.smsConsent, question: x ? x.question : "", answer: x ? x.answer : "" };
 }
 
-/** Await a storage check; on error log it, flag the turn, and use the fallback value. */
-async function soft(ctx, promise, fallback, what) {
+/** Await a storage check; on error log it, call onFail (if given), and use the fallback value. */
+async function soft(promise, fallback, what, onFail) {
   try {
     return await promise;
   } catch (e) {
     console.error(`${what} failed`, e && e.message);
-    ctx.storageTrouble = true;
+    if (onFail) onFail();
     return fallback;
   }
 }
@@ -231,27 +252,42 @@ async function runTool(name, input, ctx) {
   const cfg = biz.cfg;
 
   if (name === "get_call_times") {
-    const booked = await bookedSlots(env, nowMs); // never throws
-    const all = openSlots(nowMs, cfg, booked);
+    const booked = new Set(await bookedSlots(env, nowMs)); // never throws
     const today = zonedParts(nowMs, sellerTz);
     const sellerToday = ymd(today);
-    const last = all.length ? ymd(zonedParts(all[all.length - 1], sellerTz)) : sellerToday;
     const day = validDay(input.day);
     const part = ["morning", "afternoon", "evening"].includes(input.part_of_day) ? input.part_of_day : "any";
-    let picked = pickSlots(all, { sellerTz, day, partOfDay: part });
-    let note = "";
-    if (!picked.length && (day || part !== "any")) {
-      note = day && day < sellerToday
-        ? "That date is in the past. These are the soonest open times instead."
-        : day && day > last
-          ? `Calls can only be booked through ${last}. These are the soonest open times instead.`
-          : "No open times match that request. These are the soonest open times instead.";
-      picked = pickSlots(all, { sellerTz });
-    }
-    if (!picked.length) {
-      // Only times outside the seller's usual waking hours remain (e.g. far time zones).
-      picked = pickSlots(all, { sellerTz, sellerHours: null });
-      if (picked.length) note = "These are the only open times, and they are early or late in the seller's time zone; mention that.";
+    let picked;
+    let note;
+    let last;
+    // The index is only a hint; the per-slot keys are the truth. Check the few times
+    // about to be offered (a handful of KV reads), and pick again if any are taken.
+    for (let round = 0; round < 3; round++) {
+      const all = openSlots(nowMs, cfg, booked);
+      last = all.length ? ymd(zonedParts(all[all.length - 1], sellerTz)) : sellerToday;
+      picked = pickSlots(all, { sellerTz, day, partOfDay: part });
+      note = "";
+      if (!picked.length && (day || part !== "any")) {
+        note = day && day < sellerToday
+          ? "That date is in the past. These are the soonest open times instead."
+          : day && day > last
+            ? `Calls can only be booked through ${last}. These are the soonest open times instead.`
+            : "No open times match that request. These are the soonest open times instead.";
+        picked = pickSlots(all, { sellerTz });
+      }
+      if (!picked.length) {
+        // Only times outside the seller's usual waking hours remain (e.g. far time zones).
+        picked = pickSlots(all, { sellerTz, sellerHours: null });
+        if (picked.length) note = "These are the only open times, and they are early or late in the seller's time zone; mention that.";
+      }
+      const isos = picked.map((ms) => new Date(ms).toISOString());
+      const taken = await Promise.all(isos.map((iso) => soft(isSlotTaken(env, iso), false, "isSlotTaken")));
+      const stale = isos.filter((_, i) => taken[i]);
+      if (!stale.length) break;
+      for (const iso of stale) {
+        booked.add(iso);
+        await soft(markBooked(env, iso, nowMs), undefined, "markBooked"); // heal the index
+      }
     }
     const available = picked.map((ms) => ({ slot_id: new Date(ms).toISOString(), label: slotLabel(ms, sellerTz, lang) }));
     if (!available.length) note = "No open times in the next week. Offer to save a callback request instead.";
@@ -278,7 +314,7 @@ async function runTool(name, input, ctx) {
       return { content: { error: `This conversation already has a booking. Tell the seller the team has their details, and that they can call or text ${biz.phone} to change anything.` }, isError: true };
     }
     // Storage checks fail open: a KV error must never cost a seller their booking.
-    if ((await soft(ctx, bookingsToday(env, ctx.clientKey, nowMs), 0, "bookingsToday")) >= MAX_BOOKINGS_PER_DAY) {
+    if ((await soft(bookingsToday(env, ctx.clientKey, nowMs), 0, "bookingsToday")) >= MAX_BOOKINGS_PER_DAY) {
       return { content: { error: `No more bookings can be made from this connection today. Ask the seller to call or text ${biz.phone}.` }, isError: true };
     }
     ctx.bookingsThisResponse++;
@@ -287,6 +323,7 @@ async function runTool(name, input, ctx) {
     if (error) { ctx.bookingsThisResponse--; return { content: { error }, isError: true }; }
 
     let appointment;
+    let slotTrouble = false; // the check for this very slot failed: don't call the time locked in
     if (name === "book_call") {
       const ms = Date.parse(String(input.slot_id || ""));
       const iso = Number.isFinite(ms) ? new Date(ms).toISOString() : "";
@@ -295,13 +332,13 @@ async function runTool(name, input, ctx) {
         ctx.bookingsThisResponse--;
         return { content: { error: "That slot_id is not an open time. Call get_call_times and use one of its slot_id values." }, isError: true };
       }
-      const existing = await soft(ctx, phoneBooking(env, lead.phone, nowMs), null, "phoneBooking");
+      const existing = await soft(phoneBooking(env, lead.phone, nowMs), null, "phoneBooking");
       if (existing) {
         ctx.bookingsThisResponse--;
         const when = slotLabel(Date.parse(existing.start), sellerTz, lang);
         return { content: { error: `This phone number already has a call booked for ${when}. Tell the seller, and that they can call or text ${biz.phone} to change it.` }, isError: true };
       }
-      if (await soft(ctx, isSlotTaken(env, iso), false, "isSlotTaken")) {
+      if (await soft(isSlotTaken(env, iso), false, "isSlotTaken", () => { slotTrouble = true; })) {
         ctx.bookingsThisResponse--;
         return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
       }
@@ -314,8 +351,8 @@ async function runTool(name, input, ctx) {
         ownerCalendarUrl: calendarLink({
           startMs: ms,
           minutes: cfg.slotMinutes,
-          title: `Seller call: ${lead.name} (${lead.address})`,
-          details: `${lead.name} ${lead.phone}\n${[lead.address, lead.city, lead.state].filter(Boolean).join(", ")}\nBooked through the website chat.`,
+          title: leadPlace(lead) ? `Seller call: ${lead.name} (${leadPlace(lead)})` : `Seller call: ${lead.name}`,
+          details: [`${lead.name} ${lead.phone}`, leadPlace(lead), "Booked through the website chat."].filter(Boolean).join("\n"),
         }),
         sellerCalendarUrl: calendarLink({
           startMs: ms,
@@ -332,7 +369,7 @@ async function runTool(name, input, ctx) {
           ctx.bookingsThisResponse--;
           return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
         }
-        appointment.reserved = r === "reserved" && !ctx.storageTrouble;
+        appointment.reserved = r === "reserved" && !slotTrouble;
       } catch (e) {
         console.error("reserveSlot failed", e && e.message);
         appointment.reserved = false; // the lead still goes out; the owner confirms the time
@@ -379,15 +416,24 @@ async function runTool(name, input, ctx) {
   }
 
   if (name === "do_not_contact") {
-    if (ctx.stopsThisTurn >= 1 || ctx.prior.stops + ctx.stopsThisTurn >= MAX_STOPS_PER_CONVERSATION) {
-      return { content: { recorded: true, note: "Already recorded in this conversation. Just confirm it to the seller." } };
-    }
-    if ((await soft(ctx, bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY) {
-      return { content: { error: `Too many requests from this connection today. Ask the seller to email ${biz.email} with the number or email to remove.` }, isError: true };
-    }
     const { notice, error } = normalizeStop(input);
-    if (error) return { content: { error }, isError: true };
+    if (error) {
+      return { content: { error: `${error} If they give the same details again, ask them to email ${biz.email} so the team can remove them.` }, isError: true };
+    }
+    // A repeat of a stop already recorded (same contact, same or wider channel) is confirmed
+    // without a second notice. Anything new is always recorded and sent: never report
+    // "recorded" for a request the team did not get.
+    const keys = stopKeys(notice);
+    const covered = (k) => ctx.stopped.has(k) || ctx.stopped.has(k.replace(/:[a-z]+$/, ":all"));
+    if (keys.every(covered)) {
+      return { content: { recorded: true, duplicate: true, note: "Already recorded in this conversation. Just confirm it to the seller." } };
+    }
+    if (ctx.prior.stops + ctx.stopsThisTurn >= MAX_STOPS_PER_CONVERSATION
+      || (await soft(bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY) {
+      return { content: { error: `Too many requests from this chat. Ask the seller to email ${biz.email} with the number or email to remove, and say the team will take care of it.` }, isError: true };
+    }
     ctx.stopsThisTurn++;
+    for (const k of keys) ctx.stopped.add(k);
     const full = {
       ...notice,
       type: "do_not_contact",
@@ -402,10 +448,16 @@ async function runTool(name, input, ctx) {
     try { stored = await storeStop(env, full); } catch (e) { console.error("storeStop failed", e && e.message); }
     try { emailed = await emailStop(env, full); } catch (e) { console.error("emailStop failed", e && e.message); }
     try { await countBooking(env, ctx.clientKey, nowMs, "dn"); } catch (e) { console.error("count stop failed", e && e.message); }
+    const promise = {
+      all: "we won't call, text, or email them again",
+      calls: "we won't call them again",
+      texts: "we won't text them again",
+      email: "we won't email them again",
+    }[notice.channels];
     return {
-      content: { recorded: true, what_next: "Confirm in one sentence that we won't contact them again." },
+      content: { recorded: true, stopped: notice.channels, what_next: `Confirm in one sentence that ${promise}. Don't add anything else.` },
       lead: { ...full, delivered: emailed, stored },
-      ui: { stopped: true },
+      ui: { stopped: notice.channels },
     };
   }
 
@@ -467,6 +519,7 @@ export async function runTurn({
     env, biz, sellerTz, lang, page, nowMs, clientKey, messages,
     prior: priorActions(base), bookingsThisTurn: 0, bookingsThisResponse: 0, stopsThisTurn: 0,
   };
+  ctx.stopped = new Set(ctx.prior.stopped);
   const firstNew = base.length;
 
   const api = client || new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
@@ -567,7 +620,10 @@ function fallbackText(lang, biz, ui, stop) {
     return lang === "es" ? "Listo, el equipo se comunicará con usted pronto." : "Got it. The team will reach out soon.";
   }
   if (ui.stopped) {
-    return lang === "es" ? "Listo. No volveremos a contactarle." : "Done. We won't contact you again.";
+    const es = { all: "No volveremos a contactarle.", calls: "No volveremos a llamarle.", texts: "No le enviaremos más mensajes de texto.", email: "No le enviaremos más correos." };
+    const en = { all: "We won't contact you again.", calls: "We won't call you again.", texts: "We won't text you again.", email: "We won't email you again." };
+    const k = en[ui.stopped] ? ui.stopped : "all";
+    return lang === "es" ? `Listo. ${es[k]}` : `Done. ${en[k]}`;
   }
   console.warn("empty reply", stop);
   return lang === "es"

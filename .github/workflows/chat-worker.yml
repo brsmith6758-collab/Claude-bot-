@@ -70,16 +70,26 @@ jobs:
         run: |
           # A one-token request (a tiny fraction of a cent): catches a mistyped or revoked key,
           # a model the key can't use, and an account with no credit.
-          MODEL=$(sed -n 's/^MODEL = "\(.*\)"/\1/p' wrangler.toml)
+          MODEL=$(sed -n "s/^[[:space:]]*MODEL[[:space:]]*=[[:space:]]*[\"']\([^\"']*\)[\"'].*/\1/p" wrangler.toml | head -1)
           MODEL=${MODEL:-claude-opus-5-5}
-          code=$(curl -s --retry 3 --retry-all-errors --max-time 30 -o "$RUNNER_TEMP/anthropic-check.json" -w '%{http_code}' https://api.anthropic.com/v1/messages \
-            -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
-            -d "{\"model\":\"$MODEL\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}")
-          if [ "$code" != "200" ]; then
-            echo "::error::Anthropic rejected the API key or model $MODEL (HTTP $code): $(head -c 300 "$RUNNER_TEMP/anthropic-check.json"). Until this is fixed the website chat stays in its scripted (guided) mode."
-            exit 1
-          fi
-          echo "Anthropic key works with $MODEL."
+          code=000
+          for attempt in 1 2 3 4; do
+            code=$(curl -s --max-time 30 -o "$RUNNER_TEMP/anthropic-check.json" -w '%{http_code}' https://api.anthropic.com/v1/messages \
+              -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
+              -d "{\"model\":\"$MODEL\",\"max_tokens\":1,\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}") || code=000
+            case "$code" in
+              429|5??|000) sleep 20 ;;   # busy or unreachable: try again
+              *) break ;;
+            esac
+          done
+          case "$code" in
+            200) echo "Anthropic key works with $MODEL." ;;
+            429|5??|000)
+              echo "::warning::The Anthropic API was busy or unreachable (HTTP $code), so the key could not be checked. Deploying anyway; re-run this workflow later to check it." ;;
+            *)
+              echo "::error::Anthropic rejected the API key or model $MODEL (HTTP $code): $(head -c 300 "$RUNNER_TEMP/anthropic-check.json"). Nothing was deployed: the website chat keeps running its previous version (or guided mode, if it was never deployed)."
+              exit 1 ;;
+          esac
 
       - uses: actions/setup-node@v4
         if: steps.gate.outputs.ready == 'true'

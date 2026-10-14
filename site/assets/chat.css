@@ -168,6 +168,15 @@
 .pac-foot { padding: 0.45rem 0.9rem 0.6rem; font-size: 0.75rem; line-height: 1.4; color: var(--pac-ink-2); background: var(--pac-bg); }
 .pac-foot a { color: var(--pac-blue); font-weight: 700; text-decoration: none; white-space: nowrap; }
 .pac-foot a:hover { text-decoration: underline; }
+.pac-foot-short { display: none; }
+/* Phones in landscape: the short notice, and the conversation always keeps some room. */
+@media (max-height: 500px) {
+  .pac-foot-long { display: none; }
+  .pac-foot-short { display: inline; }
+  .pac-log { min-height: 4.5rem; }
+  .pac-chips { flex-wrap: nowrap; overflow-x: auto; }
+  .pac-chip { flex: 0 0 auto; }
+}
 .pac-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 html.pac-lock, html.pac-lock body { overflow: hidden; }

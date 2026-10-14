@@ -18,6 +18,11 @@ export function normalizePhone(raw) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** "123 Main St, Mesa, AZ 85201" from whatever location parts the lead has ("" if none). */
+export function leadPlace(lead) {
+  return [lead.address, lead.city, [lead.state, lead.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+}
+
 function cleanEmail(raw) {
   const email = clip(raw, 200);
   return EMAIL_RE.test(email) ? email : "";
@@ -78,12 +83,11 @@ export function normalizeStop(input) {
   const rawPhone = clip(input.phone, 40);
   const phone = normalizePhone(rawPhone);
   const email = cleanEmail(input.email);
+  if (!phone && /\d/.test(rawPhone)) {
+    return { error: "That phone number is not a valid 10-digit US number. Ask the seller to confirm it once." };
+  }
   if (!phone && !email) {
-    return {
-      error: /\d/.test(rawPhone)
-        ? "That phone number is not a valid 10-digit US number. Ask the seller to confirm it once."
-        : "Needs the phone number or email address to stop contacting. Ask the seller once which one.",
-    };
+    return { error: "Needs the phone number or email address to stop contacting. Ask the seller once which one." };
   }
   const channels = ["all", "calls", "texts", "email"].includes(input.channels) ? input.channels : "all";
   return { notice: { name: clip(input.name, 120), phone: phone || "", email, channels, note: clip(input.note, 500) } };
@@ -136,6 +140,13 @@ export async function bookedSlots(env, nowMs = Date.now()) {
   }
   slotCache = { at: nowMs, set: booked, env: env.LEADS };
   return booked;
+}
+
+/** Record a slot found taken (e.g. booked before the index existed): cache and index. */
+export async function markBooked(env, iso, nowMs = Date.now()) {
+  if (!env.LEADS) return;
+  if (slotCache.set && slotCache.env === env.LEADS) slotCache.set.add(iso);
+  await addToIndex(env, iso, nowMs);
 }
 
 async function addToIndex(env, iso, nowMs) {
@@ -258,7 +269,7 @@ export function leadEmailText(lead) {
     lead.textingConsent && lead.textingConsent.question ? row("Texting question", `"${lead.textingConsent.question}"`) : null,
     lead.textingConsent && lead.textingConsent.question ? row("Their answer", `"${lead.textingConsent.answer || "(no reply)"}"`) : null,
     "",
-    row("Property", [lead.address, lead.city, [lead.state, lead.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")),
+    row("Property", leadPlace(lead) || "(not given)"),
     row("Type", lead.propertyType),
     row("Condition", lead.condition),
     row("Occupancy", lead.occupancy),
@@ -275,12 +286,20 @@ export function leadEmailText(lead) {
   return lead.transcript ? `${body}\n\nCONVERSATION (keep for your records; it includes the texting answer)\n${lead.transcript}` : body;
 }
 
+/** What a stop request means for the team, by channel. Shared wording with the browser fallback. */
+export const STOP_WORDING = {
+  all: { subject: "DO NOT CONTACT", line: "Stop all calls, texts and email to this person.", action: "Remove them from your call, text and email lists and cancel any call they booked." },
+  calls: { subject: "DO NOT CALL", line: "Stop calling this person.", action: "Remove them from your call list and cancel any call they booked. Texts and email are still OK only if they agreed to them." },
+  texts: { subject: "DO NOT TEXT", line: "Stop texting this person.", action: "Remove them from your text list. Calls and email are still OK, and keep any call they booked." },
+  email: { subject: "DO NOT EMAIL", line: "Stop emailing this person.", action: "Remove them from your email list. Calls are still OK, and keep any call they booked." },
+};
+
 export function stopEmailText(notice) {
   const row = (label, value) => (value ? `${label}: ${value}` : null);
-  const what = { all: "calls, texts and email", calls: "calls", texts: "texts", email: "email" }[notice.channels] || "calls, texts and email";
+  const w = STOP_WORDING[notice.channels] || STOP_WORDING.all;
   const lines = [
-    `DO NOT CONTACT: stop all ${what} to this person.`,
-    "Remove them from your call and text lists and cancel any call they booked.",
+    `${w.subject}: ${w.line}`,
+    w.action,
     "",
     row("Name", notice.name),
     row("Phone", notice.phone),
@@ -308,15 +327,16 @@ async function emailOwner(env, { subject, text, replyTo }) {
 
 /** Email the lead to the owner through the SEND_EMAIL binding, when configured. */
 export async function emailLead(env, lead) {
-  const where = [lead.address, lead.city, lead.state].filter(Boolean).join(", ");
-  const subject = lead.appointment
-    ? `${lead.appointment.reserved === false ? "Call request (confirm the time)" : "New booked call"} ${lead.appointment.ownerLabel}: ${where}`
-    : `New seller lead (${lead.phone ? "callback" : "email follow-up"}): ${where}`;
+  const where = leadPlace(lead);
+  const subject = (lead.appointment
+    ? `${lead.appointment.reserved === false ? "Call request (confirm the time)" : "New booked call"} ${lead.appointment.ownerLabel}`
+    : `New seller lead (${lead.phone ? "callback" : "email follow-up"})`) + (where ? `: ${where}` : `: ${lead.name}`);
   return emailOwner(env, { subject, text: leadEmailText(lead), replyTo: lead.email });
 }
 
 /** Email the owner a do-not-contact notice, when email is configured. */
 export async function emailStop(env, notice) {
   const who = [notice.name, notice.phone, notice.email].filter(Boolean).join(" ");
-  return emailOwner(env, { subject: `DO NOT CONTACT: ${who}`, text: stopEmailText(notice) });
+  const w = STOP_WORDING[notice.channels] || STOP_WORDING.all;
+  return emailOwner(env, { subject: `${w.subject}: ${who}`, text: stopEmailText(notice) });
 }

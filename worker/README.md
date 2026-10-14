@@ -61,10 +61,11 @@ To update the assistant later on this path, paste the new `cloudflare-paste/work
    `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `ANTHROPIC_API_KEY`.
 4. **Actions → Deploy chat assistant (Cloudflare Worker) → Run workflow.**
 
-The workflow first checks that the Anthropic key works (it stops with a clear error if the key is
-mistyped, revoked, or the account has no credit), then runs the tests, creates the
-`prime-acre-chat-leads` storage, deploys to `chat.primeacrehomebuyers.com` with a per-visitor rate
-limit, and stores the API key as a secret. After that, every change to `worker/` deploys itself.
+The workflow first runs the tests (no secrets needed; a failing test stops the deploy). If they
+pass, it checks that the Anthropic key works (it stops with a clear error if the key is mistyped,
+revoked, or the account has no credit), creates the `prime-acre-chat-leads` storage, deploys to
+`chat.primeacrehomebuyers.com` with a per-visitor rate limit, and stores the API key as a secret.
+After that, every change to `worker/` deploys itself.
 Deploy only through this workflow or Path A: a plain `npx wrangler deploy` from a laptop uploads
 no lead storage binding and silently turns off lead storage and the double-booking guard.
 
@@ -104,10 +105,11 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
 ## Where leads go
 
 - **Your inbox**, every time, with the call time in your zone, a one-click "add to calendar" link,
-  and the full chat conversation (your record of what the seller said, including their answer
-  to the texting question).
-- **"DO NOT CONTACT" emails** when a seller asks in the chat to stop calls, texts or emails.
-  Take them off your lists and cancel any call they booked.
+  the texting question and the seller's exact answer, and the chat conversation (for very long
+  chats, the most recent part).
+- **Stop requests**, when a seller asks in the chat to stop contacting them: "DO NOT CONTACT",
+  "DO NOT CALL", "DO NOT TEXT" or "DO NOT EMAIL" emails that say exactly what to stop. A texts-only
+  request keeps their booked call; "all" or "calls" means cancel it.
 - **"Call request (confirm the time)" emails** instead of "booked call" when a time couldn't be locked in
   (no KV storage, or a storage error). Call the seller to confirm it; they were told you would.
 - **KV storage** (if bound): Cloudflare → Storage & databases → Workers KV → `prime-acre-chat-leads`.
@@ -121,7 +123,9 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   and stays away from anything Fair Housing protects.
 - Asks before texting, with the standard wording (message and data rates, reply STOP, not required),
   and counts only a clear yes. Sellers who won't give a phone number can ask for email follow-up instead.
-- Records "stop contacting me" requests and emails you a DO NOT CONTACT notice.
+- Records "stop contacting me" requests, in English or Spanish, and emails you a notice that names
+  what to stop (everything, calls, texts or email). "The bank won't stop calling me" or "don't call
+  me before 5" are not treated as opt-outs; "no texts" just turns texting off for that seller.
 - Doesn't tell a seller who may owe more than the house is worth that the sale pays off the mortgage;
   points people facing foreclosure to free HUD-approved counselors.
 - Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone,
