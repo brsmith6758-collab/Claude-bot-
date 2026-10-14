@@ -135,5 +135,102 @@ async function waitBot(page, n) {
   await ctx.close();
 }
 
+// ---------------------------------------------------------------- review fixes
+{
+  // Landscape phone: the panel fills the screen instead of shrinking to a sliver.
+  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, timezoneId: "America/Phoenix" });
+  const page = await ctx.newPage();
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await page.waitForTimeout(400);
+  const box = await page.$eval("#pac-panel", (e) => ({ w: e.offsetWidth, h: e.offsetHeight, log: e.querySelector(".pac-log").offsetHeight }));
+  assert(box.w === 844 && box.h === 390 && box.log >= 120, `landscape phone panel is full screen with room for messages (${box.w}x${box.h}, log ${box.log}px)`);
+  assert(await page.getAttribute("#pac-panel", "aria-modal") === "true", "full-screen panel is modal");
+  assert(await page.$eval(".site-header", (e) => e.closest("[inert]") !== null || e.inert === true || e.parentElement.inert === true), "page behind the panel is inert");
+  await ctx.close();
+}
+{
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  // Talk to a person -> name + number are kept.
+  await page.click(".pac-chip >> text=Talk to a person");
+  await page.waitForSelector(".pac-card");
+  await sendText(page, "Bob Smith, please call me");
+  await waitBot(page, 3);
+  assert(/best number/.test((await bubbles(page)).at(-1)), "asks for the number when only a name was given");
+  await sendText(page, "602-555-0188");
+  await waitBot(page, 4);
+  assert(/text you/.test((await bubbles(page)).at(-1)), "then asks for texting consent");
+  await sendText(page, "yeah");
+  await waitBot(page, 5);
+  await sendText(page, "Do I need to be home for the call?");
+  await waitBot(page, 7);
+  assert(/day and time/.test((await bubbles(page)).at(-1)), "a question at the time step is answered, not stored");
+  assert(posted.length === 0, "nothing sent yet");
+  await sendText(page, "tomorrow afternoon");
+  await page.waitForFunction(() => document.querySelectorAll(".pac-card").length >= 2, null, { timeout: 15000 });
+  assert(posted.length === 1 && posted[0].name === "Bob Smith" && posted[0].phone === "(602) 555-0188" && posted[0].smsConsent === true && /tomorrow afternoon/.test(posted[0].callTime), `callback lead keeps name and number: ${JSON.stringify({ n: posted[0]?.name, p: posted[0]?.phone, c: posted[0]?.callTime })}`);
+  assert(/Call requested/.test(await page.textContent(".pac-card >> nth=-1")), "guided card says 'Call requested'");
+  // Keyboard: choose a chip, then Escape still closes.
+  await ctx.close();
+}
+{
+  const { ctx, page } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await page.focus(".pac-chip >> text=How does it work?");
+  await page.keyboard.press("Enter");
+  await waitBot(page, 3);
+  assert(await page.evaluate(() => document.activeElement && document.activeElement.id === "pac-input"), "focus stays in the chat after choosing a reply");
+  await page.keyboard.press("Escape");
+  assert(await page.isHidden("#pac-panel"), "Escape closes after a reply button");
+  await ctx.close();
+}
+{
+  // Spanish 'Sí' counts as consent; a question at the address step is answered.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/es.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await page.click(".pac-chip >> text=Quiero una oferta en efectivo");
+  await waitBot(page, 2);
+  await sendText(page, "¿Cuánto tiempo toma cerrar?");
+  await waitBot(page, 4);
+  assert(/7 días/.test((await bubbles(page)).at(-2)), "question at the address step gets the FAQ answer");
+  await sendText(page, "500 Oak Ave, Tampa FL");
+  await waitBot(page, 5);
+  await page.click(".pac-chip >> nth=0");
+  await waitBot(page, 6);
+  await page.click(".pac-chip >> nth=0");
+  await waitBot(page, 7);
+  await sendText(page, "Ana Ruiz");
+  await waitBot(page, 8);
+  await sendText(page, "813 555 0123");
+  await waitBot(page, 9);
+  await sendText(page, "Sí, claro");
+  await waitBot(page, 10);
+  await page.click(".pac-chip >> nth=0");
+  await page.waitForFunction(() => document.querySelectorAll(".pac-msg.bot").length >= 11, null, { timeout: 15000 });
+  assert(posted.length === 1 && posted[0].smsConsent === true && posted[0].address === "500 Oak Ave, Tampa FL", "'Sí, claro' is recorded as consent and the address is the real one");
+  await ctx.close();
+}
+{
+  // Phone: navigating with the chat open doesn't cover the next page.
+  const { ctx, page } = await pageWith({ endpoint: "http://127.0.0.1:9", mobile: true });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await page.goto(`${SITE}/privacy.html`);
+  await page.waitForSelector(".pac-launcher");
+  assert(await page.isHidden("#pac-panel"), "chat does not reopen full screen over the next page on a phone");
+  assert(!(await page.evaluate(() => document.documentElement.classList.contains("pac-lock"))), "page scroll is not locked");
+  assert(await page.getAttribute(".pac-foot a[href='privacy.html']", "target") === "_blank", "chat privacy link opens in a new tab");
+  await ctx.close();
+}
+
 await browser.close();
 console.log("ALL BROWSER CHECKS PASSED");

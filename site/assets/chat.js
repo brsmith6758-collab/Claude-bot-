@@ -15,6 +15,7 @@
   var STORE_KEY = "pac:chat:v1";
   var TEASE_KEY = "pac:chat:teased";
   var HOURS = cfg.chatHours || { tz: "America/Chicago", days: [1, 2, 3, 4, 5, 6], start: 9, end: 19, noticeMinutes: 60 };
+  function smallScreen() { return !!(window.matchMedia && window.matchMedia("(max-width: 560px), (max-height: 500px)").matches); }
 
   var T = {
     en: {
@@ -54,6 +55,10 @@
       gOffer: "Want me to set up a quick call so you can get a real number?",
       gOfferChips: ["Yes, let's do it", "I have another question"],
       gAsk: "Sure, what would you like to know?",
+      gQuestion: "Good question. The team can go over that with you on the call.",
+      gCallbackName: "Got it. What's the best number to reach you, and your name?",
+      gTimeHint: "What day and time work best? For example: tomorrow afternoon, or Friday at 10.",
+      notGiven: "(not given yet)",
       requested: "requested time",
       faq: [
         [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. The offer you accept is what you walk away with, minus anything owed on the property."],
@@ -104,6 +109,10 @@
       gOffer: "¿Quiere que programemos una llamada rápida para darle un número real?",
       gOfferChips: ["Sí, adelante", "Tengo otra pregunta"],
       gAsk: "Claro, ¿qué le gustaría saber?",
+      gQuestion: "Buena pregunta. El equipo puede explicarle eso en la llamada.",
+      gCallbackName: "Entendido. ¿Cuál es el mejor número para comunicarnos, y su nombre?",
+      gTimeHint: "¿Qué día y hora le quedan mejor? Por ejemplo: mañana en la tarde, o el viernes a las 10.",
+      notGiven: "(aún no indicado)",
       requested: "horario solicitado",
       faq: [
         [/comisi|cobr|costo|cargo|pagar/i, "No hay comisiones ni cargos, y nosotros pagamos los gastos de cierre habituales. La oferta que acepte es lo que recibe, menos lo que deba sobre la propiedad."],
@@ -203,7 +212,7 @@
     var foot = el("div", { class: "pac-foot" }, [T.foot]);
     if (PHONE) foot.appendChild(el("a", { href: "tel:" + PHONE_TEL, text: PHONE }));
     foot.appendChild(document.createTextNode(". "));
-    foot.appendChild(el("a", { href: "privacy.html", text: T.privacy }));
+    foot.appendChild(el("a", { href: "privacy.html", target: "_blank", rel: "noopener", text: T.privacy }));
 
     panel = el("section", { id: "pac-panel", class: "pac-panel", role: "dialog", "aria-labelledby": "pac-title", hidden: "" }, [head, log, chipsBox, form, foot]);
     panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closePanel(true); });
@@ -287,7 +296,7 @@
     state.chips.forEach(function (c) {
       var chip = typeof c === "string" ? { label: c } : c;
       var b = el("button", { class: "pac-chip" + (chip.slot ? " slot" : ""), type: "button", text: chip.label });
-      b.addEventListener("click", function () { send(chip.value || chip.label); });
+      b.addEventListener("click", function () { input.focus({ preventScroll: true }); send(chip.value || chip.label); });
       chipsBox.appendChild(b);
     });
   }
@@ -313,11 +322,20 @@
 
   // ------------------------------------------------------------ open / close
 
+  // On small screens the panel covers the page: lock scrolling and make the page inert.
+  var inerted = [];
   function lockScroll(on) {
-    if (window.matchMedia && window.matchMedia("(max-width: 560px)").matches) {
-      document.documentElement.classList.toggle("pac-lock", on);
+    var modal = on && smallScreen();
+    document.documentElement.classList.toggle("pac-lock", modal);
+    if (modal) {
+      panel.setAttribute("aria-modal", "true");
+      Array.prototype.forEach.call(document.body.children, function (n) {
+        if (n !== root && !n.inert) { n.inert = true; inerted.push(n); }
+      });
     } else {
-      document.documentElement.classList.remove("pac-lock");
+      panel.removeAttribute("aria-modal");
+      inerted.forEach(function (n) { n.inert = false; });
+      inerted = [];
     }
   }
 
@@ -332,7 +350,7 @@
     if (userAction) track("chat_open", {});
     ensureStarted();
     scrollDown();
-    window.setTimeout(function () { input.focus({ preventScroll: true }); }, 50);
+    if (userAction) window.setTimeout(function () { input.focus({ preventScroll: true }); }, 50);
   }
 
   function closePanel(userAction) {
@@ -356,7 +374,7 @@
     var seen = false;
     try { seen = window.localStorage.getItem(TEASE_KEY) === "1"; } catch (e) { seen = false; }
     if (seen || state.transcript.length) return;
-    var small = window.matchMedia && window.matchMedia("(max-width: 560px)").matches;
+    var small = smallScreen();
     window.setTimeout(function () {
       if (state.open || state.transcript.length) return;
       var active = document.activeElement;
@@ -413,6 +431,7 @@
     if (text === T.chips[3]) { // Talk to a person
       bot(T.person);
       card({ type: "contact" });
+      if (state.mode !== "ai") { state.g.step = "callback"; save(); }
       return;
     }
     setBusy(true);
@@ -453,6 +472,8 @@
         bot(res.body.reply);
         handleUi(res.body.ui || {});
         (res.body.leads || []).forEach(deliverLead);
+        var ui = res.body.ui || {};
+        if ((res.body.leads && res.body.leads.length) || ui.booking || ui.saved) state.leadSent = true;
         save();
         return;
       }
@@ -481,9 +502,17 @@
   function switchToGuided() {
     setBusy(false);
     state.mode = "guided";
+    showMode();
+    if (state.leadSent) {
+      // The team already has this seller's details: don't collect them twice.
+      state.g = { step: "done", data: {} };
+      save();
+      bot(T.gAfter);
+      card({ type: "contact" });
+      return;
+    }
     state.g = { step: "address", data: state.g && state.g.data ? state.g.data : {} };
     save();
-    showMode();
     bot(T.switching);
     bot(T.gAddress);
   }
@@ -520,6 +549,21 @@
   function faqAnswer(text) {
     for (var i = 0; i < T.faq.length; i++) if (T.faq[i][0].test(text)) return T.faq[i][1];
     return "";
+  }
+
+  function isQuestion(text) {
+    return /\?\s*$/.test(text) || /^(how|what|when|why|who|where|do|does|did|can|could|is|are|will|would|should|qu[eé]|c[oó]mo|cu[aá]ndo|por qu[eé]|d[oó]nde|puede|tiene|hay)\b/i.test(text.trim());
+  }
+  function looksLikeTime(text) {
+    return /\d|\b(am|pm|a\.m|p\.m|morning|afternoon|evening|tonight|today|tomorrow|noon|mon|tue|wed|thu|fri|sat|sun|asap|now|any ?time|weekend|ma[nñ]ana|tarde|noche|hoy|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|cuando sea|lo antes)/i.test(text);
+  }
+  function extractPhone(text) {
+    var m = String(text).match(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/);
+    if (!m) return null;
+    var d = m[0].replace(/\D/g, "");
+    if (d.length === 11 && d.charAt(0) === "1") d = d.slice(1);
+    if (d.length !== 10 || /^[01]/.test(d)) return null;
+    return { formatted: "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6), raw: m[0] };
   }
 
   function wantsOffer(text) {
@@ -597,6 +641,11 @@
         bot(T.gAddress);
         break;
       case "address":
+        if (isQuestion(text)) {
+          bot(faqAnswer(text) || T.gQuestion);
+          bot(T.gAddress);
+          break;
+        }
         data.address = text.slice(0, 200);
         data.state = parseState(text);
         g.step = "condition";
@@ -629,7 +678,7 @@
         setChips(T.gConsentChips);
         break;
       case "consent":
-        data.smsConsent = text === T.gConsentChips[0] || /^(y|yes|sure|ok|okay|sí|si|claro)\b/i.test(text);
+        data.smsConsent = text === T.gConsentChips[0] || /^(?:y|yes|yeah|yep|sure|ok|okay|s[ií]|claro)(?:$|[\s,.!])/i.test(text.trim());
         g.step = "time";
         bot(T.gTime);
         setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
@@ -642,11 +691,28 @@
           setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
           break;
         }
+        if (!chosen && text !== T.gTimeAsap && !looksLikeTime(text)) {
+          if (isQuestion(text)) bot(faqAnswer(text) || T.gQuestion);
+          bot(T.gTimeHint);
+          setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
+          break;
+        }
         data.callTime = text.slice(0, 120);
         g.step = "sending";
         save();
         finishGuided();
         return;
+      case "callback":
+        var ph = extractPhone(text);
+        var nm = text.replace(ph ? ph.raw : "", "").replace(/[,;:.]+/g, " ").replace(/\b(my name is|i'?m|this is|me llamo|soy|call me|ll[aá]menme|please|por favor|at|al)\b/gi, " ").replace(/\s+/g, " ").trim();
+        if (nm) data.name = nm.slice(0, 120);
+        if (!ph) { bot(T.gCallbackName); break; }
+        data.phone = ph.formatted;
+        data.address = data.address || T.notGiven;
+        g.step = "consent";
+        bot(T.gConsent);
+        setChips(T.gConsentChips);
+        break;
       case "sending":
         return;
       default:
@@ -684,6 +750,7 @@
       setBusy(false);
       if (r && r.ok) {
         if (pac().trackLead) pac().trackLead({ source: "website-chat-guided", market: lead.market, state: lead.state });
+        state.leadSent = true;
         if (!asap) card({ type: "booking", when: d.callTime, requested: true });
         bot(T.gDone(asap ? "" : d.callTime));
       } else {
@@ -702,13 +769,17 @@
     state.transcript.forEach(function (item) { log.appendChild(renderItem(item)); });
     renderChips();
     if (state.g && state.g.step === "sending") state.g.step = "time";
-    if (state.open) openPanel(false);
+    if (state.open && !smallScreen()) openPanel(false);
+    else if (state.open) { state.open = false; save(); }
   }
 
   function init() {
     build();
     restore();
     scheduleTeaser();
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && state.open) closePanel(true);
+    });
     document.addEventListener("click", function (e) {
       var t = e.target.closest && e.target.closest("[data-open-chat]");
       if (t) { e.preventDefault(); openPanel(true); }
