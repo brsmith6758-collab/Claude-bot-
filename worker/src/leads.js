@@ -127,13 +127,23 @@ export async function isSlotTaken(env, iso) {
   return (await env.LEADS.get(`slot:${iso}`)) !== null;
 }
 
+/**
+ * Reserve a slot: "reserved", "taken" (someone else's write won), or "unstored" (no KV).
+ * KV has no compare-and-set; writing a token and reading it back catches most races in
+ * the same location, not all. The owner sees every booking by email either way.
+ */
 export async function reserveSlot(env, iso, startMs, holder) {
-  if (!env.LEADS) return false;
+  if (!env.LEADS) return "unstored";
   const expiration = Math.floor(startMs / 1000) + 60 * 60 * 24 * 3;
-  await env.LEADS.put(`slot:${iso}`, JSON.stringify(holder), { expiration, metadata: holder });
+  const token = crypto.randomUUID();
+  await env.LEADS.put(`slot:${iso}`, JSON.stringify({ ...holder, token }), { expiration, metadata: { name: holder.name } });
+  const back = await env.LEADS.get(`slot:${iso}`);
+  try {
+    if (back && JSON.parse(back).token !== token) return "taken";
+  } catch { /* unreadable: keep ours */ }
   await env.LEADS.put(`phone:${digitsOf(holder.phone)}`, JSON.stringify({ start: iso }), { expiration: Math.floor(startMs / 1000) + 3600 });
   if (slotCache.set && slotCache.env === env.LEADS) slotCache.set.add(iso);
-  return true;
+  return "reserved";
 }
 
 // ---------------------------------------------------------------- email

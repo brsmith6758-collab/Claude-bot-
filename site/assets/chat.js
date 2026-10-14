@@ -31,7 +31,7 @@
       fresh: "This chat got long, so I'm starting a fresh page. Anything you already booked is saved with the team.",
       tryAgain: "Try again",
       switching: "Let me take your details the quick way so the team can reach you.",
-      booked: "Call booked", addCal: "Add to my calendar", call: "Call", text: "Text",
+      booked: "Call booked", requestedCall: "Call requested", addCal: "Add to my calendar", call: "Call", text: "Text",
       copy: "Copy my details", copied: "Copied",
       // guided mode
       gAddress: "Great, let's get you an offer. What's the address of the property?",
@@ -47,7 +47,8 @@
       gTime: "When's a good time for a quick call? Pick one, or type a time that works.",
       gTimeAsap: "As soon as possible",
       gSending: "One moment…",
-      gDone: function (when) { return "You're all set. " + (when ? "We'll call you " + when + ". " : "We'll reach out shortly. ") + "The team reviews the property first, and a written cash offer typically follows within 24 hours of the review. If anything changes, call or text " + PHONE + "."; },
+      gDone: function (when) { return "Thanks! " + (when ? "I've asked the team to call you around " + when + ". They'll confirm by call or text. " : "The team will reach out shortly. ") + "They review the property first, and a written cash offer typically follows within 24 hours of the review. If anything changes, call or text " + PHONE + "."; },
+      gStale: "That time has already passed. Here are the next open options:",
       gFail: "I couldn't send that automatically. Please call or text " + PHONE + " and mention these details:",
       gAfter: "The team has your details and will reach out. For anything else, call or text " + PHONE + ".",
       gOffer: "Want me to set up a quick call so you can get a real number?",
@@ -81,7 +82,7 @@
       fresh: "Esta conversación se hizo larga, así que empiezo una nueva. Lo que ya programó está guardado con el equipo.",
       tryAgain: "Intentar de nuevo",
       switching: "Permítame tomar sus datos de forma rápida para que el equipo se comunique con usted.",
-      booked: "Llamada programada", addCal: "Agregar a mi calendario", call: "Llamar", text: "Texto",
+      booked: "Llamada programada", requestedCall: "Llamada solicitada", addCal: "Agregar a mi calendario", call: "Llamar", text: "Texto",
       copy: "Copiar mis datos", copied: "Copiado",
       gAddress: "Perfecto, vamos a conseguirle una oferta. ¿Cuál es la dirección de la propiedad?",
       gCondition: "Gracias. ¿En qué condición está la casa?",
@@ -96,7 +97,8 @@
       gTime: "¿Cuándo le queda bien una llamada rápida? Elija una opción o escriba un horario.",
       gTimeAsap: "Lo antes posible",
       gSending: "Un momento…",
-      gDone: function (when) { return "¡Listo! " + (when ? "Le llamaremos " + when + ". " : "Nos comunicaremos pronto. ") + "El equipo revisa la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión. Si algo cambia, llame o envíe un texto al " + PHONE + "."; },
+      gDone: function (when) { return "¡Gracias! " + (when ? "Le pedí al equipo que le llame alrededor de " + when + ". Le confirmarán por llamada o texto. " : "El equipo se comunicará pronto. ") + "Revisan la propiedad primero y una oferta por escrito suele llegar dentro de 24 horas después de la revisión. Si algo cambia, llame o envíe un texto al " + PHONE + "."; },
+      gStale: "Ese horario ya pasó. Estas son las próximas opciones:",
       gFail: "No pude enviar esto automáticamente. Por favor llame o envíe un texto al " + PHONE + " con estos datos:",
       gAfter: "El equipo tiene sus datos y se comunicará con usted. Para cualquier otra cosa, llame o envíe un texto al " + PHONE + ".",
       gOffer: "¿Quiere que programemos una llamada rápida para darle un número real?",
@@ -231,8 +233,8 @@
     var card = el("div", { class: "pac-card" });
     var d = item.data || {};
     if (d.type === "booking") {
-      card.appendChild(el("b", { text: T.booked }));
-      card.appendChild(el("p", { class: "pac-when", text: d.when + (d.requested ? " (" + T.requested + ")" : "") }));
+      card.appendChild(el("b", { text: d.requested ? T.requestedCall : T.booked }));
+      card.appendChild(el("p", { class: "pac-when", text: d.when }));
       var acts = el("div", { class: "pac-actions" });
       if (d.calendarUrl && /^https:\/\/calendar\.google\.com\//.test(d.calendarUrl)) {
         acts.appendChild(el("a", { class: "pac-action", href: d.calendarUrl, target: "_blank", rel: "noopener", text: T.addCal }));
@@ -401,8 +403,10 @@
     send(text);
   }
 
+  var lastChips = [];
   function send(text) {
     if (busy) return;
+    lastChips = state.chips.slice();
     me(text);
     setChips([]);
     track("chat_message", { mode: state.mode || "pending" });
@@ -547,7 +551,8 @@
     var out = [];
     try {
       var now = Date.now();
-      var earliest = now + (HOURS.noticeMinutes || 60) * 60000;
+      var notice = typeof HOURS.noticeMinutes === "number" ? HOURS.noticeMinutes : 60;
+      var earliest = now + notice * 60000;
       var today = zonedParts(now, HOURS.tz);
       for (var i = 0; i <= 6 && out.length < 4; i++) {
         var cal = new Date(Date.UTC(today.y, today.m - 1, today.d + i));
@@ -557,6 +562,8 @@
         for (var h = HOURS.start; h < HOURS.end && perDay < 2 && out.length < 4; h += 3) {
           var ms = zoned(cal.getUTCFullYear(), cal.getUTCMonth() + 1, cal.getUTCDate(), h, 0, HOURS.tz);
           if (ms < earliest) continue;
+          var localHour = new Date(ms).getHours(); // the visitor's own clock
+          if (localHour < 7 || localHour >= 21) continue;
           out.push(ms);
           perDay++;
         }
@@ -566,7 +573,7 @@
     return out.map(function (ms) {
       var dfmt = new Intl.DateTimeFormat(loc, { weekday: "short", month: "short", day: "numeric" }).format(new Date(ms));
       var tfmt = new Intl.DateTimeFormat(loc, { hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(new Date(ms));
-      return LANG === "es" ? dfmt + " a las " + tfmt : dfmt + " at " + tfmt;
+      return { label: LANG === "es" ? dfmt + " a las " + tfmt : dfmt + " at " + tfmt, ms: ms, slot: true };
     });
   }
 
@@ -625,9 +632,16 @@
         data.smsConsent = text === T.gConsentChips[0] || /^(y|yes|sure|ok|okay|sí|si|claro)\b/i.test(text);
         g.step = "time";
         bot(T.gTime);
-        setChips([T.gTimeAsap].concat(suggestTimes()).map(function (l, i) { return { label: l, slot: i > 0 }; }));
+        setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
         break;
       case "time":
+        var chosen = (lastChips || []).filter(function (c) { return c && c.ms && c.label === text; })[0];
+        var notice = typeof HOURS.noticeMinutes === "number" ? HOURS.noticeMinutes : 60;
+        if (chosen && chosen.ms < Date.now() + notice * 60000) {
+          bot(T.gStale);
+          setChips([{ label: T.gTimeAsap }].concat(suggestTimes()));
+          break;
+        }
         data.callTime = text.slice(0, 120);
         g.step = "sending";
         save();

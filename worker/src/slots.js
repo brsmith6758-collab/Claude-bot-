@@ -2,10 +2,12 @@
 // seller in theirs. No external calendar; booked slots live in KV.
 
 const PART_RANGES = {
-  morning: [0, 12],
+  morning: [7, 12],
   afternoon: [12, 17],
-  evening: [17, 24],
+  evening: [17, 21],
 };
+// Calls are only offered between 7 AM and 9 PM in the seller's own time zone.
+export const SELLER_HOURS = [7, 21];
 
 /** True when `tz` is an IANA zone this runtime understands. */
 export function isValidTimeZone(tz) {
@@ -93,7 +95,8 @@ export function scheduleConfig(env = {}) {
   const start = parseHHMM(env.BUSINESS_START, 9 * 60);
   const end = parseHHMM(env.BUSINESS_END, 19 * 60);
   const slot = Math.min(Math.max(parseInt(env.SLOT_MINUTES, 10) || 30, 15), 120);
-  const lead = Math.min(Math.max(parseInt(env.MIN_NOTICE_MINUTES, 10) || 60, 0), 24 * 60);
+  const notice = parseInt(env.MIN_NOTICE_MINUTES, 10);
+  const lead = Math.min(Math.max(Number.isFinite(notice) ? notice : 60, 0), 24 * 60);
   const ahead = Math.min(Math.max(parseInt(env.DAYS_AHEAD, 10) || 7, 1), 30);
   return {
     tz,
@@ -136,7 +139,7 @@ export function openSlots(nowMs, cfg, booked = new Set()) {
  * Narrow open slots to the seller's request and spread the choice:
  * at most `perDay` per local date, `max` total, at least 90 minutes apart.
  */
-export function pickSlots(slotsMs, { sellerTz, day = "", partOfDay = "any", perDay = 3, max = 6 }) {
+export function pickSlots(slotsMs, { sellerTz, day = "", partOfDay = "any", perDay = 3, max = 6, sellerHours = SELLER_HOURS }) {
   const range = PART_RANGES[partOfDay] || null;
   const byDay = new Map();
   for (const ms of slotsMs) {
@@ -144,6 +147,7 @@ export function pickSlots(slotsMs, { sellerTz, day = "", partOfDay = "any", perD
     const key = ymd(p);
     if (day && key !== day) continue;
     if (range && (p.hour < range[0] || p.hour >= range[1])) continue;
+    if (sellerHours && (p.hour < sellerHours[0] || p.hour >= sellerHours[1])) continue;
     if (!byDay.has(key)) byDay.set(key, []);
     byDay.get(key).push(ms);
   }

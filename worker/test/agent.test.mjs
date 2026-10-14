@@ -301,3 +301,36 @@ test("the turn stops calling the model when its time budget runs out", async () 
   assert.equal(out.history.at(-1).content[0].type, "tool_result");
   assert.ok(out.ui.slots.length > 0, "the times found are still shown");
 });
+
+test("time lookups carry today's date and explain past or far dates", async () => {
+  const offered = [];
+  const client = fakeClient([
+    msg([toolUse("get_call_times", { day: "2026-10-12", part_of_day: "any" })], "tool_use"),
+    (params) => { offered.push(lastToolResult(params)); return msg([toolUse("get_call_times", { day: "2026-12-01", part_of_day: "any" })], "tool_use"); },
+    (params) => { offered.push(lastToolResult(params)); return msg([text("ok")]); },
+  ]);
+  await runTurn({ env: envWith(), history: [], message: "x", context: { ...context, timeZone: "Pacific/Honolulu" }, nowMs: NOW, client });
+  assert.equal(offered[0].seller_today, "Wednesday 2026-10-14");
+  assert.equal(offered[0].bookable_through, "2026-10-21");
+  assert.match(offered[0].note, /in the past/);
+  assert.match(offered[1].note, /only be booked through 2026-10-21/);
+  for (const s of offered[0].available) assert.doesNotMatch(s.label, / [1-6]:\d\d AM/, `no pre-dawn times: ${s.label}`);
+});
+
+test("losing a race for the same slot reports it as taken", async () => {
+  const env = envWith();
+  const realGet = env.LEADS.get.bind(env.LEADS);
+  // Another seller's write lands between our write and our read-back.
+  env.LEADS.get = async (k) => (k.startsWith("slot:") && env.LEADS.store.has(k) ? JSON.stringify({ name: "Other", token: "someone-else" }) : realGet(k));
+  const client = fakeClient([
+    msg([toolUse("book_call", { slot_id: "2026-10-14T16:30:00.000Z", ...lead })], "tool_use"),
+    (params) => {
+      const r = params.messages.at(-1).content[0];
+      assert.ok(r.is_error && /just taken/.test(r.content));
+      return msg([text("That one just went. How about 10?")]);
+    },
+  ]);
+  const out = await runTurn({ env, history: [], message: "9:30 please", context, nowMs: NOW, client });
+  assert.equal(out.leads.length, 0);
+  assert.equal(env.SEND_EMAIL.sent.length, 0);
+});

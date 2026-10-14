@@ -3,7 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt, TOOLS, contextLine } from "./prompt.js";
 import {
-  scheduleConfig, openSlots, pickSlots, slotLabel, isValidTimeZone, calendarLink, stateTimeZone,
+  scheduleConfig, openSlots, pickSlots, slotLabel, isValidTimeZone, calendarLink, stateTimeZone, zonedParts, ymd,
 } from "./slots.js";
 import {
   normalizeLead, storeLead, emailLead, bookedSlots, isSlotTaken, reserveSlot, phoneBooking, bookingsToday, countBooking,
@@ -172,18 +172,38 @@ async function runTool(name, input, ctx) {
   if (name === "get_call_times") {
     const booked = await bookedSlots(env, nowMs);
     const all = openSlots(nowMs, cfg, booked);
+    const today = zonedParts(nowMs, sellerTz);
+    const sellerToday = ymd(today);
+    const last = all.length ? ymd(zonedParts(all[all.length - 1], sellerTz)) : sellerToday;
     const day = validDay(input.day);
     const part = ["morning", "afternoon", "evening"].includes(input.part_of_day) ? input.part_of_day : "any";
     let picked = pickSlots(all, { sellerTz, day, partOfDay: part });
     let note = "";
     if (!picked.length && (day || part !== "any")) {
-      note = "No open times match that request. These are the soonest open times instead.";
+      note = day && day < sellerToday
+        ? "That date is in the past. These are the soonest open times instead."
+        : day && day > last
+          ? `Calls can only be booked through ${last}. These are the soonest open times instead.`
+          : "No open times match that request. These are the soonest open times instead.";
       picked = pickSlots(all, { sellerTz });
+    }
+    if (!picked.length) {
+      // Only times outside the seller's usual waking hours remain (e.g. far time zones).
+      picked = pickSlots(all, { sellerTz, sellerHours: null });
+      if (picked.length) note = "These are the only open times, and they are early or late in the seller's time zone; mention that.";
     }
     const available = picked.map((ms) => ({ slot_id: new Date(ms).toISOString(), label: slotLabel(ms, sellerTz, lang) }));
     if (!available.length) note = "No open times in the next week. Offer to save a callback request instead.";
+    const weekday = new Intl.DateTimeFormat("en-US", { timeZone: sellerTz, weekday: "long" }).format(new Date(nowMs));
     return {
-      content: { seller_time_zone: sellerTz, business_hours: biz.hoursLabel, available, ...(note ? { note } : {}) },
+      content: {
+        seller_today: `${weekday} ${sellerToday}`,
+        bookable_through: last,
+        seller_time_zone: sellerTz,
+        business_hours: biz.hoursLabel,
+        available,
+        ...(note ? { note } : {}),
+      },
       ui: available.length ? { slots: available } : undefined,
     };
   }
@@ -245,7 +265,12 @@ async function runTool(name, input, ctx) {
         }),
       };
       try {
-        appointment.reserved = await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone });
+        const r = await reserveSlot(env, iso, ms, { name: lead.name, phone: lead.phone });
+        if (r === "taken") {
+          ctx.bookingsThisResponse--;
+          return { content: { error: "That time was just taken. Offer other times from get_call_times." }, isError: true };
+        }
+        appointment.reserved = r === "reserved";
       } catch (e) {
         console.error("reserveSlot failed", e && e.message);
         appointment.reserved = false; // the lead still goes out; the owner confirms the time

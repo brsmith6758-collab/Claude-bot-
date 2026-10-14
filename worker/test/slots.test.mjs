@@ -74,3 +74,24 @@ test("labels and calendar links", () => {
   assert.ok(!isValidTimeZone("Not/AZone"));
   assert.ok(!isValidTimeZone(""));
 });
+
+test("sellers far from Central only see waking-hour times", () => {
+  const all = openSlots(WED_1010_CDT, cfg);
+  const hawaii = pickSlots(all, { sellerTz: "Pacific/Honolulu" });
+  assert.ok(hawaii.length > 0);
+  for (const ms of hawaii) {
+    const h = zonedParts(ms, "Pacific/Honolulu").hour;
+    assert.ok(h >= 7 && h < 21, `Honolulu hour ${h}`);
+  }
+  const morning = pickSlots(all, { sellerTz: "Pacific/Honolulu", partOfDay: "morning" });
+  for (const ms of morning) assert.ok(zonedParts(ms, "Pacific/Honolulu").hour >= 7, "morning never means 4 AM");
+  const any = pickSlots(all, { sellerTz: "Pacific/Honolulu", sellerHours: null });
+  assert.ok(zonedParts(any[0], "Pacific/Honolulu").hour < 7, "without the filter the soonest slot is before 7 AM");
+});
+
+test("a zero-minute notice is honoured", () => {
+  const zero = scheduleConfig({ MIN_NOTICE_MINUTES: "0" });
+  assert.equal(zero.minNoticeMinutes, 0);
+  assert.equal(openSlots(Date.UTC(2026, 9, 14, 15, 0), zero)[0], Date.UTC(2026, 9, 14, 15, 0));
+  assert.equal(scheduleConfig({}).minNoticeMinutes, 60);
+});

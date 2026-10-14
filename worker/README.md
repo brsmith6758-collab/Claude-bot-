@@ -110,8 +110,18 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   points homeowners facing foreclosure to free HUD-approved counselors as well, and stays away
   from anything Fair Housing protects.
 - Asks before texting, and records the answer with the lead.
-- Only offers call times that are actually open; two sellers cannot book the same slot.
+- Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone.
+- Limits abuse in code: one booking per reply, two per conversation, three per visitor per day,
+  one upcoming call per phone number, and a signed conversation history nobody can forge.
 - Replies in Spanish to Spanish speakers and on the Spanish page.
+
+Known limits:
+
+- If two sellers pick the same time within a few seconds of each other, both can be confirmed.
+  You get both lead emails and can call one of them at a nearby time. (Fully preventing it needs a
+  Cloudflare Durable Object, which the dashboard path cannot set up.)
+- Path B (GitHub) deploys real per-visitor and site-wide rate limits. Path A (dashboard) relies on a
+  lighter built-in limiter, so the Anthropic monthly spend limit from step 1 matters more there.
 
 ## For developers
 
