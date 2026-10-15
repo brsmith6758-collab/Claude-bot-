@@ -176,6 +176,16 @@ function priorContact(history) {
   return found;
 }
 
+/**
+ * A 400 from the API that a fresh history can fix (thinking signature, tool pairing).
+ * Anything else (billing, configuration) means the AI is unavailable right now.
+ */
+export function historyProblem(e) {
+  // The API's own message (e.error.error.message), not the SDK's wrapper text.
+  const apiMessage = e && e.error && e.error.error && e.error.error.message;
+  return /signature|thinking|tool_use|tool_result|messages\.\d+/i.test(String(apiMessage || (e && e.message) || ""));
+}
+
 /** Keys for the contacts and channel a stop request covers: "p:<digits>:texts", "e:<email>:all". */
 function stopKeys(notice) {
   const keys = [];
@@ -606,7 +616,10 @@ export async function runTurn({
       });
     } catch (e) {
       // A booking already happened this turn: report it rather than lose it.
-      if (leads.length || followUp) { console.error("model call failed after a booking or follow-up", e && e.message); lastStop = "error"; break; }
+      // A history the API rejects must still reach the 409 "start fresh" path, or the chat would be stuck;
+      // the follow-up was already emailed above, and the browser forwards it when the Worker can't.
+      const historyBad = e instanceof Anthropic.BadRequestError && historyProblem(e);
+      if (leads.length || (followUp && !historyBad)) { console.error("model call failed after a booking or follow-up", e && e.message); lastStop = "error"; break; }
       throw e;
     }
     lastStop = response.stop_reason;

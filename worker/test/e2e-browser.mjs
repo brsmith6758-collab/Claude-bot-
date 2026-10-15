@@ -653,5 +653,59 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await ctx.close();
 }
 
+{
+  // AI mode: stops from separate turns add up, carry into guided mode, and a reply the Worker
+  // didn't forward (e.g. after a history reset) is forwarded by the bubble once there's a lead.
+  const mock = async (page, replies) => {
+    let i = 0;
+    await page.route("http://127.0.0.1:8899/health", (r) => r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: '{"ok":true,"ai":true}' }));
+    await page.route("http://127.0.0.1:8899/chat", (r) => {
+      const x = replies[Math.min(i++, replies.length - 1)];
+      return r.fulfill({ status: x.status || 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: JSON.stringify(x.body) });
+    });
+  };
+  const ok = (extra) => ({ body: { reply: "Done.", history: [], sig: "", ui: {}, leads: [], ...extra } });
+  {
+    const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:8899" });
+    await mock(page, [
+      ok({ ui: { stopped: "calls" }, leads: [{ type: "do_not_contact", name: "Dana", phone: "(602) 555-0143", channels: "calls", delivered: true }] }),
+      ok({ ui: { stopped: "email" }, leads: [{ type: "do_not_contact", name: "Dana", phone: "(602) 555-0143", channels: "email", delivered: true }] }),
+      { status: 503, body: { error: "ai_unavailable" } },
+    ]);
+    await page.goto(`${SITE}/index.html`);
+    await page.click(".pac-launcher");
+    await waitBot(page, 1);
+    await say(page, "don't call me");
+    await say(page, "and don't email me");
+    await say(page, "I still want an offer", 2);
+    await say(page, "9 Pine St, Mesa AZ");
+    await tap(page, "Move-in ready");
+    await tap(page, "As soon as possible");
+    await say(page, "Dana Lee");
+    await say(page, "602-555-0143");
+    await tap(page, "Yes, texting is fine");
+    const leadPost = posted.find((x) => x.source === "website-chat-guided");
+    assert(leadPost && /no calls/.test(leadPost.contactLimits) && /no email/.test(leadPost.contactLimits) && /No calls/.test(leadPost.callTime),
+      `limits from two AI turns both carry into guided mode: ${leadPost && leadPost.contactLimits}`);
+    await ctx.close();
+  }
+  {
+    const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:8899" });
+    await mock(page, [
+      ok({ ui: { saved: true }, leads: [{ type: "lead", name: "Dana Lee", phone: "(602) 555-0177", delivered: true }] }),
+      ok({ reply: "Sure." }),
+    ]);
+    await page.goto(`${SITE}/index.html`);
+    await page.click(".pac-launcher");
+    await waitBot(page, 1);
+    await say(page, "Call me ASAP, Dana Lee 602-555-0177");
+    await say(page, "My wife is a co-owner, please include her");
+    await page.waitForFunction(() => true);
+    await page.waitForTimeout(300);
+    assert(posted.length === 1 && /^MESSAGE FROM SELLER/.test(posted[0]._subject) && /co-owner/.test(posted[0].note), "a follow-up the Worker didn't forward is forwarded by the bubble");
+    await ctx.close();
+  }
+}
+
 await browser.close();
 console.log("ALL BROWSER CHECKS PASSED");

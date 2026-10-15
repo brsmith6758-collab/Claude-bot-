@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import Anthropic from "@anthropic-ai/sdk";
 import { runTurn, checkHistory, cleanAssistantContent, signHistory, HistoryError } from "../src/agent.js";
 import { fakeKV, fakeMailer, fakeClient, msg, thinking, text, toolUse } from "./fakes.mjs";
 import { resetSlotCache } from "../src/leads.js";
@@ -693,4 +694,17 @@ test("after a lead, every later message is emailed to the team word for word", a
   const t3 = await runTurn({ env, history: t2.history, sig: t2.sig, message: "And please don't text me", context, nowMs: NOW, client });
   assert.equal(env.SEND_EMAIL.sent.length, 3);
   assert.equal(t3.reply, "Thanks, I've passed that to the team.");
+});
+
+test("a history the API rejects still resets after a lead (the follow-up is already sent)", async () => {
+  const env = envWith();
+  const t1 = await runTurn({ env, history: [], message: "call me ASAP", context, nowMs: NOW,
+    client: fakeClient([msg([toolUse("save_lead", { callback_preference: "ASAP", ...lead })], "tool_use"), msg([text("Saved.")])]) });
+  const bad = new Anthropic.BadRequestError(400, { type: "error", error: { type: "invalid_request_error", message: "messages.1.content.0: Invalid `signature` in `thinking` block" } }, "bad", new Headers());
+  const client = { beta: { messages: { create: async () => { throw bad; } } } };
+  await assert.rejects(
+    runTurn({ env, history: t1.history, sig: t1.sig, message: "one more thing", context, nowMs: NOW, client }),
+    (e) => e instanceof Anthropic.BadRequestError,
+  );
+  assert.equal(env.SEND_EMAIL.sent.length, 2, "the follow-up was emailed before the model call");
 });

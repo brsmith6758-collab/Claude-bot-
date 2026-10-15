@@ -538,6 +538,7 @@
       window.clearTimeout(timer);
       if (res.status === 200 && res.body && typeof res.body.reply === "string") {
         failures = 0;
+        var hadLead = !!state.leadSent;
         if (Array.isArray(res.body.history)) { state.history = res.body.history; state.sig = res.body.sig || ""; }
         setBusy(false);
         bot(res.body.reply);
@@ -549,9 +550,12 @@
         });
         var ui = res.body.ui || {};
         if (leads.some(function (l) { return l.type !== "do_not_contact" && l.type !== "seller_message"; }) || ui.booking || ui.saved) state.leadSent = true;
-        if (ui.stopped) {
-          state.stopped = ui.stopped === true ? "all" : ui.stopped;
-          if (state.stopped === "all") state.optedOut = true;
+        if (ui.stopped) state.stopped = mergeStopped(state.stopped, ui.stopped === true ? "all" : ui.stopped);
+        if (state.stopped === "all") state.optedOut = true;
+        // After a lead, every message should reach the team. If the Worker didn't forward this one
+        // (for example after the chat history was reset), the bubble does.
+        if (hadLead && !leads.some(function (l) { return l.type === "seller_message"; })) {
+          deliverLead({ type: "seller_message", name: (state.contact || {}).name, phone: (state.contact || {}).phone, email: (state.contact || {}).email, note: text, delivered: false });
         }
         save();
         return;
@@ -627,6 +631,15 @@
   }
 
   // Leads the Worker could not email itself go through the site's form endpoint.
+  // "calls" + "texts" -> "calls+texts"; "all" wins.
+  function mergeStopped(a, b) {
+    if (!a || !b) return a || b || "";
+    var set = {};
+    String(a).split("+").concat(String(b).split("+")).forEach(function (c) { set[c] = true; });
+    if (set.all || (set.calls && set.texts && set.email)) return "all";
+    return ["calls", "texts", "email"].filter(function (c) { return set[c]; }).join("+");
+  }
+
   function deliverLead(lead) {
     if (lead.type === "seller_message") {
       if (!lead.delivered && pac().submitLead) {
@@ -816,7 +829,7 @@
         if (channel === "message") { bot(T.gPassedMsg); save(); return; }
         if (channel !== "review") {
           state.stopFailed = false;
-          state.stopped = state.stopped && state.stopped !== channel && channel !== "all" ? state.stopped + "+" + channel : channel;
+          state.stopped = mergeStopped(state.stopped, channel);
           if (channel === "all") state.optedOut = true;
         }
         bot(T.gStopDoneFor(channel));
