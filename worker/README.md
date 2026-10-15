@@ -128,11 +128,11 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
 - Records "stop contacting me" requests, in English or Spanish. In AI mode the assistant works out
   what to stop and emails you a DO NOT CONTACT / CALL / TEXT / EMAIL notice. The scripted fallback
   mode never guesses what an opt-out means: a bare "STOP" (or "unsubscribe me", "leave me alone") is
-  a full stop; after a seller's details were sent, anything else that may be about contacting them
-  ("don't call me this week", "no texts please") reaches you word for word as a "CONTACT REQUEST"
-  to follow exactly; before that, the seller picks stop all / no calls / no texts / no email / keep
-  going with buttons, and their words travel with the lead. "The bank won't stop calling me" is
-  not treated as an opt-out.
+  a full stop. Once a seller's details were sent, everything else they type in the chat is emailed
+  to you word for word: as a "CONTACT REQUEST" when it may be about contacting them ("stop the
+  calls", "don't call me this week", "no me llame más"), otherwise as a "MESSAGE FROM SELLER". Before
+  that, the seller picks stop all / no calls / no texts / no email / keep going with buttons, and
+  their words travel with the lead.
 - Doesn't tell a seller who may owe more than the house is worth that the sale pays off the mortgage;
   points people facing foreclosure to free HUD-approved counselors.
 - Only offers call times that are actually open, between 7 AM and 9 PM in the seller's own time zone,

@@ -447,8 +447,8 @@ async function runTool(name, input, ctx) {
     }
     // The cap counts distinct contacts and channels, so resending one that didn't get through never uses it up.
     const fresh = keys.filter((k) => !ctx.attempted.has(k));
-    if ((fresh.length && ctx.attempted.size + fresh.length > MAX_STOPS_PER_CONVERSATION)
-      || (await soft(bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY) {
+    if (fresh.length && (ctx.attempted.size + fresh.length > MAX_STOPS_PER_CONVERSATION
+      || (await soft(bookingsToday(env, ctx.clientKey, nowMs, "dn"), 0, "stop count")) >= MAX_STOPS_PER_DAY)) {
       return { content: { error: `Too many requests from this chat. Ask the seller to email ${biz.email} with the number or email to remove, and say the team will take care of it.` }, isError: true };
     }
     ctx.stopsThisTurn++;
@@ -466,7 +466,9 @@ async function runTool(name, input, ctx) {
     let emailed = false;
     try { stored = await storeStop(env, full); } catch (e) { console.error("storeStop failed", e && e.message); }
     try { emailed = await emailStop(env, full); } catch (e) { console.error("emailStop failed", e && e.message); }
-    try { await countBooking(env, ctx.clientKey, nowMs, "dn"); } catch (e) { console.error("count stop failed", e && e.message); }
+    if (fresh.length) {
+      try { await countBooking(env, ctx.clientKey, nowMs, "dn"); } catch (e) { console.error("count stop failed", e && e.message); }
+    }
     if (emailed) for (const k of keys) ctx.stopped.add(k);
     const promise = {
       all: "we won't call, text, or email them again",

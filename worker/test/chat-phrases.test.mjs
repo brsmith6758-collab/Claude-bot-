@@ -45,7 +45,17 @@ test("anything else that may be about contact is caught (passed on, or asked abo
     "ya no me manden mensajes", "Ya no quiero que me llamen", "No quiero que me contacten", "No quiero que me llamen", "No más llamadas",
     "No más mensajes", "No quiero más mensajes", "Quítenme de su lista", "Bórrenme de su lista", "Elimínenme de su lista", "Quiero darme de baja",
     "No me interesa", "Paren de llamarme", "No llamen más", "dejen de llamar", "Les pido que dejen de llamarme", "Por favor borren mi número",
-    "No me manden correos", "No me envíen mensajes de texto", "No me contacten antes de las 5, estoy trabajando"]) {
+    "No me manden correos", "No me envíen mensajes de texto", "No me contacten antes de las 5, estoy trabajando",
+    "Stop the calls", "Stop the texts please", "stop with the calls", "Stop spamming me", "Stop f***ing calling me", "Stop constantly calling me",
+    "Stop reaching out to me", "Stop bugging me", "Stop pestering me", "Stop, wrong number", "STOP - wrong person", "Stop. Not selling.",
+    "Stop, I'm not selling", "Stop. I sold the house", "STOP. I never asked for this", "no more texting", "no more calling", "no texting please",
+    "don't send me texts", "I'm no longer interested", "No longer interested", "Cease and desist", "I don't want to hear from you again",
+    "No further contact please", "I prefer not to be contacted", "Actually, just stop everything, I'm not selling",
+    "No estoy interesado", "Ya no estoy interesada", "No, gracias. No estoy interesado.", "Favor de no llamarme", "¿Pueden dejar de llamarme?",
+    "Borren mis datos", "No me llame más", "No me llame", "Por favor no me llame", "No me vuelva a llamar", "Deje de llamarme", "Deje de escribirme",
+    "Deje de mandarme mensajes", "Déjeme en paz", "No me contacte", "No me mande más mensajes", "No me envíe mensajes", "No me moleste",
+    "Quíteme de su lista", "Bórreme de su lista", "Sáqueme de su lista", "Elimíneme de su lista", "No quiero que me llame", "Sáquenme de su lista",
+    "No me hablen más", "No me hable más", "No deseo que me contacten", "Saquen mi número de su lista"]) {
     assert.equal(kind(t), "stop", t);
   }
 });
@@ -56,7 +66,8 @@ test("messages about someone else, or about other things, are left alone", () =>
     "Can you call after 5? I work days", "I quit my job", "Mi casa tiene un precio alto", "End of the month works", "I need to cancel my listing first",
     "Mis inquilinos no dejan de llamarme", "Yes, texting is fine", "Calls only, please", "My ex wants to take me off the deed",
     "My ex wants to remove me from the deed", "Can you take me off the loan?", "I want to stop paying the mortgage", "Ya no vivo en la casa",
-    "No quiero más problemas con esta casa", "Can you call me at 3?", "tomorrow afternoon", "123 Main St, Mesa AZ"]) {
+    "No quiero más problemas con esta casa", "Can you call me at 3?", "tomorrow afternoon", "123 Main St, Mesa AZ",
+    "The house has bugs in the attic", "When will I hear from you?", "Quiero dejar la casa como está", "Is it OK to stop by the house?"]) {
     assert.equal(kind(t), "none", t);
   }
 });

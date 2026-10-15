@@ -381,6 +381,11 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   assert(/passed your words to the team/.test(await last(page)), "seller is told it was passed on");
   await say(page, "Don't call me this week, I'm traveling");
   assert(posted.length === 3 && /^CONTACT REQUEST/.test(posted[2]._subject) && /this week/.test(posted[2].note), "a short-term request is passed on as written, not turned into a permanent stop");
+  await say(page, "Stop the calls");
+  assert(posted.length === 4 && /^CONTACT REQUEST/.test(posted[3]._subject), "'Stop the calls' after a lead reaches the team");
+  await say(page, "Do you buy condos too?");
+  assert(posted.length === 5 && /^MESSAGE FROM SELLER/.test(posted[4]._subject) && /condos/.test(posted[4].note) && /passed that to the team/.test(await last(page)),
+    "after a lead, any other message is forwarded too, so nothing the seller says is lost");
   await ctx.close();
 }
 {
@@ -557,11 +562,37 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   assert(/which one do you mean/.test(await last(page)), "asks which they mean");
   await say(page, "no texts");
   await say(page, "I said no texts");
-  assert(/noted your words/.test(await last(page, 2)) || /noted your words/.test(await last(page)), "after a second typed reply, their words are noted for the team");
+  assert(/include your words/.test(await last(page, 2)) || /include your words/.test(await last(page)), "after a second typed reply, their words go with the lead");
   await say(page, "602 - 555 - 0143");
   await tap(page, "Yes, texting is fine");
   await tap(page, "As soon as possible");
   assert(posted.length === 1 && posted[0].phone === "(602) 555-0143" && /no texts/.test(posted[0].sellerContactWords), `spaced-out number accepted, words kept: ${posted[0] && posted[0].sellerContactWords}`);
+  await ctx.close();
+}
+
+{
+  // Spanish usted forms after a lead; "todo" typed at the buttons is never guessed.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/es.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "Dejen de llamarme");
+  await say(page, "todo");
+  assert(/elija una de las opciones/.test(await last(page)) && posted.length === 0, "'todo' at the buttons gets 'please tap one'");
+  await tap(page, "No me contacten más");
+  await say(page, "602-555-0143");
+  assert(posted.length === 1 && /^DO NOT CONTACT/.test(posted[0]._subject), "then the stop goes out");
+  await page.evaluate(() => sessionStorage.clear());
+  await page.goto(`${SITE}/es.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await tap(page, "Hablar con una persona", 0);
+  await page.waitForSelector(".pac-card");
+  await say(page, "Ana Ruiz 813 555 0123");
+  await tap(page, "Sí, textos está bien");
+  await tap(page, "Lo antes posible");
+  await say(page, "No me llame más");
+  assert(posted.length === 3 && /^CONTACT REQUEST/.test(posted[2]._subject) && /No me llame/.test(posted[2].note), "'No me llame más' after a lead reaches the team");
   await ctx.close();
 }
 

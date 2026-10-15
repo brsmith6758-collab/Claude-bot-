@@ -629,11 +629,12 @@ test("several taken slots stacked at the start of a day are never offered", asyn
 
 test("resending a stop never uses up the cap, and calls+texts is confirmed exactly", async () => {
   const env = envWith({ SEND_EMAIL: undefined });
+  const clientKey = "203.0.113.9"; // the daily per-network counter is on, as in production
   const stop = (phone, channels) => ({ name: "Dana", phone, email: "", channels, note: "" });
   let history = [];
   let sig;
   for (let i = 0; i < 6; i++) {
-    const out = await runTurn({ env, history, sig, message: "stop", context, nowMs: NOW,
+    const out = await runTurn({ env, history, sig, message: "stop", context, nowMs: NOW, clientKey,
       client: fakeClient([msg([toolUse("do_not_contact", stop("602-555-0143", "all"))], "tool_use"), msg([text("Done.")])]) });
     assert.equal(out.leads.length, 1, `resend ${i} goes back to the browser`);
     ({ history, sig } = out);
@@ -642,7 +643,7 @@ test("resending a stop never uses up the cap, and calls+texts is confirmed exact
     msg([toolUse("do_not_contact", stop("480-555-0199", "calls")), toolUse("do_not_contact", stop("480-555-0199", "texts"))], "tool_use"),
     msg([]),
   ]);
-  const out = await runTurn({ env, history, sig, message: "and my other number: no calls or texts", context, nowMs: NOW, client });
+  const out = await runTurn({ env, history, sig, message: "and my other number: no calls or texts", context, nowMs: NOW, client, clientKey });
   assert.equal(out.leads.length, 2, "a new contact is still recorded after many resends");
   assert.equal(out.ui.stopped, "calls+texts");
   assert.equal(out.reply, "Done. We won't call or text you again.");
