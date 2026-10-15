@@ -596,5 +596,62 @@ async function guidedTo(page, step, { phone = "602-555-0143", consent = "Calls o
   await ctx.close();
 }
 
+{
+  // AI mode goes down right after a lead: the message that hit the outage still reaches the team.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:8899" });
+  let calls = 0;
+  await page.route("http://127.0.0.1:8899/health", (r) => r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: '{"ok":true,"ai":true}' }));
+  await page.route("http://127.0.0.1:8899/chat", (r) => {
+    calls++;
+    if (calls === 1) {
+      return r.fulfill({ status: 200, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({ reply: "Saved.", history: [], sig: "", ui: { saved: true }, leads: [{ type: "lead", name: "Dana Lee", phone: "(602) 555-0177", email: "", address: "1 Main", delivered: true }] }) });
+    }
+    return r.fulfill({ status: 503, contentType: "application/json", headers: { "Access-Control-Allow-Origin": "*" }, body: '{"error":"ai_unavailable"}' });
+  });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "Call me ASAP, Dana Lee 602-555-0177, 1 Main St Mesa");
+  await say(page, "Actually please call my husband Tom instead, 480-555-0199");
+  assert(posted.length === 1 && /^MESSAGE FROM SELLER/.test(posted[0]._subject) && /husband Tom/.test(posted[0].note), "the message typed when the AI went down is forwarded");
+  // "Talk to a person" after a lead keeps forwarding.
+  await say(page, "Talk to a person");
+  await say(page, "Forget it, I sold it to my neighbor");
+  assert(posted.length === 2 && /sold it to my neighbor/.test(posted[1].note), "after 'Talk to a person', later messages still reach the team");
+  await ctx.close();
+}
+{
+  // A forward that fails asks the seller to send their message another way (not a removal).
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await guidedTo(page, "time");
+  await tap(page, "As soon as possible");
+  await page.unroute("https://formsubmit.co/**");
+  await page.route("https://formsubmit.co/**", (r) => r.fulfill({ status: 200, contentType: "application/json", body: '{"success":"false"}' }));
+  await say(page, "Do you buy condos too?");
+  assert(/with your message so the team sees it/.test(await last(page)) && !/to remove/.test(await last(page)), "a failed forward doesn't talk about removal");
+  await ctx.close();
+}
+{
+  // "Just no calls" on the first message: the stop goes out, and they can still get an offer by text.
+  const { ctx, page, posted } = await pageWith({ endpoint: "http://127.0.0.1:9" });
+  await page.goto(`${SITE}/index.html`);
+  await page.click(".pac-launcher");
+  await waitBot(page, 1);
+  await say(page, "I want to sell my house but please don't call me, text only");
+  await tap(page, "Just no calls");
+  await say(page, "602-555-0143", 2);
+  assert(posted.length === 1 && /^DO NOT CALL/.test(posted[0]._subject) && /address of the property/.test(await last(page)), "DO NOT CALL sent, then the offer flow continues");
+  await say(page, "9 Pine St, Mesa AZ");
+  await tap(page, "Move-in ready");
+  await tap(page, "As soon as possible");
+  await say(page, "Dana Lee");
+  await say(page, "602-555-0143");
+  await tap(page, "Yes, texting is fine");
+  assert(posted.length === 2 && /no calls/.test(posted[1].contactLimits) && /No calls/.test(posted[1].callTime), "the lead goes out marked no calls, without a call time");
+  await ctx.close();
+}
+
 await browser.close();
 console.log("ALL BROWSER CHECKS PASSED");

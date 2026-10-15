@@ -341,6 +341,21 @@ export async function emailLead(env, lead) {
   return emailOwner(env, { subject, text: leadEmailText(lead), replyTo: lead.email });
 }
 
+/** Email the owner a message the seller typed after their details were sent, when email is configured. */
+export async function emailFollowUp(env, msg) {
+  const who = [msg.name, msg.phone, msg.email].filter(Boolean).join(" ");
+  const text = [
+    "MESSAGE FROM SELLER, typed in the website chat after their details were sent.",
+    "Read it; if it's about being contacted, follow it exactly.",
+    "",
+    `"${msg.note}"`,
+    "",
+    `From: ${who}`,
+    `Sent: ${msg.submittedAt}`,
+  ].join("\n");
+  return emailOwner(env, { subject: `MESSAGE FROM SELLER: ${who}`.slice(0, 180), text, replyTo: msg.email });
+}
+
 /** Email the owner a do-not-contact notice, when email is configured. */
 export async function emailStop(env, notice) {
   const who = [notice.name, notice.phone || notice.phoneAsGiven, notice.email].filter(Boolean).join(" ");

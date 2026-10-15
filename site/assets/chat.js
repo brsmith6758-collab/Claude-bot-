@@ -76,6 +76,7 @@
       gTapOne: "Please tap one of the options so I get it right.",
       gNotedWords: "Got it. I'll include your words when I send your details to the team.",
       gPassedMsg: "Thanks, I've passed that to the team.",
+      gForwardFail: "I couldn't pass that on automatically. Please call or text " + PHONE + (EMAIL ? " or email " + EMAIL : "") + " with your message so the team sees it.",
       gDoneNoWay: "Thanks! You asked us not to call or text and didn't leave an email, so the team can't reach you yet. Call or text " + PHONE + " when you're ready.",
       gStopAsk2: "To take you off our list I need the phone number or email we have for you. You can also email " + (EMAIL || "us") + ".",
       cStopAll: "Stop all contact", cNoCalls: "Just no calls", cNoTexts: "Just no texts", cNoEmail: "Just no email", cKeepGoing: "No, keep going",
@@ -162,6 +163,7 @@
       gTapOne: "Por favor elija una de las opciones para hacerlo bien.",
       gNotedWords: "Entendido. Incluiré sus palabras cuando envíe sus datos al equipo.",
       gPassedMsg: "Gracias, se lo pasé al equipo.",
+      gForwardFail: "No pude enviar esto automáticamente. Por favor llame o envíe un texto al " + PHONE + (EMAIL ? " o escriba a " + EMAIL : "") + " con su mensaje para que el equipo lo vea.",
       gDoneNoWay: "¡Gracias! Pidió que no le llamemos ni le enviemos textos y no dejó un correo, así que el equipo aún no puede contactarle. Llame o envíe un texto al " + PHONE + " cuando quiera.",
       gStopAsk2: "Para quitarle de nuestra lista necesito el número de teléfono o correo que tenemos suyo. También puede escribir a " + (EMAIL || "nuestro correo") + ".",
       cStopAll: "No me contacten más", cNoCalls: "Solo sin llamadas", cNoTexts: "Solo sin textos", cNoEmail: "Solo sin correos", cKeepGoing: "No, sigamos",
@@ -500,7 +502,7 @@
     if (text === T.chips[3]) { // Talk to a person
       bot(T.person);
       card({ type: "contact" });
-      if (state.mode !== "ai") { state.g.step = "callback"; save(); }
+      if (state.mode !== "ai" && !state.leadSent) { state.g.step = "callback"; save(); }
       return;
     }
     setBusy(true);
@@ -542,11 +544,11 @@
         handleUi(res.body.ui || {});
         var leads = res.body.leads || [];
         leads.forEach(function (l) {
-          if (l.phone || l.email) state.contact = { name: l.name || "", phone: l.phone || "", email: l.email || "" };
+          if ((l.phone || l.email) && l.type !== "seller_message") state.contact = { name: l.name || "", phone: l.phone || "", email: l.email || "" };
           deliverLead(l);
         });
         var ui = res.body.ui || {};
-        if (leads.some(function (l) { return l.type !== "do_not_contact"; }) || ui.booking || ui.saved) state.leadSent = true;
+        if (leads.some(function (l) { return l.type !== "do_not_contact" && l.type !== "seller_message"; }) || ui.booking || ui.saved) state.leadSent = true;
         if (ui.stopped) {
           state.stopped = ui.stopped === true ? "all" : ui.stopped;
           if (state.stopped === "all") state.optedOut = true;
@@ -582,9 +584,24 @@
     state.mode = "guided";
     showMode();
     var stopping = !!(pending && stopSignal(pending).stop);
-    if (state.leadSent || state.optedOut || state.stopFailed) {
-      // The team already has this seller's details (or they asked us to stop): don't collect them again.
-      state.g = { step: "done", data: state.g && state.g.data ? state.g.data : {} };
+    var data = state.g && state.g.data ? state.g.data : {};
+    // Limits the seller already asked for in AI mode carry over to the scripted chat.
+    String(state.stopped || "").split("+").forEach(function (c) {
+      if (c === "calls") data.noCalls = true;
+      if (c === "texts") { data.noTexts = true; data.smsConsent = false; }
+      if (c === "email") data.noEmail = true;
+    });
+    if (state.leadSent) {
+      // The team already has this seller's details: whatever they just typed goes to the team.
+      state.g = { step: "done", data: data };
+      save();
+      if (pending) { guided(pending); return; }
+      bot(T.gAfter);
+      card({ type: "contact" });
+      return;
+    }
+    if (state.optedOut || state.stopFailed) {
+      state.g = { step: "done", data: data };
       save();
       if (stopping) { guided(pending); return; }
       if (state.stopFailed) { bot(T.gStopFail); return; }
@@ -593,7 +610,7 @@
       card({ type: "contact" });
       return;
     }
-    state.g = { step: "address", data: state.g && state.g.data ? state.g.data : {} };
+    state.g = { step: "address", data: data };
     save();
     if (stopping) { state.g.step = "intent"; guided(pending); return; }
     bot(T.switching);
@@ -611,6 +628,13 @@
 
   // Leads the Worker could not email itself go through the site's form endpoint.
   function deliverLead(lead) {
+    if (lead.type === "seller_message") {
+      if (!lead.delivered && pac().submitLead) {
+        pac().submitLead(stopNotice(lead.name, lead.phone, lead.email, lead.note, "message", chatTranscript(), "website-chat"))
+          .then(function (r) { if (!r || !r.ok) { console.warn("chat follow-up email fallback failed"); bot(T.gForwardFail); } });
+      }
+      return;
+    }
     if (lead.type === "do_not_contact") {
       if (lead.delivered) return;
       var sent = pac().submitLead
@@ -777,6 +801,8 @@
     var g = state.g;
     channel = STOP_WORDING[channel] ? channel : "all";
     g.step = "stopping";
+    g.sending = { phone: phone, email: email, words: String(words || "").slice(0, 500), channel: channel };
+    if (channel !== "message" && channel !== "review") { g.stopChannel = channel; g.stopWords = g.sending.words; }
     save();
     setBusy(true);
     var name = g.data.name || (state.contact && state.contact.name) || "";
@@ -784,17 +810,30 @@
     var submit = pac().submitLead ? pac().submitLead(notice) : Promise.resolve({ ok: false });
     submit.then(function (r) {
       setBusy(false);
+      g.sending = null;
+      g.step = "done";
       if (r && r.ok) {
-        if (channel === "message") { bot(T.gPassedMsg); g.step = "done"; save(); return; }
-        state.stopFailed = false;
-        state.stopped = channel;
-        if (channel === "all") state.optedOut = true;
+        if (channel === "message") { bot(T.gPassedMsg); save(); return; }
+        if (channel !== "review") {
+          state.stopFailed = false;
+          state.stopped = state.stopped && state.stopped !== channel && channel !== "all" ? state.stopped + "+" + channel : channel;
+          if (channel === "all") state.optedOut = true;
+        }
         bot(T.gStopDoneFor(channel));
+        // "No calls" (or texts/email) before any lead: they may still want an offer, with that limit.
+        if (!state.leadSent && /^(calls|texts|email)$/.test(channel)) {
+          if (channel === "calls") g.data.noCalls = true;
+          if (channel === "texts") { g.data.noTexts = true; g.data.smsConsent = false; }
+          if (channel === "email") g.data.noEmail = true;
+          g.step = "intent";
+          if (SELL_RE.test(norm(words))) { g.step = "address"; bot(T.gAddress); }
+        }
+      } else if (channel === "message" || channel === "review") {
+        bot(T.gForwardFail); // their message, not a removal: ask them to send it another way
       } else {
         state.stopFailed = true; // never claim it's done when the team didn't get it
         bot(T.gStopFail);
       }
-      g.step = "done";
       save();
     });
   }
@@ -833,8 +872,6 @@
       if (sig.stop) applyStop("review", text); else bot(faqAnswer(text) || T.gNeutral);
       return;
     }
-    state.forwards = (state.forwards || 0) + 1;
-    if (!sig.stop && state.forwards > 20) { bot(faqAnswer(text) || T.gNeutral); return; } // runaway chat: stop forwarding chit-chat
     var answer = sig.stop ? "" : faqAnswer(text);
     if (answer) bot(answer);
     guidedStop(who.phone, who.email, text, sig.stop ? "review" : "message");
@@ -850,7 +887,7 @@
     d.smsConsent = false;
     d.noTexts = true;
     d.consentReply = String(text).slice(0, 200);
-    askTime(T.gNoTexts, [{ label: T.cStopAll }]);
+    askTime(d.noCalls ? T.gNoTextsMid : T.gNoTexts, [{ label: T.cStopAll }]);
   }
 
   function noteWords(text) {
@@ -1275,6 +1312,11 @@
       case "stopping":
         return;
       default:
+        if (!state.leadSent && !state.optedOut && SELL_RE.test(norm(text))) {
+          g.step = "address";
+          bot(T.gAddress);
+          break;
+        }
         // Never say "the team will reach out" unless a lead actually went out.
         bot(faqAnswer(text) || (state.stopFailed ? T.gStopFail
           : state.stopped ? T.gStopDoneFor(state.stopped)
@@ -1358,7 +1400,14 @@
     state.transcript.forEach(function (item) { log.appendChild(renderItem(item)); });
     renderChips();
     if (state.g && state.g.step === "sending") state.g.step = state.g.data && state.g.data.phone ? "time" : "email";
-    if (state.g && state.g.step === "stopping") state.g.step = "stop";
+    if (state.g && state.g.step === "stopping") {
+      var pend = state.g.sending;
+      state.g.step = state.leadSent || (pend && /^(message|review)$/.test(pend.channel)) ? "done" : "stop";
+      if (pend && (pend.phone || pend.email)) {
+        // The page was reloaded mid-send: send it again (a duplicate beats a lost message).
+        window.setTimeout(function () { guidedStop(pend.phone, pend.email, pend.words, pend.channel); }, 0);
+      }
+    }
     if (state.open && !smallScreen()) openPanel(false);
     else if (state.open) { state.open = false; save(); }
   }

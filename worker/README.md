@@ -112,6 +112,9 @@ Also update `chatHours` in `site/config.js` so the guided mode suggests the same
   request keeps their booked call; "all" or "calls" means cancel it. A "CONTACT REQUEST" email
   carries the seller's own words (from the scripted mode) for you to read and follow; if it's
   unclear, treat it as a stop. Guided leads may also carry "Seller's words about contact".
+- **"MESSAGE FROM SELLER" emails**: once a seller's details are sent, anything else they type in the
+  chat (in either mode) is emailed to you word for word, so a changed number, "call my husband
+  instead" or an opt-out the assistant misses still reaches you.
 - **"Call request (confirm the time)" emails** instead of "booked call" when a time couldn't be locked in
   (no KV storage, or a storage error). Call the seller to confirm it; they were told you would.
 - **KV storage** (if bound): Cloudflare → Storage & databases → Workers KV → `prime-acre-chat-leads`.

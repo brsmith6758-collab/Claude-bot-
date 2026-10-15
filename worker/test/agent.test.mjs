@@ -237,13 +237,14 @@ test("only one booking runs per response, and two per conversation", async () =>
     msg([text("ok")]),
   ]);
   const out2 = await runTurn({ env, history: out.history, sig: out.sig, message: "also call my brother", context, nowMs: NOW, client: c2 });
-  assert.equal(out2.leads.length, 1);
+  assert.equal(out2.leads.filter((l) => l.type !== "seller_message").length, 1);
+  assert.equal(out2.leads[0].type, "seller_message", "a message after a lead is also forwarded to the team");
   const c3 = fakeClient([
     msg([toolUse("save_lead", { callback_preference: "now", ...lead, phone: "602-555-0147" })], "tool_use"),
     (params) => { assert.match(params.messages.at(-1).content[0].content, /already has a booking/); return msg([text("ok")]); },
   ]);
   const out3 = await runTurn({ env, history: out2.history, sig: out2.sig, message: "and my cousin", context, nowMs: NOW, client: c3 });
-  assert.equal(out3.leads.length, 0);
+  assert.equal(out3.leads.filter((l) => l.type !== "seller_message").length, 0);
 });
 
 test("one future call per phone number, three bookings a day per visitor network", async () => {
@@ -674,4 +675,22 @@ test("a later question that only mentions texting doesn't replace the consent re
   const out = await runTurn({ env, history: t2.history, sig: t2.sig, message: "email is fine", context, nowMs: NOW,
     client: fakeClient([msg([toolUse("save_lead", { callback_preference: "email", ...lead })], "tool_use"), msg([text("Done.")])]) });
   assert.deepEqual(out.leads[0].textingConsent, { agreed: true, question: ask, answer: "yes" });
+});
+
+test("after a lead, every later message is emailed to the team word for word", async () => {
+  const env = envWith();
+  const t1 = await runTurn({ env, history: [], message: "call me ASAP", context, nowMs: NOW,
+    client: fakeClient([msg([toolUse("save_lead", { callback_preference: "ASAP", ...lead })], "tool_use"), msg([text("Saved.")])]) });
+  assert.equal(env.SEND_EMAIL.sent.length, 1);
+  const t2 = await runTurn({ env, history: t1.history, sig: t1.sig, message: "Actually call my husband Tom instead, 480-555-0199", context, nowMs: NOW,
+    client: fakeClient([msg([text("Got it, I'll let the team know.")])]) });
+  assert.equal(env.SEND_EMAIL.sent.length, 2);
+  assert.match(env.SEND_EMAIL.sent[1].raw, /Subject: MESSAGE FROM SELLER: Dana Lee \(602\) 555-0143/);
+  assert.equal(t2.leads[0].type, "seller_message");
+  assert.equal(t2.leads[0].delivered, true);
+  // If the model is down, the message still goes out and the seller is told so.
+  const client = fakeClient([]); // script exhausted: every call throws
+  const t3 = await runTurn({ env, history: t2.history, sig: t2.sig, message: "And please don't text me", context, nowMs: NOW, client });
+  assert.equal(env.SEND_EMAIL.sent.length, 3);
+  assert.equal(t3.reply, "Thanks, I've passed that to the team.");
 });

@@ -6,7 +6,7 @@ import {
   scheduleConfig, openSlots, pickSlots, slotLabel, isValidTimeZone, calendarLink, stateTimeZone, zonedParts, ymd,
 } from "./slots.js";
 import {
-  normalizeLead, normalizeStop, storeLead, storeStop, emailLead, emailStop, bookedSlots, isSlotTaken, reserveSlot,
+  normalizeLead, normalizeStop, storeLead, storeStop, emailLead, emailStop, emailFollowUp, bookedSlots, isSlotTaken, reserveSlot,
   phoneBooking, bookingsToday, countBooking, markBooked, leadPlace,
 } from "./leads.js";
 
@@ -152,6 +152,28 @@ function mergeStopped(a, b) {
   const set = new Set([...a.split("+"), ...b.split("+")]);
   if (set.has("all") || ["calls", "texts", "email"].every((c) => set.has(c))) return "all";
   return ["calls", "texts", "email"].filter((c) => set.has(c)).join("+");
+}
+
+/** The seller's contact details from the last booking or callback request in this conversation, if any. */
+function priorContact(history) {
+  const inputs = new Map();
+  let found = null;
+  for (const m of history) {
+    for (const b of m.content || []) {
+      if (m.role === "assistant" && b.type === "tool_use" && (b.name === "book_call" || b.name === "save_lead")) inputs.set(b.id, b);
+      if (m.role === "user" && b.type === "tool_result" && !b.is_error && inputs.has(b.tool_use_id)) {
+        try {
+          const r = JSON.parse(b.content);
+          if (r.booked === true || r.saved === true) {
+            const t = inputs.get(b.tool_use_id);
+            const { lead } = normalizeLead(t.input || {}, { kind: t.name === "book_call" ? "book" : "save" });
+            if (lead) found = { name: lead.name, phone: lead.phone, email: lead.email };
+          }
+        } catch { /* not ours */ }
+      }
+    }
+  }
+  return found;
 }
 
 /** Keys for the contacts and channel a stop request covers: "p:<digits>:texts", "e:<email>:all". */
@@ -558,6 +580,16 @@ export async function runTurn({
 
   const ui = {};
   const leads = [];
+  // Once the team has this seller's details, every later message is also sent to the team word
+  // for word, so a change or an opt-out the model misses still reaches a person.
+  let followUp = null;
+  const contact = base.length ? priorContact(base) : null;
+  if (contact && (contact.phone || contact.email)) {
+    followUp = { type: "seller_message", ...contact, note: said.slice(0, 1500), page, lang, submittedAt: new Date(nowMs).toISOString() };
+    let emailed = false;
+    try { emailed = await emailFollowUp(env, followUp); } catch (e) { console.error("emailFollowUp failed", e && e.message); }
+    followUp.delivered = emailed;
+  }
   let lastStop = "";
   for (let call = 0; call < MAX_MODEL_CALLS; call++) {
     const remaining = budgetMs - (Date.now() - startedAt);
@@ -574,7 +606,7 @@ export async function runTurn({
       });
     } catch (e) {
       // A booking already happened this turn: report it rather than lose it.
-      if (leads.length) { console.error("model call failed after a booking", e && e.message); lastStop = "error"; break; }
+      if (leads.length || followUp) { console.error("model call failed after a booking or follow-up", e && e.message); lastStop = "error"; break; }
       throw e;
     }
     lastStop = response.stop_reason;
@@ -585,7 +617,7 @@ export async function runTurn({
       // Never store a declined or cut-off response. Keep what was booked; otherwise undo the turn.
       if (leads.length) break;
       const reply = response.stop_reason === "refusal" ? refusalText(lang, biz) : fallbackText(lang, biz, {}, lastStop);
-      return finish({ reply, history: base, ui: {}, leads: [], refused: response.stop_reason === "refusal" });
+      return finish({ reply, history: base, ui: {}, leads: followUp ? [followUp] : [], refused: response.stop_reason === "refusal" });
     }
 
     const content = cleanAssistantContent(response.content);
@@ -628,10 +660,12 @@ export async function runTurn({
     .join("\n\n");
 
   return finish({
-    reply: reply || fallbackText(lang, biz, ui, lastStop),
+    reply: reply || (followUp && !leads.length
+      ? (lang === "es" ? "Gracias, se lo pasé al equipo." : "Thanks, I've passed that to the team.")
+      : fallbackText(lang, biz, ui, lastStop)),
     history: messages,
     ui,
-    leads,
+    leads: followUp ? [followUp, ...leads] : leads,
     refused: false,
   });
 }
