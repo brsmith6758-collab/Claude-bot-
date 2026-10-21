@@ -230,7 +230,6 @@
   }
   var ICON_CHAT = '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10h8M8 13h5"/>';
   var ICON_SEND = '<path d="M4 12l16-8-6 16-2.5-6.5z"/>';
-  var HOUSE = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="9" fill="#1E4FA3"/><path d="M8 21l12-10 12 10v11H8z" fill="#fff"/><rect x="17" y="24" width="6" height="8" fill="#F59E0B"/></svg>';
 
   // Turn phone numbers, emails and https links in plain text into links, without innerHTML.
   function richText(text) {
@@ -260,8 +259,7 @@
     launcher = el("button", { class: "pac-launcher", type: "button", "aria-expanded": "false", "aria-controls": "pac-panel", "aria-label": T.launcher }, [icon, el("span", { class: "pac-label", text: T.launcher })]);
     launcher.addEventListener("click", function () { openPanel(true); });
 
-    var avatar = el("span", { class: "pac-avatar" });
-    avatar.innerHTML = HOUSE;
+    var avatar = el("span", { class: "pac-avatar", "aria-hidden": "true" }); // the PAC monogram, drawn by chat.css
     var closeBtn = el("button", { class: "pac-close", type: "button", "aria-label": T.close, text: "×" });
     closeBtn.addEventListener("click", function () { closePanel(true); });
     var head = el("div", { class: "pac-head" }, [avatar, el("div", { class: "pac-title" }, [el("h2", { id: "pac-title", text: T.title }), statusEl = el("p", { text: state.mode === "ai" ? T.status : T.statusGuided })]), closeBtn]);

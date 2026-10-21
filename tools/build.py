@@ -54,7 +54,6 @@ T = {
     "en": {
         "serving": "We buy houses in Arizona, Florida, Tennessee, North Carolina and nationwide",
         "call_or_text": "Call or text", "text_us": "Text us", "lang_switch": ("Español", "es.html"),
-        "tag": "We buy houses for cash",
         "nav": [("How it works", "#how"), ("Where we buy", "#markets"), ("FAQ", "#faq"), ("Contact", "#about")],
         "cta": "Get My Cash Offer", "cta_arrow": "Get My Cash Offer →",
         "skip": "Skip to the cash offer form",
@@ -81,7 +80,6 @@ T = {
     "es": {
         "serving": "Compramos casas en Arizona, Florida, Tennessee, Carolina del Norte y en todo el país",
         "call_or_text": "Llame o envíe un texto al", "text_us": "Envíenos un texto", "lang_switch": ("English", "index.html"),
-        "tag": "Compramos casas por efectivo",
         "nav": [("Cómo funciona", "#how"), ("Dónde compramos", "#markets"), ("Preguntas", "#faq"), ("Contacto", "#about")],
         "cta": "Recibir mi oferta", "cta_arrow": "Recibir mi oferta →",
         "skip": "Ir al formulario de oferta",
@@ -108,13 +106,19 @@ T = {
 }
 STATE_ES = {"AZ": "Arizona", "FL": "Florida", "TN": "Tennessee", "NC": "Carolina del Norte"}
 
-FONTS = ("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800"
-         "&family=Figtree:wght@400;500;600;700&display=swap")
+# Brand type: Cinzel for the logo wordmark and small caps labels, Cormorant Garamond for headlines, Figtree for reading.
+FONTS = ("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700"
+         "&family=Cormorant+Garamond:wght@600;700&family=Figtree:wght@400;500;600;700;800&display=swap")
 
-FAVICON = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E"
-           "%3Crect width='40' height='40' rx='9' fill='%231E4FA3'/%3E"
-           "%3Cpath d='M8 21l12-10 12 10v11H8z' fill='%23fff'/%3E"
-           "%3Crect x='17' y='24' width='6' height='8' fill='%23F59E0B'/%3E%3C/svg%3E")
+TAGLINE = "Land. Legacy. Wealth."
+# Logo files in site/assets/img, cut from brand/prime-acre-capital-logo.webp by tools/logo_assets.py.
+IMG = {
+    "monogram": "assets/img/pac-monogram.png",      # gold PAC monogram, transparent, 147x168
+    "logo": "assets/img/prime-acre-capital-logo.jpg",  # full square logo, 720x720
+    "og": "assets/img/og-image.jpg",                # 1200x630 share card
+    "favicon": "assets/img/favicon-48.png",
+    "touch": "assets/img/apple-touch-icon.png",
+}
 
 US_STATES = [
     ("AL", "Alabama"), ("AK", "Alaska"), ("AZ", "Arizona"), ("AR", "Arkansas"), ("CA", "California"),
@@ -285,78 +289,11 @@ def esc(s):
     return html.escape(str(s), quote=True)
 
 
-BRAND_MARK = ('<svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">'
-              '<rect width="40" height="40" rx="9" fill="var(--brand)"/>'
-              '<path d="M8 21l12-10 12 10v11H8z" fill="#fff"/>'
-              '<rect x="17" y="24" width="6" height="8" fill="var(--cta)"/></svg>')
+BRAND_MARK = '<img class="brand-mark" src="%s" width="46" height="52" alt="">' % IMG["monogram"]
+BRAND_WORD = '<span class="brand-word"><span>Prime Acre</span><small>Capital</small></span>'
 
-STREET_ART = """<svg viewBox="0 0 1600 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-  <circle cx="1400" cy="70" r="46" fill="#FBBF24" opacity=".85"/>
-  <g fill="#FFFFFF" opacity=".9">
-    <ellipse cx="300" cy="80" rx="70" ry="22"/><ellipse cx="330" cy="66" rx="40" ry="24"/><ellipse cx="270" cy="70" rx="34" ry="20"/>
-    <ellipse cx="1000" cy="60" rx="60" ry="18"/><ellipse cx="1025" cy="48" rx="34" ry="20"/>
-  </g>
-  <rect x="0" y="262" width="1600" height="58" fill="#86C58A"/>
-  <rect x="0" y="262" width="1600" height="8" fill="#A4D7A6"/>
-  <rect x="0" y="298" width="1600" height="22" fill="#D9E2EC"/>
-  <g>
-    <rect x="110" y="170" width="210" height="92" fill="#E3EEF9"/>
-    <polygon points="90,175 215,100 340,175" fill="#5B7B9C"/>
-    <rect x="200" y="128" width="30" height="26" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="100" y="206" width="230" height="8" fill="#5B7B9C"/>
-    <rect x="112" y="214" width="6" height="48" fill="#F8FAFC"/><rect x="312" y="214" width="6" height="48" fill="#F8FAFC"/>
-    <rect x="196" y="214" width="38" height="48" rx="2" fill="#F59E0B"/>
-    <rect x="134" y="218" width="36" height="30" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="260" y="218" width="36" height="30" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-  </g>
-  <g>
-    <rect x="420" y="140" width="230" height="122" fill="#FFFFFF"/>
-    <rect x="600" y="70" width="22" height="50" fill="#9AA8B8"/>
-    <polygon points="400,145 535,55 670,145" fill="#2F4A6B"/>
-    <rect x="513" y="198" width="44" height="64" rx="2" fill="#F59E0B"/>
-    <circle cx="548" cy="232" r="2.5" fill="#1B1200"/>
-    <rect x="445" y="160" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="585" y="160" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="445" y="212" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="585" y="212" width="40" height="36" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="505" y="262" width="60" height="6" fill="#C9D4E0"/>
-    <rect x="520" y="268" width="30" height="30" fill="#D9E2EC"/>
-  </g>
-  <g>
-    <rect x="712" y="226" width="5" height="40" fill="#8B5A2B"/>
-    <rect x="684" y="202" width="62" height="30" rx="4" fill="#FFFFFF" stroke="#2F4A6B" stroke-width="2"/>
-    <text x="715" y="223" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="800" font-size="15" fill="#2F4A6B">SOLD</text>
-  </g>
-  <g><rect x="790" y="222" width="14" height="42" fill="#8B5A2B"/><circle cx="797" cy="196" r="46" fill="#4E9A5A"/><circle cx="772" cy="212" r="26" fill="#5DAA69"/><circle cx="822" cy="214" r="24" fill="#5DAA69"/></g>
-  <g fill="#5E9F6E"><rect x="880" y="186" width="20" height="78" rx="10"/><rect x="862" y="206" width="12" height="36" rx="6"/><rect x="862" y="230" width="20" height="10" rx="5"/><rect x="906" y="196" width="12" height="40" rx="6"/><rect x="896" y="224" width="20" height="10" rx="5"/></g>
-  <g>
-    <rect x="980" y="178" width="250" height="84" fill="#F6E7D3"/>
-    <polygon points="960,182 1105,108 1250,182" fill="#C96A3B"/>
-    <rect x="1230" y="206" width="110" height="56" fill="#F6E7D3"/>
-    <polygon points="1222,208 1285,166 1348,208" fill="#C96A3B"/>
-    <rect x="1246" y="222" width="78" height="40" rx="2" fill="#E3E8EE" stroke="#C9D4E0" stroke-width="2"/>
-    <rect x="1088" y="206" width="36" height="56" rx="2" fill="#2F4A6B"/>
-    <rect x="1010" y="200" width="40" height="34" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="1160" y="200" width="40" height="34" rx="2" fill="#BFDBF7" stroke="#9DBBDD" stroke-width="2"/>
-    <rect x="1250" y="262" width="70" height="36" fill="#D9E2EC"/>
-  </g>
-  <g fill="#6FB36F"><ellipse cx="380" cy="258" rx="26" ry="12"/><ellipse cx="950" cy="258" rx="22" ry="11"/><ellipse cx="1400" cy="256" rx="30" ry="13"/><ellipse cx="60" cy="258" rx="28" ry="12"/></g>
-  <g><path d="M1480 264 C1478 230 1486 200 1500 172" stroke="#8B5A2B" stroke-width="9" fill="none" stroke-linecap="round"/>
-    <g fill="#3F8F5A"><ellipse cx="1480" cy="168" rx="34" ry="11" transform="rotate(-30 1480 168)"/><ellipse cx="1520" cy="166" rx="34" ry="11" transform="rotate(25 1520 166)"/><ellipse cx="1500" cy="150" rx="12" ry="30"/><ellipse cx="1470" cy="186" rx="30" ry="10" transform="rotate(10 1470 186)"/><ellipse cx="1530" cy="186" rx="30" ry="10" transform="rotate(-15 1530 186)"/></g></g>
-</svg>"""
-
-ABOUT_ART = """<svg viewBox="0 0 360 300" aria-hidden="true" focusable="false">
-  <circle cx="180" cy="150" r="128" fill="var(--surface)" opacity=".8"/>
-  <rect x="110" y="140" width="140" height="100" rx="6" fill="var(--surface)" stroke="var(--brand)" stroke-width="4"/>
-  <polygon points="94,146 180,82 266,146" fill="var(--brand)"/>
-  <rect x="164" y="186" width="32" height="54" rx="3" fill="#F59E0B"/>
-  <rect x="128" y="160" width="26" height="24" rx="2" fill="#BFDBF7" stroke="var(--brand)" stroke-width="3"/>
-  <rect x="206" y="160" width="26" height="24" rx="2" fill="#BFDBF7" stroke="var(--brand)" stroke-width="3"/>
-  <circle cx="264" cy="96" r="30" fill="#1E9E5A" stroke="#FFFFFF" stroke-width="5"/>
-  <path d="M250 96l10 10 18-20" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <g transform="translate(62 224) rotate(-30)"><circle cx="0" cy="0" r="16" fill="none" stroke="#F59E0B" stroke-width="7"/><rect x="14" y="-4" width="60" height="8" rx="4" fill="#F59E0B"/><rect x="56" y="-4" width="8" height="18" rx="2" fill="#F59E0B"/><rect x="42" y="-4" width="8" height="14" rx="2" fill="#F59E0B"/></g>
-  <g transform="translate(286 226) rotate(12)"><rect x="-40" y="-22" width="80" height="44" rx="6" fill="#86C58A" stroke="#1E9E5A" stroke-width="3"/><circle cx="0" cy="0" r="12" fill="none" stroke="#1E9E5A" stroke-width="3"/><text x="0" y="5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="14" fill="#1E9E5A">$</text></g>
-</svg>"""
+ABOUT_ART = ('<img src="%s" width="720" height="720" loading="lazy" alt="Prime Acre Capital logo: a gold PAC monogram over rolling fields, '
+             'with the words Land. Legacy. Wealth.">' % IMG["logo"])
 
 
 def phone_link(cls=""):
@@ -402,9 +339,15 @@ def head(title, desc, path, jsonld, lang="en"):
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(desc)s">
 <meta property="og:url" content="%(url)s">
-<meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#10233F">
-<link rel="icon" href="%(favicon)s">
+<meta property="og:image" content="%(og)s">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="%(brand)s: %(tagline)s">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="%(og)s">
+<meta name="theme-color" content="#0E0C09">
+<link rel="icon" type="image/png" sizes="48x48" href="%(favicon)s">
+<link rel="apple-touch-icon" href="%(touch)s">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="%(fonts)s">
@@ -413,8 +356,8 @@ def head(title, desc, path, jsonld, lang="en"):
 <script type="application/ld+json">%(jsonld)s</script>
 </head>
 <body>
-""" % dict(title=esc(title), desc=esc(desc), url=esc(url), brand=esc(BRAND), favicon=FAVICON,
-           fonts=esc(FONTS), jsonld=json.dumps(jsonld, ensure_ascii=False), lang=lang, alternates=alternates)
+""" % dict(title=esc(title), desc=esc(desc), url=esc(url), brand=esc(BRAND), favicon=IMG["favicon"], touch=IMG["touch"],
+           og=esc(SITE_URL + IMG["og"]), tagline=esc(TAGLINE), fonts=esc(FONTS), jsonld=json.dumps(jsonld, ensure_ascii=False), lang=lang, alternates=alternates)
 
 
 def topbar(lang="en"):
@@ -445,7 +388,7 @@ def header(lang="en", same_page=False):
   <div class="wrap">
     <a class="brand" href="%(home)s" aria-label="%(brand)s">
       %(mark)s
-      <span>%(brand)s<small>%(tag)s</small></span>
+      %(word)s
     </a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav">Menu</button>
     <nav class="nav" id="nav" aria-label="Main">
@@ -456,7 +399,7 @@ def header(lang="en", same_page=False):
   </div>
 </header>
 """ % dict(skip=esc(t["skip"]), topbar=topbar(lang), home="es.html" if lang == "es" else "index.html", brand=esc(BRAND),
-           mark=BRAND_MARK, tag=esc(t["tag"]), links=links, phone_btn=phone_btn, cta=esc(t["cta"]))
+           mark=BRAND_MARK, word=BRAND_WORD, links=links, phone_btn=phone_btn, cta=esc(t["cta"]))
 
 
 def lead_card(state="", city="", lang="en", card_id="lead-card", details=True):
@@ -514,7 +457,7 @@ def hero(eyebrow, h1, lede, state="", city="", lang="en"):
     t = T[lang]
     has_photo = os.path.exists(HERO_PHOTO)
     photo = '<div class="hero-photo" style="background-image:url(assets/img/hero.jpg)"></div>' if has_photo else ""
-    street = "" if has_photo else '<div class="street">%s</div>' % STREET_ART
+    street = "" if has_photo else '<div class="land" aria-hidden="true"></div>'
     talk = ('<p class="talk">%s %s</p>' % (esc(t["talk"]), phone_link())) if PHONE else ""
     bullets = "".join('<li>%s<span>%s</span></li>' % (icon("check"), esc(b)) for b in t["bullets"])
     return """<section class="hero%(cls)s">
@@ -626,7 +569,7 @@ def about():
     </div>
   </div>
 </section>
-""" % dict(art=art, photo=" has-photo" if os.path.exists(TEAM_PHOTO) else "", legal=esc(LEGAL_NAME), lines=lines)
+""" % dict(art=art, photo=" has-photo" if os.path.exists(TEAM_PHOTO) else " logo-art", legal=esc(LEGAL_NAME), lines=lines)
 
 
 def compare():
@@ -1074,7 +1017,8 @@ def footer(lang="en"):
   <div class="wrap">
     <div class="foot-grid">
       <div>
-        <a class="brand" href="%(home)s">%(mark)s<span>%(brand)s<small>%(tag)s</small></span></a>
+        <a class="brand" href="%(home)s" aria-label="%(brand)s">%(mark)s%(word)s</a>
+        <p class="foot-tagline">%(tagline)s</p>
         <p>%(blurb)s</p>
         <ul class="foot-contact" style="margin-top:1rem">%(contact)s</ul>
       </div>
@@ -1098,7 +1042,7 @@ def footer(lang="en"):
   </div>
 </footer>
 <div class="sticky-cta"><a class="btn btn-cta" href="#offer">%(cta)s</a>%(sticky)s</div>
-""" % dict(home=home, mark=BRAND_MARK, brand=esc(BRAND), tag=esc(t["tag"]), blurb=esc(t["foot_blurb"] % LEGAL_NAME), contact=contact,
+""" % dict(home=home, mark=BRAND_MARK, word=BRAND_WORD, tagline=esc(TAGLINE), brand=esc(BRAND), blurb=esc(t["foot_blurb"] % LEGAL_NAME), contact=contact,
            h_where=esc(t["foot_where"]), states=states, nationwide=esc(t["nationwide"]), h_cities=esc(t["foot_cities"]), cities=cities,
            h_company=esc(t["foot_company"]), links=links, legal=esc(LEGAL_NAME), rights=esc(t["rights"]),
            legal_text=esc(t["legal"] % LEGAL_NAME), cta=esc(t["cta"]), sticky=sticky)
@@ -1123,6 +1067,9 @@ def org_jsonld():
         "name": LEGAL_NAME,
         "alternateName": BRAND,
         "url": SITE_URL,
+        "logo": SITE_URL + IMG["logo"],
+        "image": SITE_URL + IMG["og"],
+        "slogan": TAGLINE,
         "description": "Cash home buyers. We buy houses as-is in Arizona, Florida, Tennessee, North Carolina and nationwide.",
         "areaServed": [{"@type": "State", "name": m["name"]} for m in MARKETS] + [{"@type": "Country", "name": "United States"}],
     }
@@ -1159,7 +1106,7 @@ def page_index():
     title = "Sell Your House Fast for Cash | We Buy Houses in AZ, FL, TN, NC | Prime Acre Capital"
     desc = ("Prime Acre Capital LLC buys houses as-is for cash in Arizona, Florida, Tennessee, North Carolina and nationwide. "
             "No fees, no repairs, no agents. Get a fair cash offer within 24 hours and close in as little as 7 days. Call or text %s." % PHONE).strip()
-    h1 = "Sell Your House Fast for Cash. Any Condition. Any Situation."
+    h1 = 'Sell Your House Fast for Cash. <span class="hl">Any Condition. Any Situation.</span>'
     lede = ("We buy houses as-is in Arizona, Florida, Tennessee, North Carolina and nationwide. No repairs, no showings, "
             "no agent fees, and no waiting on a buyer's bank.")
     body = (hero("Direct cash home buyer · No agents, no fees", h1, lede) + trust_strip() + how() + situations() + about()
@@ -1220,7 +1167,7 @@ def page_state(m):
               "If we can't buy a particular property ourselves, we match you with a vetted local buyer, at no cost to you." % ", ".join(m["cities"][:5]))]
     jsonld = graph(org_jsonld(), service_jsonld("Sell your house for cash in %s" % m["name"], {"@type": "State", "name": m["name"]},
                                                 SITE_URL + m["slug"] + ".html"), faq_jsonld(extra))
-    h1 = "Sell Your %s House Fast for Cash" % m["name"]
+    h1 = 'Sell Your %s House <span class="hl">Fast for Cash</span>' % esc(m["name"])
     body = (hero("We buy houses in %s" % m["name"], h1, m["lede"], state=m["abbr"]) + trust_strip()
             + why_section("Why %s homeowners sell to us" % m["name"],
                           "Every market has its own reasons a house gets hard to sell the traditional way. These are the ones we solve most often in %s." % m["name"],
@@ -1240,7 +1187,7 @@ def page_city(c):
               "Yes. We buy in %s, and throughout %s County. Condos, single-family homes, duplexes, mobile homes with land and vacant lots all qualify." % (", ".join(c["areas"]), c["county"]))]
     jsonld = graph(org_jsonld(), service_jsonld("Sell your house for cash in %s" % name, {"@type": "City", "name": c["city"], "containedInPlace": {"@type": "State", "name": m["name"]}},
                                                 SITE_URL + c["file"]), faq_jsonld(extra))
-    h1 = "Sell Your House Fast in %s" % name
+    h1 = 'Sell Your House Fast in <span class="hl">%s</span>' % esc(name)
     body = (hero("We buy houses in %s" % name, h1, c["intro"], state=c["st"], city=c["city"]) + trust_strip()
             + why_section("Why %s homeowners sell to us" % c["city"],
                           "We buy in %s and every neighborhood between. These are the situations we solve most often around %s." % (", ".join(c["areas"]), c["city"]),
@@ -1253,7 +1200,7 @@ def page_city(c):
 def page_es():
     """Spanish landing page: quick forms top and bottom, core sections translated."""
     t = T["es"]
-    h1 = "Venda su casa rápido por efectivo. En cualquier condición. En cualquier situación."
+    h1 = 'Venda su casa rápido por efectivo. <span class="hl">En cualquier condición. En cualquier situación.</span>'
     lede = ("Compramos casas tal como están en Arizona, Florida, Tennessee, Carolina del Norte y en todo Estados Unidos. "
             "Sin reparaciones, sin visitas, sin comisiones de agente y sin esperar al banco del comprador.")
     steps = [
@@ -1339,7 +1286,7 @@ def page_es():
 </section>
 <section class="section about" id="about">
   <div class="wrap">
-    <div class="about-art">%(art)s</div>
+    <div class="about-art logo-art">%(art)s</div>
     <div>
       <span class="eyebrow">Con quién está tratando</span>
       <h2>Un comprador directo. Ni intermediarios, ni un centro de llamadas.</h2>
@@ -1470,6 +1417,14 @@ def artifact_build(out_path):
         with open(HERO_PHOTO, "rb") as f:
             data = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
         body = body.replace("url(assets/img/hero.jpg)", "url(%s)" % data)
+    def data_uri(rel):
+        mime = {".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp"}[os.path.splitext(rel)[1]]
+        with open(os.path.join(SITE, rel), "rb") as f:
+            return "data:%s;base64,%s" % (mime, base64.b64encode(f.read()).decode("ascii"))
+    for rel in sorted(set(re.findall(r'assets/img/[\w.-]+\.(?:png|jpg|webp)', body))):
+        body = body.replace(rel, data_uri(rel))
+    for rel in sorted(set(re.findall(r'url\("(img/[\w.-]+\.(?:png|jpg|webp))"\)', css))):
+        css = css.replace('url("%s")' % rel, 'url("%s")' % data_uri("assets/" + rel))
 
     out = ('<title>%s</title>\n<link rel="stylesheet" href="%s">\n<style>\n%s\n</style>\n%s\n%s\n<script>\n%s\n</script>\n<script>\n%s\n</script>\n'
            % (title, esc(FONTS), css, jsonld, body, config, app))
