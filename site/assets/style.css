@@ -44,9 +44,11 @@
 }
 /* Dark brand surfaces get a light focus ring. */
 .topbar, .site-header, .hero, .offer, .calc-out, .market-wide, .site-footer, .sticky-cta { --focus: var(--gold-light); }
+/* ...except the white form cards that sit inside them. */
+.lead-card, .form { --focus: var(--brand); }
 /* ---------- base ---------- */
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; -webkit-text-size-adjust: 100%; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -63,7 +65,7 @@ body {
 [hidden] { display: none !important; }
 img, svg { max-width: 100%; height: auto; }
 a { color: inherit; }
-h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -0.005em; color: var(--ink); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -0.005em; color: var(--ink); font-variant-numeric: lining-nums; }
 h1 { font-size: clamp(2.5rem, 5.2vw, 3.9rem); font-weight: 700; }
 h2 { font-size: clamp(2.05rem, 3.8vw, 2.85rem); font-weight: 700; }
 h3, h4 { font-family: var(--font-label); line-height: 1.2; letter-spacing: -0.01em; }
@@ -72,7 +74,12 @@ p { margin: 0; }
 .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
 .eyebrow { display: inline-flex; align-items: center; gap: 0.7rem; font: 600 0.82rem var(--font-brand); color: var(--brand); letter-spacing: 0.16em; text-transform: uppercase; }
 .section-head.center .eyebrow::before, .section-head.center .eyebrow::after { content: ""; width: 28px; height: 1px; background: currentColor; opacity: 0.6; }
+@media (max-width: 480px) {
+  .section-head.center .eyebrow { letter-spacing: 0.12em; }
+  .section-head.center .eyebrow::before, .section-head.center .eyebrow::after { display: none; }
+}
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+a.sr-only:focus { position: fixed; left: 1rem; top: 1rem; z-index: 100; width: auto; height: auto; margin: 0; padding: 0.75rem 1rem; overflow: visible; clip: auto; white-space: normal; background: var(--surface); color: var(--ink); font-weight: 700; border-radius: 8px; outline: 3px solid var(--brand); outline-offset: 2px; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 /* ---------- buttons ---------- */
@@ -96,7 +103,7 @@ p { margin: 0; }
 .btn-light:hover { background: var(--brand-soft); border-color: var(--brand-soft); }
 .btn-lg { padding: 1.1rem 1.8rem; font-size: 1.08rem; }
 .btn[disabled] { opacity: 0.65; cursor: wait; }
-.btn svg { width: 18px; height: 18px; }
+.btn svg { width: 18px; height: 18px; flex-shrink: 0; }
 
 /* ---------- top bar + header ---------- */
 .topbar { background: var(--brand-deep); color: var(--on-dark-2); font-size: 0.86rem; border-bottom: 1px solid var(--dark-line); }
@@ -133,8 +140,12 @@ p { margin: 0; }
 .nav .btn-outline { color: var(--on-dark); font-weight: 700; border-color: rgba(201, 165, 92, 0.5); }
 .nav .btn-outline:hover { background: rgba(201, 165, 92, 0.12); border-color: var(--gold); }
 .nav-toggle { display: none; margin-left: auto; background: none; border: 2px solid rgba(201, 165, 92, 0.5); color: var(--on-dark); border-radius: 999px; padding: 0.55rem 0.9rem; font: 700 0.9rem var(--font-body); cursor: pointer; }
-@media (max-width: 960px) {
+@media (max-width: 1000px) {
   .nav .btn-outline { display: none; }
+}
+/* Spanish nav labels are longer. The number stays in the top bar. */
+@media (max-width: 1080px) {
+  :lang(es) .nav .btn-outline { display: none; }
 }
 @media (max-width: 860px) {
   .nav {
@@ -285,7 +296,11 @@ p { margin: 0; }
 .contact-card a:hover { color: var(--brand); }
 .contact-card svg { flex: 0 0 36px; width: 36px; height: 36px; padding: 8px; border-radius: 50%; background: var(--brand-soft); color: var(--brand); }
 .contact-card small { color: var(--ink-2); font-weight: 500; display: block; font-size: 0.82rem; }
-@media (max-width: 860px) { .about .wrap { grid-template-columns: minmax(0, 1fr); } .about-art { min-height: 220px; } }
+@media (max-width: 860px) {
+  .about .wrap { grid-template-columns: minmax(0, 1fr); }
+  .about-art { min-height: 220px; }
+  .about-art.logo-art { width: min(100%, 420px, 85vh); justify-self: center; min-height: 0; }
+}
 
 /* comparison */
 .compare { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
@@ -296,10 +311,15 @@ p { margin: 0; }
 .compare td.us { font-weight: 700; background: var(--brand-soft); }
 .compare td:first-child { font-weight: 600; }
 .compare tbody tr:last-child td { border-bottom: 0; }
-.compare td .yes, .compare td .no { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; margin-right: 0.55rem; vertical-align: -6px; font-size: 0.8rem; font-weight: 800; }
+.compare td .yes, .compare td .no { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; margin-right: 0.55rem; vertical-align: middle; position: relative; top: -0.1em; font-size: 0.8rem; font-weight: 800; }
 .compare td .yes { background: var(--gold-grad); color: var(--cta-ink); }
 .compare td .no { background: var(--line); color: var(--ink-2); }
 .compare-note { font-size: 0.82rem; color: var(--ink-2); margin-top: 0.9rem; }
+@media (max-width: 700px) {
+  .compare table { min-width: 0; }
+  .compare th, .compare td { padding: 0.7rem 0.6rem; font-size: 0.85rem; }
+  .compare th.us { letter-spacing: 0.04em; }
+}
 
 /* calculator */
 .calc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
@@ -308,6 +328,7 @@ p { margin: 0; }
 .money-in { position: relative; display: block; }
 .money-in::before { content: "$"; position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--ink-2); font-weight: 600; pointer-events: none; }
 .field .money-in input { padding-left: 1.7rem; }
+.calc-inputs .field { align-content: end; }
 .range { display: grid; gap: 0.5rem; }
 .range input[type=range] { width: 100%; accent-color: var(--brand); }
 .range output { font-weight: 800; color: var(--brand); }
@@ -343,7 +364,7 @@ p { margin: 0; }
 .market p { color: var(--ink-2); font-size: 0.93rem; }
 .market .cities { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem; }
 .market .cities a { font-size: 0.82rem; font-weight: 600; text-decoration: none; color: var(--brand); background: var(--brand-soft); padding: 0.25rem 0.6rem; border-radius: 999px; }
-.market .cities a:hover { background: var(--brand-soft-2); }
+.market .cities a:hover { background: var(--brand-soft-2); color: #5E460C; }
 .market a.more { margin-top: auto; padding-top: 0.6rem; font-weight: 700; color: var(--ink); }
 .market-wide { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; padding: 1.6rem 1.8rem; background: var(--brand-dark); color: var(--on-dark); border-radius: var(--radius); box-shadow: inset 0 0 0 1px rgba(201, 165, 92, 0.35); }
 .market-wide h3 { color: var(--gold-light); font: 700 1.7rem var(--font-display); }
@@ -371,6 +392,7 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
 .offer::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--gold-rule); pointer-events: none; }
 .offer .wrap { position: relative; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(2rem, 5vw, 4rem); align-items: start; }
 .offer h2 { color: var(--on-dark); margin-top: 0.5rem; }
+.offer .lead-card h2 { color: var(--ink); }
 .offer .eyebrow { color: var(--gold-light); }
 .offer .lede { color: var(--on-dark-2); margin-top: 1rem; font-size: 1.05rem; }
 .offer ul { margin: 1.5rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.7rem; }
@@ -392,6 +414,7 @@ a.chip:hover { border-color: var(--brand); color: var(--brand); }
 .field { display: grid; gap: 0.35rem; min-width: 0; }
 .field label { font-weight: 700; font-size: 0.88rem; color: var(--ink); }
 .field label .opt { font-weight: 500; color: var(--ink-2); }
+.field input::placeholder, .field textarea::placeholder { color: #6B6358; opacity: 1; }
 .field input, .field select, .field textarea {
   width: 100%; padding: 0.85rem 0.95rem;
   border: 1.5px solid var(--line); border-radius: var(--radius-sm);

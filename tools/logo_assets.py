@@ -7,6 +7,7 @@ Writes to site/assets/img:
   favicon-48.png                browser tab icon
   apple-touch-icon.png          home-screen icon
   prime-acre-capital-logo.jpg   full logo (about section, structured data)
+  prime-acre-capital-logo-1254.webp  the same at full size, for high-density screens
   landscape.webp                the gold-etched hills, used along the bottom of the hero
   og-image.jpg                  1200x630 card shown when a link to the site is shared
 
@@ -59,7 +60,8 @@ def main():
     clean = Image.fromarray(px)
 
     mono = keyed(clean, MONOGRAM_BOX)
-    fit_h(mono, 168).save(os.path.join(OUT, "pac-monogram.png"), optimize=True)
+    # 256-color palette: looks the same in the header and is about a third of the size
+    fit_h(mono, 168).quantize(256, method=Image.Quantize.FASTOCTREE).save(os.path.join(OUT, "pac-monogram.png"), optimize=True)
     square_icon(mono, 48, 0.2, 0.1).save(os.path.join(OUT, "favicon-48.png"), optimize=True)
     touch = Image.new("RGBA", (180, 180), BLACK + (255,))
     inner = fit_h(mono, 128)
@@ -67,7 +69,8 @@ def main():
     touch.convert("RGB").save(os.path.join(OUT, "apple-touch-icon.png"), optimize=True)
 
     logo.resize((720, 720), Image.LANCZOS).save(os.path.join(OUT, "prime-acre-capital-logo.jpg"), quality=86, optimize=True, progressive=True)
-    logo.crop(LANDSCAPE_BOX).save(os.path.join(OUT, "landscape.webp"), quality=80, method=6)
+    logo.save(os.path.join(OUT, "prime-acre-capital-logo-1254.webp"), quality=82, method=6)
+    logo.crop(LANDSCAPE_BOX).save(os.path.join(OUT, "landscape.webp"), quality=60, method=6)
 
     w, h = 1200, 630
     card = Image.new("RGBA", (w, h), (6, 6, 6, 255))

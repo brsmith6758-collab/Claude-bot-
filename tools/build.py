@@ -115,6 +115,7 @@ TAGLINE = "Land. Legacy. Wealth."
 IMG = {
     "monogram": "assets/img/pac-monogram.png",      # gold PAC monogram, transparent, 147x168
     "logo": "assets/img/prime-acre-capital-logo.jpg",  # full square logo, 720x720
+    "logo_hd": "assets/img/prime-acre-capital-logo-1254.webp",  # same, full size, for high-density screens
     "og": "assets/img/og-image.jpg",                # 1200x630 share card
     "favicon": "assets/img/favicon-48.png",
     "touch": "assets/img/apple-touch-icon.png",
@@ -292,8 +293,16 @@ def esc(s):
 BRAND_MARK = '<img class="brand-mark" src="%s" width="46" height="52" alt="">' % IMG["monogram"]
 BRAND_WORD = '<span class="brand-word"><span>Prime Acre</span><small>Capital</small></span>'
 
-ABOUT_ART = ('<img src="%s" width="720" height="720" loading="lazy" alt="Prime Acre Capital logo: a gold PAC monogram over rolling fields, '
-             'with the words Land. Legacy. Wealth.">' % IMG["logo"])
+ABOUT_ALT = {
+    "en": "Prime Acre Capital logo: a gold PAC monogram over rolling fields, with the words Land. Legacy. Wealth.",
+    "es": "Logotipo de Prime Acre Capital: monograma PAC dorado sobre colinas, con el lema Land. Legacy. Wealth.",
+}
+
+
+def about_art(lang="en"):
+    """The full logo for the about section; the 1254px file keeps it sharp on high-density screens."""
+    return ('<img src="%s" srcset="%s 720w, %s 1254w" sizes="(max-width: 860px) 420px, 504px" width="720" height="720" '
+            'loading="lazy" alt="%s">' % (IMG["logo"], IMG["logo"], IMG["logo_hd"], esc(ABOUT_ALT[lang])))
 
 
 def phone_link(cls=""):
@@ -556,7 +565,7 @@ def about():
         lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>We reply within 24 hours</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
     if REVIEWS_URL:
         lines += '<a href="%s" target="_blank" rel="noopener">%s<span>%s<small>Google</small></span></a>' % (esc(REVIEWS_URL), icon("star"), esc(T["en"]["reviews"]))
-    art = ('<img src="assets/img/team.jpg" alt="The %s team" loading="lazy">' % esc(BRAND)) if os.path.exists(TEAM_PHOTO) else ABOUT_ART
+    art = ('<img src="assets/img/team.jpg" alt="The %s team" loading="lazy">' % esc(BRAND)) if os.path.exists(TEAM_PHOTO) else about_art()
     return """<section class="section about" id="about">
   <div class="wrap">
     <div class="about-art%(photo)s">%(art)s</div>
@@ -1018,7 +1027,7 @@ def footer(lang="en"):
     <div class="foot-grid">
       <div>
         <a class="brand" href="%(home)s" aria-label="%(brand)s">%(mark)s%(word)s</a>
-        <p class="foot-tagline">%(tagline)s</p>
+        <p class="foot-tagline" lang="en">%(tagline)s</p>
         <p>%(blurb)s</p>
         <ul class="foot-contact" style="margin-top:1rem">%(contact)s</ul>
       </div>
@@ -1200,7 +1209,7 @@ def page_city(c):
 def page_es():
     """Spanish landing page: quick forms top and bottom, core sections translated."""
     t = T["es"]
-    h1 = 'Venda su casa rápido por efectivo. <span class="hl">En cualquier condición. En cualquier situación.</span>'
+    h1 = 'Venda su casa rápido por efectivo. En <span class="hl">cualquier condición.</span> En <span class="hl">cualquier situación.</span>'
     lede = ("Compramos casas tal como están en Arizona, Florida, Tennessee, Carolina del Norte y en todo Estados Unidos. "
             "Sin reparaciones, sin visitas, sin comisiones de agente y sin esperar al banco del comprador.")
     steps = [
@@ -1342,7 +1351,7 @@ def page_es():
     %(card2)s
   </div>
 </section>
-""" % dict(steps=step_cards, sits=sit_cards, art=ABOUT_ART, legal=esc(LEGAL_NAME), contact=contact_lines, brand=esc(BRAND), rows=trs,
+""" % dict(steps=step_cards, sits=sit_cards, art=about_art("es"), legal=esc(LEGAL_NAME), contact=contact_lines, brand=esc(BRAND), rows=trs,
            promises=plis, markets=mcards, faqs=fds, check=icon("check"),
            talk=('<p class="talk"><span>¿Prefiere hablar? Llame o envíe un texto al %s</span></p>' % phone_link()) if PHONE else "",
            card2=lead_card(lang="es", card_id="lead-card-2", details=False))
@@ -1412,6 +1421,7 @@ def artifact_build(out_path):
     body = body.replace('href="index.html#', 'href="#').replace('href="index.html"', 'href="#top"')
     body = body.replace('<li><a href="privacy.html">Privacy policy</a></li>', '')
     body = re.sub(r'<span class="lang">.*?</span>', '', body)
+    body = re.sub(r' (?:srcset|sizes)="[^"]*"', '', body)
     body = body.replace('<a class="sr-only" href="#offer">Skip to the cash offer form</a>\n', "")
     if os.path.exists(HERO_PHOTO):
         with open(HERO_PHOTO, "rb") as f:

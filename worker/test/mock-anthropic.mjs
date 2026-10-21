@@ -80,8 +80,8 @@ http.createServer((req, res) => {
     }
     let body;
     try { body = JSON.parse(raw || "{}"); } catch { body = {}; }
-    if (!Array.isArray(body.messages)) {
-      // Anything that isn't a Messages API call (a health probe, a stray GET) gets a 400, not a crash.
+    if (!Array.isArray(body.messages) || !body.messages.length) {
+      // Anything that isn't a Messages API call (a health probe, a stray GET, an empty list) gets a 400, not a crash.
       res.writeHead(400, { "content-type": "application/json" });
       return res.end(JSON.stringify({ type: "error", error: { type: "invalid_request_error", message: "messages: Field required" } }));
     }

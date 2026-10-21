@@ -59,7 +59,7 @@
   font-size: 0.95rem; line-height: 1.45; cursor: pointer;
   animation: pac-pop 0.25s ease-out both;
 }
-.pac-teaser b { display: block; font-family: var(--font-display, inherit); margin-bottom: 0.15rem; }
+.pac-teaser b { display: block; font-family: var(--font-label, inherit); margin-bottom: 0.15rem; }
 .pac-teaser-close {
   position: absolute; top: 6px; right: 6px; width: 28px; height: 28px;
   border: 0; border-radius: 50%; background: transparent; color: var(--pac-ink-2);
@@ -164,6 +164,7 @@
   padding: 0.65rem 0.8rem; border: 1.5px solid var(--pac-line); border-radius: 12px;
   font: 500 16px/1.4 var(--font-body, inherit); color: var(--pac-ink); background: var(--pac-bg);
 }
+.pac-compose textarea::placeholder { color: #6B6358; opacity: 1; }
 .pac-compose textarea:focus { outline: none; border-color: var(--pac-accent); box-shadow: 0 0 0 3px var(--pac-soft); }
 .pac-send {
   flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer;
