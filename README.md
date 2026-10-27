@@ -135,7 +135,9 @@ order that works:
 - **Short copy, page structure, cities and the home-page FAQ** live in `tools/build.py`.
 - **Long-form content** (state rules with statute citations, city fact sheets, the guides and
   situation pages) lives in `tools/content/*.json`. Every legal or local fact has a source link
-  and a checked date; re-check them at least once a year.
+  and a checked date; re-check them at least once a year. The company pages (How it works, About,
+  FAQ, Contact) live there too, as `page_<slug>.json`. A page shows up in the menus, footer and
+  sitemap as soon as its file exists, and links to pages that don't exist yet render as plain text.
 - After any change: `python3 tools/content_check.py && python3 tools/build.py`, then commit.
   The build stops if any page makes a claim the site must never make (guarantees, "#1",
   invented counts or reviews, partner-matching promises; see `BANNED_LIVE` in `tools/build.py`),

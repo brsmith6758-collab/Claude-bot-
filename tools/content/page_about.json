@@ -1,0 +1,183 @@
+{
+  "slug": "about",
+  "nav_label": "About",
+  "title": "About Prime Acre Capital | Direct Cash Home Buyer",
+  "meta_description": "Prime Acre Capital LLC buys houses directly from owners for cash in AZ, FL, TN and NC. What we are, what we aren't, and how we make money.",
+  "eyebrow": "About us",
+  "h1": "A real estate investment company that buys houses directly",
+  "lede": "Prime Acre Capital LLC buys houses from owners for cash, as-is. We're not agents and we don't list houses. When you reach out, you talk to the people making the offer.",
+  "sections": [
+    {
+      "id": "what-we-do",
+      "heading": "What we do",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "We buy houses in any condition in Arizona, Florida, Tennessee and North Carolina. You don't repair, clean or show the house. We make a cash offer, explain how we got to it, and close on the date you choose with a licensed title company or closing attorney."
+        },
+        {
+          "type": "p",
+          "text": "We buy single-family homes, condos, townhouses, duplexes and small multifamily buildings, mobile homes with land, and vacant lots."
+        }
+      ]
+    },
+    {
+      "id": "what-we-are-not",
+      "heading": "What we are, and what we're not",
+      "blocks": [
+        {
+          "type": "dl",
+          "items": [
+            {
+              "term": "We are",
+              "text": "A real estate investment company. We buy houses directly from owners and take on the repairs, the holding costs and the risk of reselling or renting them."
+            },
+            {
+              "term": "We're not real estate agents or a brokerage",
+              "text": "We don't list houses or represent buyers or sellers."
+            },
+            {
+              "term": "We're not a lender or a mortgage-relief service",
+              "text": "We don't make loans, negotiate with lenders, or arrange loan modifications or short sales. If you're behind on payments, your loan servicer, an attorney or a free HUD-approved housing counselor (800-569-4287) can explain your options."
+            },
+            {
+              "term": "We don't charge sellers",
+              "text": "No commissions and no fees to get an offer or to sell."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "how-we-make-money",
+      "heading": "How we make money",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Like any investor, we buy for less than a fully repaired house would sell for. In exchange, we take on the repairs, the costs of holding the property, and the risk that it costs more or sells for less than we expected."
+        },
+        {
+          "type": "p",
+          "text": "That trade isn't right for everyone. If your house is in good shape and you have time to wait for a buyer, listing with an agent will likely net you more, and we'll tell you so. A cash sale tends to make sense when repairs, a deadline or a complicated situation make a regular listing hard."
+        }
+      ]
+    },
+    {
+      "id": "where-we-buy",
+      "heading": "Where we buy",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "We focus on four states: [Arizona](arizona), [Florida](florida), [Tennessee](tennessee) and [North Carolina](north-carolina). Outside those states, send us the address anyway. We look at every property and tell you plainly whether we can make an offer."
+        },
+        {
+          "type": "component",
+          "name": "city_list"
+        }
+      ]
+    },
+    {
+      "id": "how-we-work",
+      "heading": "How we work with you",
+      "blocks": [
+        {
+          "type": "ul",
+          "items": [
+            "Every offer is free and no-obligation. You can say no at any point before you sign.",
+            "We show you the numbers behind the offer: nearby sales, repairs and our costs.",
+            "If our walkthrough turns up something new, we explain any change in writing before anything is signed.",
+            "You pick the closing date, as little as 7 days once title is clear, or later.",
+            "A licensed title company or closing attorney handles the closing and pays you. Your money never passes through us.",
+            "If you ask us to stop calling, texting or emailing, we stop as soon as we can."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "check-us-out",
+      "heading": "Check us out before you decide",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "You should be able to check out any company that wants to buy your house. With us, the closing is handled by a licensed title company or closing attorney you can look up yourself, and the written agreement shows exactly what you'll receive."
+        },
+        {
+          "type": "component",
+          "name": "verify_us"
+        }
+      ]
+    },
+    {
+      "id": "quick-facts",
+      "heading": "Quick facts",
+      "blocks": [
+        {
+          "type": "dl",
+          "items": [
+            {
+              "term": "What we buy",
+              "text": "Houses, condos, townhouses and small multifamily in any condition, plus mobile homes with land and vacant lots"
+            },
+            {
+              "term": "Home states",
+              "text": "Arizona, Florida, Tennessee and North Carolina; we look at addresses anywhere in the US"
+            },
+            {
+              "term": "Cost to you",
+              "text": "No commissions and no fees"
+            },
+            {
+              "term": "Closing",
+              "text": "With a licensed title company or closing attorney, on the date you choose"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "get-in-touch",
+      "heading": "Get in touch",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Call, text or email, or send the address with the form below. [More ways to reach us](contact)."
+        },
+        {
+          "type": "component",
+          "name": "contact_card"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "Are you real estate agents?",
+      "a": "No. We're a real estate investment company that buys houses directly from owners. We don't list houses or charge commissions."
+    },
+    {
+      "q": "Who will I be talking to?",
+      "a": "Someone from Prime Acre Capital who is working on your offer. The chat on this site is an AI assistant that answers common questions and passes your details to us; a person reviews every request it sends."
+    },
+    {
+      "q": "Do you buy outside Arizona, Florida, Tennessee and North Carolina?",
+      "a": "Send us the address. We look at properties anywhere in the US and tell you plainly whether we can make an offer."
+    },
+    {
+      "q": "How do I know you're legitimate?",
+      "a": "You never pay us anything, and your money is handled by a licensed title company or closing attorney that you can look up yourself. You can have your own attorney review the agreement, and you can walk away at any point before signing."
+    },
+    {
+      "q": "Why would I sell to an investor instead of listing?",
+      "a": "Usually for speed, certainty or to skip repairs. If your house is in good shape and you can wait, listing will likely get you a higher price, and we'll say so."
+    }
+  ],
+  "related": [
+    "how-it-works",
+    "how-we-calculate-your-offer",
+    "compare",
+    "faq",
+    "contact"
+  ],
+  "article": false,
+  "last_reviewed": "2026-10-27"
+}

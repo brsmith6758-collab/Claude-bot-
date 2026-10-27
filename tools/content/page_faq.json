@@ -1,0 +1,202 @@
+{
+  "slug": "faq",
+  "nav_label": "FAQ",
+  "title": "Selling Your House for Cash: FAQ | Prime Acre Capital",
+  "meta_description": "Straight answers about our cash offers, closing, mortgages and liens, inherited and rented houses, texts and privacy, and who we are.",
+  "eyebrow": "FAQ",
+  "h1": "Straight answers before you decide",
+  "lede": "How we price an offer, how closing and payment work, what happens to your mortgage, and how to make us stop calling. If your question isn't here, ask us.",
+  "sections": [
+    {
+      "id": "all-questions",
+      "heading": "All questions",
+      "blocks": [
+        {
+          "type": "component",
+          "name": "faq_list"
+        }
+      ]
+    },
+    {
+      "id": "still-have-a-question",
+      "heading": "Still have a question?",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Call, text or email, or use the chat in the corner of the screen. Or send the address and we'll call with a no-obligation cash offer, usually within 24 hours."
+        },
+        {
+          "type": "component",
+          "name": "contact_card"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "group": "Your offer",
+      "q": "How do you decide what to offer?",
+      "a": "We look at what similar homes nearby have sold for after repairs, subtract what it will cost to repair, hold and resell the property, and leave room for our margin. We walk you through the numbers so you know how we got there."
+    },
+    {
+      "group": "Your offer",
+      "q": "Will you lowball me?",
+      "a": "A cash offer will be lower than what a fully repaired house could sell for on the open market, because we take on the repairs, the holding costs and the risk of reselling. What you can expect is a number built from figures we show you: recent nearby sales, the repairs we'd take on, and our costs. If it doesn't work for you, you've spent a few minutes and have a cash number to compare with your other options."
+    },
+    {
+      "group": "Your offer",
+      "q": "How fast will I get an offer?",
+      "a": "Usually within 24 hours of getting the address. A few details about the condition help us get closer on the first call."
+    },
+    {
+      "group": "Your offer",
+      "q": "Do I have to accept the offer?",
+      "a": "No. Every offer is free and no-obligation, and you can say no at any point before you sign. If listing with an agent would likely get you more, we'll tell you so."
+    },
+    {
+      "group": "Your offer",
+      "q": "Can the offer change after the walkthrough?",
+      "a": "It can. If the walkthrough shows something we didn't know about, like a roof leak or foundation movement, we explain any change in writing before anything is signed, and you can still say no."
+    },
+    {
+      "group": "Your offer",
+      "q": "Will I get the offer in writing?",
+      "a": "We explain the offer by phone first. If you want to go ahead, we do a short walkthrough and then send a written purchase agreement with the price, your closing date and the terms. Nothing is final until you sign it."
+    },
+    {
+      "group": "Your offer",
+      "q": "Why is a cash offer lower than a listing price?",
+      "a": "Because we buy as-is and take on the repairs, holding costs, closing and resale costs, and the risk of reselling. A listing usually brings a higher price but comes with commissions, repairs, showings and time."
+    },
+    {
+      "group": "Closing and money",
+      "q": "Are there any fees or commissions?",
+      "a": "No. No commissions and no service fees, and we pay standard closing costs. What you receive at closing is the agreed price minus anything owed on the property, such as a mortgage payoff, liens, and your share of property taxes and HOA dues up to the closing date."
+    },
+    {
+      "group": "Closing and money",
+      "q": "How fast can you close, and can I pick a later date?",
+      "a": "We can often close in as little as 7 days once title is clear. If you need more time, to find your next place or to move, pick a later date. The closing date is your choice."
+    },
+    {
+      "group": "Closing and money",
+      "q": "Who handles the closing?",
+      "a": "A licensed title company or closing attorney. In North Carolina, attorneys conduct closings. The closing agent searches the property records, gets payoff figures, prepares the closing documents and pays everyone at closing."
+    },
+    {
+      "group": "Closing and money",
+      "q": "How do I get paid?",
+      "a": "The closing agent pays off what's owed on the property and sends you the rest by wire or check. Your money never passes through us. Before you send or receive a wire, call the closing agent at a number you looked up yourself to confirm the instructions. Criminals send fake wiring emails during home sales."
+    },
+    {
+      "group": "Closing and money",
+      "q": "Do I need an attorney?",
+      "a": "It's your choice. You're generally not required to hire your own attorney, but you're welcome to have one review the agreement before you sign, and it's a good idea if the house is in probate, a divorce or foreclosure. The title company or closing attorney handles the closing but may not represent you, so ask."
+    },
+    {
+      "group": "Closing and money",
+      "q": "Do I need to clean or make repairs?",
+      "a": "No. We buy the house as it is. Take what you want and leave the rest."
+    },
+    {
+      "group": "Mortgages, liens and taxes",
+      "q": "I still have a mortgage. Can you still buy?",
+      "a": "Yes. When the sale price covers it, the mortgage, along with any liens or back taxes, is paid off from the sale proceeds at closing."
+    },
+    {
+      "group": "Mortgages, liens and taxes",
+      "q": "What if I owe more than the house is worth?",
+      "a": "We'll tell you honestly. If the price won't cover what you owe, you would generally need to pay the difference at closing or get your lender to accept less, which is called a short sale. We don't negotiate with lenders or arrange short sales. Your loan servicer, a free HUD-approved housing counselor (800-569-4287) or an attorney can explain your options. A tax professional can tell you whether forgiven debt is taxable."
+    },
+    {
+      "group": "Mortgages, liens and taxes",
+      "q": "I'm behind on my payments. Can selling help?",
+      "a": "If the price covers what you owe, a sale pays off the lender at closing. We buy houses. We don't negotiate with lenders or arrange loan modifications or short sales, and we never ask you for money. Signing a contract with us doesn't put a foreclosure on hold, so timing matters. Talk to your loan servicer about options like a repayment plan or loan modification, call a free HUD-approved housing counselor at 800-569-4287, and consider asking an attorney about your rights."
+    },
+    {
+      "group": "Mortgages, liens and taxes",
+      "q": "What if I'm behind on property taxes?",
+      "a": "Back taxes can be paid from the sale at closing when the price covers them. The closing agent gets the exact amount from the county, and from the city if it bills separately. Each state has its own rules and deadlines for unpaid taxes, so ask your county or city tax office where yours stand."
+    },
+    {
+      "group": "Mortgages, liens and taxes",
+      "q": "What about liens, judgments or HOA balances?",
+      "a": "The title search and payoff requests to your HOA and any lienholders show what's owed. They're generally paid from the sale proceeds at closing when the price covers them."
+    },
+    {
+      "group": "Your situation",
+      "q": "Can you buy an inherited house?",
+      "a": "Yes. Who signs depends on your state, the will and any court orders: a court-appointed personal representative, the heirs, or a trustee if the house is in a trust. The title company or closing attorney confirms who needs to sign. If no one has authority to sell yet, we can set the closing for after that's in place. Take what you want from the house and leave the rest."
+    },
+    {
+      "group": "Your situation",
+      "q": "What if there are tenants?",
+      "a": "We can buy a rental with tenants in place. Leases generally stay in effect when a property sells, and the buyer takes over as landlord. The security deposit generally moves to the new owner or goes back to the tenant, with notice, under your state's rules."
+    },
+    {
+      "group": "Your situation",
+      "q": "Can I sell during a divorce?",
+      "a": "Yes. Generally every owner has to sign, and in some states a spouse has to sign even if only one of you is on the title. Once a divorce case is filed, court orders, and in some states automatic orders, can limit a sale until you both agree or the court allows it. We give you one clear number to divide and a closing date that works for both of you. Talk to your attorney before you sign."
+    },
+    {
+      "group": "Your situation",
+      "q": "What condition does the house need to be in?",
+      "a": "Any. We buy houses with fire or water damage, bad roofs, foundation issues, mold, code violations, unfinished renovations and houses packed with belongings. Leave behind anything you don't want to move."
+    },
+    {
+      "group": "Your situation",
+      "q": "What kinds of property do you buy?",
+      "a": "Single-family homes, condos, townhouses, duplexes and small multifamily, mobile homes with land, and vacant lots, in Arizona, Florida, Tennessee and North Carolina."
+    },
+    {
+      "group": "Your situation",
+      "q": "Do you buy outside Arizona, Florida, Tennessee and North Carolina?",
+      "a": "Send us the address. We look at properties anywhere in the US and tell you plainly whether we can make an offer."
+    },
+    {
+      "group": "Calls, texts and privacy",
+      "q": "How do I stop calls, texts or emails?",
+      "a": "Reply STOP to any text, tell us in the website chat, or call or email us, and we'll stop as soon as we can. You can ask at any time."
+    },
+    {
+      "group": "Calls, texts and privacy",
+      "q": "Do I have to agree to text messages?",
+      "a": "No. Texting is optional. Check the box only if you want texts. We'll still reach you by phone or email."
+    },
+    {
+      "group": "Calls, texts and privacy",
+      "q": "Will you sell my information?",
+      "a": "No. We don't sell your personal information. We share it only as needed to complete a sale you agree to, for example with the title company or closing attorney, and with the service providers that run this website and deliver our messages. If anyone other than Prime Acre Capital LLC would be the buyer of your property, we will tell you who before sharing your details with them. Our [privacy policy](privacy) has the details."
+    },
+    {
+      "group": "Calls, texts and privacy",
+      "q": "Is the chat a real person?",
+      "a": "No. The chat is an AI assistant that answers common questions and passes your details to us. A person from our company reviews every request it sends. Please don't share Social Security, bank or loan account numbers in the chat."
+    },
+    {
+      "group": "About us",
+      "q": "Are you real estate agents?",
+      "a": "No. We're a real estate investment company that buys houses directly from owners. We don't list houses or charge commissions. [More about us](about)."
+    },
+    {
+      "group": "About us",
+      "q": "How do I know this is legitimate?",
+      "a": "Fair question. You never pay us anything, and your money never passes through us: every closing runs through a licensed title company or closing attorney who holds the funds and records the sale. You can have your own attorney review the agreement, and you can walk away at any point before signing."
+    },
+    {
+      "group": "About us",
+      "q": "How do you make money?",
+      "a": "Like any investor, we buy for less than a fully repaired house would sell for. In exchange, we take on the repairs, the holding costs and the risk of reselling or renting the property."
+    }
+  ],
+  "related": [
+    "how-it-works",
+    "how-we-calculate-your-offer",
+    "compare",
+    "about",
+    "contact"
+  ],
+  "article": false,
+  "last_reviewed": "2026-10-27",
+  "legal_note": true
+}

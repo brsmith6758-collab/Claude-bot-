@@ -1,0 +1,242 @@
+{
+  "slug": "how-it-works",
+  "nav_label": "How it works",
+  "title": "How Selling Your House for Cash Works | Prime Acre Capital",
+  "meta_description": "Every step of a cash sale to Prime Acre Capital: what we look at, the walkthrough, the written agreement, the closing and how you get paid.",
+  "eyebrow": "How it works",
+  "h1": "How selling your house to us works, step by step",
+  "lede": "You tell us about the house, we call with a cash offer, usually within 24 hours, and you pick the closing date. A licensed title company or closing attorney handles the paperwork and pays you. Here is each step, what you'll need and roughly how long it takes.",
+  "form_reason": "",
+  "sections": [
+    {
+      "id": "the-short-version",
+      "heading": "The short version",
+      "blocks": [
+        {
+          "type": "component",
+          "name": "steps"
+        },
+        {
+          "type": "p",
+          "text": "There's no listing, no showings and no buyer's lender to wait on. You deal with the company making the offer, and nothing is final until you sign a written agreement."
+        }
+      ]
+    },
+    {
+      "id": "step-1-tell-us-about-the-house",
+      "heading": "Step 1: Tell us about the house",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Use the form on this page, call, text, or use the chat in the corner of the screen. The address and a way to reach you are enough to start. If you want a more precise number on the first call, add what you know:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "Bedrooms, bathrooms and roughly how old the house is",
+            "Repairs it needs, big or small: roof, plumbing, foundation, water or fire damage",
+            "Whether anyone lives there, including tenants with a lease",
+            "Roughly what you owe on it, if anything: a mortgage, a second loan, liens or back taxes",
+            "When you'd like to be done"
+          ]
+        },
+        {
+          "type": "p",
+          "text": "You don't need to clean, fix or empty anything first. Don't send Social Security, bank or loan account numbers through the form or the chat. We never need them to make an offer."
+        }
+      ]
+    },
+    {
+      "id": "step-2-we-run-the-numbers",
+      "heading": "Step 2: We run the numbers and call you",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "We look at three things: what similar homes nearby have sold for recently after they were fixed up, what your house needs, and what it will cost us to hold, close on and resell or rent it. The offer is what's left after those costs and a margin for our risk and profit."
+        },
+        {
+          "type": "p",
+          "text": "We call with the number, usually within 24 hours, and walk you through how we got there. A cash offer will be lower than what a fully repaired house could sell for on the open market. If listing with an agent would likely net you more and you have time to wait, we'll tell you."
+        }
+      ]
+    },
+    {
+      "id": "step-3-a-short-walkthrough",
+      "heading": "Step 3: A short walkthrough",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "If you'd like to move forward, we confirm the condition. That can be a short visit in person, a video call where you walk us through the house on your phone, or a few photos. Nothing needs to be cleaned or staged."
+        },
+        {
+          "type": "p",
+          "text": "If the walkthrough shows something we didn't know about, such as a roof leak or foundation movement, we explain any change to the offer in writing before anything is signed. You can still say no."
+        }
+      ]
+    },
+    {
+      "id": "step-4-the-written-agreement",
+      "heading": "Step 4: The written agreement",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "When you're ready, we send a written purchase agreement with the price, the closing date you picked and the terms of the sale. Read it carefully and ask about anything that isn't clear. You're welcome to have your own attorney review it before you sign."
+        },
+        {
+          "type": "callout",
+          "title": "Before you sign anything",
+          "text": "Check that the price, the closing date and the name of the title company or closing attorney match what we discussed, and ask about anything you don't understand."
+        }
+      ]
+    },
+    {
+      "id": "step-5-title-work-and-closing",
+      "heading": "Step 5: Title work and closing on your date",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "The agreement goes to a licensed title company or closing attorney. In North Carolina, attorneys conduct closings. The closing agent searches the property's public records, orders payoff figures from your lender and anyone with a lien on the house, and lists anything that has to be cleared before closing."
+        },
+        {
+          "type": "p",
+          "text": "Probate, liens, missing signatures or an old loan that was never released can take longer to clear. You choose the date: as little as 7 days once title is clear, or later if you need time to move."
+        },
+        {
+          "type": "p",
+          "text": "At closing you sign the deed and the closing documents. Ask the closing agent whether you can sign where you live, for example with a traveling notary, if you're out of town."
+        }
+      ]
+    },
+    {
+      "id": "how-you-get-paid",
+      "heading": "How you get paid",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Your money is paid by the closing agent, never through us. Ask the closing agent for the settlement statement before closing day: it lists the price and every payoff and cost, line by line. At closing they pay off your mortgage, liens or back taxes when the price covers them, then send you the rest by wire or check."
+        },
+        {
+          "type": "callout",
+          "title": "Watch for wire fraud",
+          "text": "Criminals send fake emails with new wiring instructions during home sales. Before you send or receive a wire, call the title company or attorney at a phone number you looked up yourself, not one from an email, and confirm the details."
+        }
+      ]
+    },
+    {
+      "id": "timeline",
+      "heading": "A typical timeline",
+      "blocks": [
+        {
+          "type": "table",
+          "caption": "Each sale is different. These are typical times, not promises.",
+          "head": [
+            "Step",
+            "What happens",
+            "Typical timing"
+          ],
+          "rows": [
+            [
+              "First contact",
+              "You send the address by form, phone, text or chat",
+              "About a minute"
+            ],
+            [
+              "Offer call",
+              "We explain the offer and the numbers behind it",
+              "Usually within 24 hours"
+            ],
+            [
+              "Walkthrough",
+              "A short visit, a video call or a few photos",
+              "When it suits you"
+            ],
+            [
+              "Written agreement",
+              "Price, closing date and terms in writing",
+              "After the walkthrough"
+            ],
+            [
+              "Title work and closing",
+              "Records search and payoffs, then you sign and the closing agent pays you",
+              "As little as 7 days once title is clear; longer for probate or liens; or a later date you pick"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "documents-to-have-ready",
+      "heading": "Documents to have ready",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "You don't need these to get an offer. The title company or closing attorney will ask for most of them, so having them handy speeds things up:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "A government-issued photo ID for each person who will sign",
+            "Your most recent mortgage statement, or the lender's name and loan number for each loan",
+            "HOA contact details and recent statements, if there's an association",
+            "Recent property tax bills or notices",
+            "Leases, rent amounts and security deposit records, if the house is rented",
+            "Papers that show your authority to sell: court letters for probate, the trust or a certification of trust, any divorce court orders, and a death certificate if an owner has died",
+            "Keys, garage openers, gate codes and any warranties or permits you have"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "start-here",
+      "heading": "Start with the address",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "If you'd rather talk first, call or text instead."
+        },
+        {
+          "type": "component",
+          "name": "quick_form"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How long does the whole process take?",
+      "a": "Most of it is up to you. We usually call with an offer within 24 hours. After you sign, closing can happen in as little as 7 days once title is clear, or on a later date you choose. Probate, liens or title problems can add time."
+    },
+    {
+      "q": "Do I have to be there for the walkthrough?",
+      "a": "Not necessarily. Someone needs to let us in for an in-person visit, but a video call or a few photos can work instead. If you live out of town, someone you trust can do the video call or let us in."
+    },
+    {
+      "q": "Can the offer change after the walkthrough?",
+      "a": "It can. If the walkthrough shows something we didn't know about, like a roof leak or foundation movement, we explain any change in writing before anything is signed, and you can still say no."
+    },
+    {
+      "q": "Who handles the money?",
+      "a": "A licensed title company or closing attorney. They pay off what's owed on the property and pay you the rest. Your money never passes through us."
+    },
+    {
+      "q": "Do I need to clean out the house?",
+      "a": "No. Take what you want and leave the rest. We buy the house as it is."
+    },
+    {
+      "q": "What if I change my mind?",
+      "a": "Every offer is free and no-obligation, and you can say no at any point before you sign the written agreement. Once you sign, the agreement's terms apply, so read it carefully and ask questions first."
+    },
+    {
+      "q": "Can I sell if I live in another state?",
+      "a": "Yes. Someone you trust can let us in or walk us through the house on a video call, or you can send photos. Ask the closing agent about signing where you live, for example with a traveling notary."
+    }
+  ],
+  "related": [
+    "how-we-calculate-your-offer",
+    "faq",
+    "about"
+  ],
+  "article": false,
+  "last_reviewed": "2026-10-27",
+  "legal_note": true
+}

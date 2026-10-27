@@ -1,0 +1,102 @@
+{
+  "slug": "contact",
+  "nav_label": "Contact",
+  "title": "Contact Prime Acre Capital | Call, Text or Email",
+  "meta_description": "Call, text or email Prime Acre Capital, or send your address for a no-obligation cash offer. What to have handy and what happens after you reach out.",
+  "eyebrow": "Contact",
+  "h1": "Talk to us about your house",
+  "lede": "Call, text, email or use the chat. Or send the address with the form, and we'll call with a no-obligation cash offer, usually within 24 hours.",
+  "sections": [
+    {
+      "id": "ways-to-reach-us",
+      "heading": "Ways to reach us",
+      "blocks": [
+        {
+          "type": "component",
+          "name": "contact_card"
+        },
+        {
+          "type": "p",
+          "text": "The chat in the corner of every page can answer common questions and help you set up a call. It's an AI assistant, and a person from our company reviews every request it sends us."
+        }
+      ]
+    },
+    {
+      "id": "what-to-have-handy",
+      "heading": "What to have handy",
+      "blocks": [
+        {
+          "type": "p",
+          "text": "Only the address and a way to reach you are required. These help us give you a more precise number on the first call:"
+        },
+        {
+          "type": "ul",
+          "items": [
+            "The condition of the house and any repairs it needs",
+            "Whether it's empty, lived in, or rented to tenants",
+            "Roughly what's owed on it: mortgage, liens or back taxes",
+            "The date you'd like to be done by"
+          ]
+        },
+        {
+          "type": "p",
+          "text": "Please don't send Social Security, bank or loan account numbers. We never need them to make an offer."
+        }
+      ]
+    },
+    {
+      "id": "what-happens-next",
+      "heading": "What happens after you reach out",
+      "blocks": [
+        {
+          "type": "ol",
+          "items": [
+            "We look at the property, recent nearby sales and the repairs it likely needs.",
+            "We call with a cash offer, usually within 24 hours, and explain the numbers.",
+            "If you want to go ahead, we set up a short walkthrough in person or by video call, or you send a few photos.",
+            "You get a written agreement, and you choose the closing date."
+          ]
+        },
+        {
+          "type": "p",
+          "text": "There's no obligation at any point before you sign. If you want us to stop calling, texting or emailing, reply STOP to a text, tell us in the chat, or call or email, and we'll stop as soon as we can. [See every step in detail](how-it-works)."
+        }
+      ]
+    },
+    {
+      "id": "send-the-address",
+      "heading": "Send the address",
+      "blocks": [
+        {
+          "type": "component",
+          "name": "quick_form"
+        }
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "q": "How soon will I hear back?",
+      "a": "We usually call with an offer within 24 hours of getting the address. If you'd like a specific time, say so in the form or the chat."
+    },
+    {
+      "q": "Do I have to agree to text messages?",
+      "a": "No. Texting is optional. Check the box only if you want texts. We'll still reach you by phone or email."
+    },
+    {
+      "q": "Will you sell my information?",
+      "a": "No. We don't sell your personal information. Our [privacy policy](privacy) explains what we collect and who we share it with."
+    },
+    {
+      "q": "Can I just ask a question without getting an offer?",
+      "a": "Yes. Call, text, email or use the chat. There's no obligation to sell."
+    }
+  ],
+  "related": [
+    "how-it-works",
+    "faq",
+    "about"
+  ],
+  "article": false,
+  "last_reviewed": "2026-10-27"
+}

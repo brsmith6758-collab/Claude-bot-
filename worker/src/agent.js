@@ -451,7 +451,7 @@ async function runTool(name, input, ctx) {
         time_confirmed: confirmed,
         call_length_minutes: cfg.slotMinutes,
         what_next: confirmed
-          ? "The team reviews the property before the call; a written cash offer typically follows within 24 hours of the review."
+          ? "The team reviews the property before the call and goes over a no-obligation cash offer with the seller, usually within 24 hours of the review. A short walkthrough and a written purchase agreement follow only if the seller wants to go ahead."
           : "The time is requested but could not be locked in, so the team will confirm it with the seller by phone. Tell the seller exactly that; don't call it confirmed.",
       }
       : { saved: true, what_next: `The team will ${lead.phone ? "reach out" : "follow up by email"} during business hours (${biz.hoursLabel}).` };

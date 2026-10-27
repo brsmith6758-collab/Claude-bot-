@@ -63,7 +63,7 @@ T = {
         "nav": [("How it works", "#how"), ("Where we buy", "#markets"), ("FAQ", "#faq"), ("Contact", "#about")],
         "cta": "Get My Cash Offer", "cta_arrow": "Get My Cash Offer →",
         "skip": "Skip to the cash offer form",
-        "card_title": "Get Your Fair Cash Offer",
+        "card_title": "Get Your Cash Offer",
         "card_sub": "Start below. It takes about 30 seconds and there's no obligation.",
         "f_address": "Property address", "f_phone": "Phone", "f_email": "Email", "optional": "(optional)",
         "fine": "No obligation. We never sell your information.",
@@ -73,12 +73,12 @@ T = {
         "done_h": "You're all set!",
         "done_p": "We're looking at the property now. Expect a call%s, usually within 24 hours, to talk through your cash offer. Save the number so you don't miss us.",
         "done_more": "Add details to speed up my offer", "done_alt": "Or call or text",
-        "bullets": ["A no-obligation cash offer, usually within 24 hours", "No fees, no commissions, no closing costs", "Close in as little as 7 days, or on your date"],
+        "bullets": ["A no-obligation cash offer, usually within 24 hours", "No fees or commissions; we pay standard closing costs", "Close in as little as 7 days, or on your date"],
         "talk": "Prefer to talk? Call or text",
         "trust": [("clock", "Offer in about 24 hours", "With the math behind it, explained"),
-                  ("dollar", "$0 fees or commissions", "We pay the closing costs too"),
+                  ("dollar", "$0 fees or commissions", "We pay standard closing costs"),
                   ("calendar", "Close in as little as 7 days", "Or pick any date that suits you"),
-                  ("house", "Any condition", "Repairs, tenants, liens: we handle it")],
+                  ("house", "Any condition", "Even with repairs, tenants or liens")],
         "foot_where": "Where we buy", "foot_cities": "Cities we buy in", "foot_company": "Company",
         "foot_blurb": "%s buys houses directly from owners in Arizona, Florida, Tennessee and North Carolina, and looks at properties anywhere in the US. Cash offers, no fees, closing on your schedule.",
         "foot_links": [("How it works", "index.html#how"), ("Contact us", "index.html#about"), ("Questions", "index.html#faq"), ("Get a cash offer", "#offer"), ("Privacy policy", "privacy.html")],
@@ -92,7 +92,7 @@ T = {
         "nav": [("Cómo funciona", "#how"), ("Dónde compramos", "#markets"), ("Preguntas", "#faq"), ("Contacto", "#about")],
         "cta": "Recibir mi oferta", "cta_arrow": "Recibir mi oferta →",
         "skip": "Ir al formulario de oferta",
-        "card_title": "Reciba su oferta justa en efectivo",
+        "card_title": "Reciba su oferta en efectivo",
         "card_sub": "Empiece abajo. Toma unos 30 segundos y no hay ningún compromiso.",
         "f_address": "Dirección de la propiedad", "f_phone": "Teléfono", "f_email": "Correo electrónico", "optional": "(opcional)",
         "fine": "Sin compromiso. Nunca vendemos su información.",
@@ -102,12 +102,12 @@ T = {
         "done_h": "¡Listo!",
         "done_p": "Ya estamos revisando la propiedad. Espere una llamada%s, normalmente en menos de 24 horas, para hablar de su oferta en efectivo. Guarde el número para no perder nuestra llamada.",
         "done_more": "", "done_alt": "O llame o envíe un texto al",
-        "bullets": ["Una oferta en efectivo sin compromiso, normalmente en 24 horas", "Sin comisiones ni gastos de cierre", "Cierre en tan solo 7 días, o en la fecha que usted elija"],
+        "bullets": ["Una oferta en efectivo sin compromiso, normalmente en 24 horas", "Sin comisiones ni cargos; pagamos los gastos de cierre habituales", "Cierre en tan solo 7 días, o en la fecha que usted elija"],
         "talk": "¿Prefiere hablar? Llame o envíe un texto al",
         "trust": [("clock", "Oferta en unas 24 horas", "Con los números detrás, explicados"),
-                  ("dollar", "$0 en comisiones", "También pagamos los gastos de cierre"),
+                  ("dollar", "$0 en comisiones", "Pagamos los gastos de cierre habituales"),
                   ("calendar", "Cierre en 7 días", "O en la fecha que mejor le convenga"),
-                  ("house", "Cualquier condición", "Reparaciones, inquilinos, gravámenes: nos encargamos")],
+                  ("house", "Cualquier condición", "Aunque necesite reparaciones o tenga inquilinos o gravámenes")],
         "foot_where": "Dónde compramos", "foot_cities": "Ciudades donde compramos", "foot_company": "Empresa",
         "foot_blurb": "%s compra casas directamente a sus dueños en Arizona, Florida, Tennessee y Carolina del Norte, y revisa propiedades en cualquier parte del país. Ofertas en efectivo, sin comisiones, con cierre en su fecha.",
         "foot_links": [("Cómo funciona", "es.html#how"), ("Contacto", "es.html#about"), ("Preguntas", "es.html#faq"), ("Recibir una oferta", "#offer"), ("Política de privacidad", "privacidad.html")],
@@ -453,7 +453,7 @@ def email_link(cls=""):
 # ---------------------------------------------------------------- partials
 
 
-def head(title, desc, path, jsonld, lang="en"):
+def head(title, desc, path, jsonld, lang="en", robots=""):
     url = SITE_URL + ("" if path == "index.html" else path)
     alternates = ""
     if path in ("index.html", "es.html"):
@@ -467,7 +467,7 @@ def head(title, desc, path, jsonld, lang="en"):
 <title>%(title)s</title>
 <meta name="description" content="%(desc)s">
 <link rel="canonical" href="%(url)s">
-%(alternates)s<meta property="og:type" content="website">
+%(robots)s%(alternates)s<meta property="og:type" content="website">
 <meta property="og:site_name" content="%(brand)s">
 <meta property="og:title" content="%(title)s">
 <meta property="og:description" content="%(desc)s">
@@ -488,7 +488,8 @@ def head(title, desc, path, jsonld, lang="en"):
 <body>
 """ % dict(title=esc(title), desc=esc(desc), url=esc(url), brand=esc(BRAND), favicon=IMG["favicon"], touch=IMG["touch"],
            preload="".join('<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>\n' % f for f in FONT_PRELOAD),
-           og=esc(SITE_URL + IMG["og"]), tagline=esc(TAGLINE), jsonld=json.dumps(jsonld, ensure_ascii=False), lang=lang, alternates=alternates)
+           og=esc(SITE_URL + IMG["og"]), tagline=esc(TAGLINE), jsonld=json.dumps(jsonld, ensure_ascii=False), lang=lang, alternates=alternates,
+           robots=('<meta name="robots" content="%s">\n' % esc(robots)) if robots else "")
 
 
 def topbar(lang="en"):
@@ -783,7 +784,7 @@ def contact_lines(lang="en"):
             PHONE_TEL, icon("phone"), esc(PHONE), "Llame o envíe un texto" if lang == "es" else "Call or text")
     if EMAIL:
         lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>%s</small></span></a>' % (
-            esc(EMAIL), icon("mail"), esc(EMAIL), "Respondemos en menos de 24 horas" if lang == "es" else "We reply within 24 hours")
+            esc(EMAIL), icon("mail"), esc(EMAIL), "Normalmente respondemos en menos de 24 horas" if lang == "es" else "We usually reply within 24 hours")
     if REVIEWS_URL:
         lines += '<a href="%s" target="_blank" rel="noopener">%s<span>%s<small>Google</small></span></a>' % (esc(REVIEWS_URL), icon("star"), esc(T[lang]["reviews"]))
     return lines
@@ -813,7 +814,7 @@ def compare():
         ("Price", "Below a retail listing price", "Usually higher, after repairs and prep"),
         ("Commissions and fees", "$0", "Commonly 5–6% combined, and negotiable"),
         ("Repairs", "None. We buy as-is.", "Often requested after inspection"),
-        ("Closing costs", "We pay them", "Seller typically pays a share"),
+        ("Closing costs", "We pay standard closing costs", "Seller typically pays a share"),
         ("Showings and open houses", "None", "Weeks of showings and cleaning"),
         ("Time to close", "As little as 7 days, or your date", "Often 2–4 months from listing to closing"),
         ("Certainty", "Cash, no financing contingency", "A sale can fall through if the buyer's loan fails"),
@@ -918,13 +919,13 @@ FAQ_ITEMS = [
     ("How do I know this is legitimate?",
      "Fair question. You never pay us anything, and your money never passes through us: every closing runs through a licensed title company or closing attorney who holds the funds and records the sale. You can have your own attorney review the contract, and you can walk away at any point before signing."),
     ("Will you lowball me?",
-     "A cash offer will be lower than what a fully repaired house could sell for on the open market, because we take on the repairs, the holding costs and the risk of reselling. What we promise is that it's built from real numbers we show you: recent nearby sales, the repairs we'll take on, and our costs. If the number doesn't work for you, you've lost a minute and gained a free second opinion on what your house is worth as-is."),
+     "A cash offer will be lower than what a fully repaired house could sell for on the open market, because we take on the repairs, the holding costs and the risk of reselling. What you can expect is a number built from figures we show you: recent nearby sales, the repairs we'd take on, and our costs. If it doesn't work for you, you've spent a few minutes and have a cash number to compare with your other options."),
     ("How do you decide what to offer?",
      "We look at what similar homes nearby have sold for after repairs, subtract what it will cost to repair, hold and resell the property, and leave room for our margin. We walk you through the numbers, so you know how we got there."),
     ("Are there any fees?",
      "No. No commissions and no service fees, and we pay standard closing costs. What you receive at closing is the agreed price minus anything owed on the property, such as a mortgage payoff, liens, and your share of property taxes and HOA dues up to the closing date."),
     ("What condition does the house need to be in?",
-     "Any. We buy houses with fire or water damage, bad roofs, foundation issues, mold, hoarding situations and unfinished renovations. Leave behind anything you don't want to move."),
+     "Any. We buy houses with fire or water damage, bad roofs, foundation issues, mold, unfinished renovations and houses packed with belongings. Leave behind anything you don't want to move."),
     ("How fast can you close?",
      "As little as 7 days once title is clear. If you need longer, choose the date that works for you. We close through a licensed title company or closing attorney, and you get paid at closing."),
     ("Do I have to accept the offer?",
@@ -981,7 +982,7 @@ def offer_form(default_state="", default_city="", reason=""):
     """The full offer form, like the top sites: (1) the address, (2) contact details, which sends the request,
     (3) optional property details that are added to the same request."""
     bullets = [
-        "No fees, commissions or closing costs",
+        "No fees or commissions; we pay standard closing costs",
         "As-is purchase. Leave behind what you don't want.",
         "Close in as little as 7 days, or pick a later date",
         "Mortgage, liens or back taxes? Paid from the sale at closing.",
@@ -1140,7 +1141,7 @@ def offer_form(default_state="", default_city="", reason=""):
       <div class="thanks" data-result="fallback" hidden tabindex="-1" role="status">
         %(okmark)s
         <h3>Almost there. Send us these details.</h3>
-        <p>We couldn't deliver this automatically from this page. Copy your request and text or email it to us, and we'll reply within 24 hours.</p>
+        <p>We couldn't deliver this automatically from this page. Copy your request and text or email it to us. We usually reply within 24 hours.</p>
         <div class="summary"></div>
         <button type="button" class="btn btn-outline" data-copy>Copy my request</button>
         <div class="lines">%(fallback_lines)s</div>
@@ -1508,7 +1509,7 @@ def related_cards(slugs):
 
 def sources_block(sources, reviewed, legal):
     if not sources and not reviewed:
-        return ""
+        return ('<p class="page-note">%s</p>' % esc(LEGAL_NOTE)) if legal else ""
     lis = "".join('<li><a href="%s" target="_blank" rel="noopener">%s</a></li>' % (esc(s["url"]), esc(s["name"])) for s in sources or [])
     out = '<section class="sources" aria-labelledby="sources-h"><h2 id="sources-h">Sources</h2>'
     if lis:
@@ -1552,13 +1553,16 @@ def content_page(slug):
         parts.append('<section class="prose" id="%s" aria-labelledby="%s-h"><h2 id="%s-h">%s</h2>\n%s\n</section>' % (
             sec["id"], sec["id"], sec["id"], rich(sec["heading"]), render_blocks(sec.get("blocks", []), d, ctx)))
         toc.append((sec["id"], plain(sec["heading"])))
+        if any(b.get("type") == "component" and b.get("name") == "faq_list" for b in sec.get("blocks", [])):
+            # A grouped FAQ list gets one "On this page" entry per group, pointing at the group headings.
+            toc += [(slugify(g), g) for g in dict.fromkeys(f.get("group") for f in d.get("faqs") or []) if g]
     faqs = d.get("faqs") or []
     if faqs and not ctx.faq_done:
         parts.append('<section class="prose" id="questions" aria-labelledby="questions-h"><h2 id="questions-h">Questions</h2>\n%s\n</section>'
                      % faq_details(faqs, grouped=True))
         toc.append(("questions", "Questions"))
     parts.append(related_cards(d.get("related")))
-    parts.append(sources_block(d.get("sources"), d.get("last_reviewed") if d.get("article") else "", d.get("article")))
+    parts.append(sources_block(d.get("sources"), d.get("last_reviewed") if d.get("article") else "", d.get("article") or d.get("legal_note")))
     nodes = [org_jsonld(), crumbs_jsonld(trail, url)]
     if faqs:
         nodes.append(faq_jsonld_items(faqs))
@@ -1573,7 +1577,7 @@ def content_page(slug):
 def page_index():
     title = "Sell Your House Fast for Cash | We Buy Houses in AZ, FL, TN, NC | Prime Acre Capital"
     desc = ("Prime Acre Capital LLC buys houses as-is for cash in Arizona, Florida, Tennessee, North Carolina and nationwide. "
-            "No fees, no repairs, no agents. Get a fair cash offer within 24 hours and close in as little as 7 days. Call or text %s." % PHONE).strip()
+            "No fees, no repairs, no agents. A cash offer usually within 24 hours, and close in as little as 7 days. Call or text %s." % PHONE).strip()
     h1 = 'Sell Your House Fast for Cash. <span class="hl">Any Condition. Any Situation.</span>'
     lede = ("We buy houses as-is in Arizona, Florida, Tennessee, North Carolina and nationwide. No repairs, no showings, "
             "no agent fees, and no waiting on a buyer's bank.")
@@ -1631,7 +1635,7 @@ def cities_section(m, current=None):
 def page_state_basic(m):
     title = "Sell My House Fast in %s | We Buy Houses for Cash | %s" % (m["name"], BRAND)
     desc = ("Sell your %s house fast for cash. %s buys houses as-is in %s and across %s. "
-            "No fees, no repairs, no obligation. Cash offer within 24 hours. Call or text %s." % (m["name"], LEGAL_NAME, ", ".join(m["cities"][:4]), m["name"], PHONE)).strip()
+            "No fees, no repairs, no obligation. Cash offer usually within 24 hours. Call or text %s." % (m["name"], LEGAL_NAME, ", ".join(m["cities"][:4]), m["name"], PHONE)).strip()
     extra = [("Do you buy everywhere in %s?" % m["name"],
               "Yes. We buy in %s and the surrounding counties, and in smaller towns across the state. "
               "Send any address and we'll tell you plainly whether we can make an offer." % ", ".join(m["cities"][:5]))]
@@ -1639,7 +1643,7 @@ def page_state_basic(m):
                                                 SITE_URL + m["slug"] + ".html"), faq_jsonld(extra))
     h1 = 'Sell Your %s House <span class="hl">Fast for Cash</span>' % esc(m["name"])
     body = (hero("We buy houses in %s" % m["name"], h1, esc(m["lede"]), state=m["abbr"]) + trust_strip()
-            + why_section("Why %s homeowners sell to us" % m["name"],
+            + why_section("Common reasons to sell as-is in %s" % m["name"],
                           "Every market has its own reasons a house gets hard to sell the traditional way. These come up often in %s." % m["name"],
                           m["points"])
             + how() + situations() + about() + promise() + cities_section(m) + testimonials()
@@ -1652,19 +1656,21 @@ def page_city_basic(c):
     name = "%s, %s" % (c["city"], c["st"])
     title = "Sell My House Fast in %s | We Buy Houses %s | %s" % (name, c["city"], BRAND)
     desc = ("We buy houses in %s for cash. %s buys as-is in %s and across %s County. No fees, no repairs, no agents. "
-            "Get a fair cash offer within 24 hours. Call or text %s." % (name, LEGAL_NAME, ", ".join(c["areas"][:3]), c["county"], PHONE)).strip()
+            "A cash offer usually within 24 hours. Call or text %s." % (name, LEGAL_NAME, ", ".join(c["areas"][:3]), c["county"], PHONE)).strip()
     extra = [("Do you buy houses everywhere in %s?" % c["city"],
               "Yes. We buy in %s, and throughout %s County. Condos, single-family homes, duplexes, mobile homes with land and vacant lots all qualify." % (", ".join(c["areas"]), c["county"]))]
     jsonld = graph(org_jsonld(), service_jsonld("Sell your house for cash in %s" % name, {"@type": "City", "name": c["city"], "containedInPlace": {"@type": "State", "name": m["name"]}},
                                                 SITE_URL + c["file"]), faq_jsonld(extra))
     h1 = 'Sell Your House Fast in <span class="hl">%s</span>' % esc(name)
     body = (hero("We buy houses in %s" % name, h1, esc(c["intro"]), state=c["st"], city=c["city"]) + trust_strip()
-            + why_section("Why %s homeowners sell to us" % c["city"],
-                          "We buy in %s and every neighborhood between. These situations come up often around %s." % (", ".join(c["areas"]), c["city"]),
+            + why_section("Common reasons to sell as-is in %s" % c["city"],
+                          "We buy in %s and across %s County. These are common reasons owners choose a cash sale." % (", ".join(c["areas"]), c["county"]),
                           m["points"])
             + how() + situations() + about() + promise() + cities_section(m, c["city"]) + testimonials()
             + faq(extra) + offer_form(c["st"], c["city"]) + footer())
-    return head(title, desc, c["file"], jsonld) + header() + body + scripts()
+    # Near-duplicate of the other city pages until its researched content exists, so keep it out of search
+    # results (Google treats swapped-city-name pages as doorways). Visitors and links still work.
+    return head(title, desc, c["file"], jsonld, robots="noindex, follow") + header() + body + scripts()
 
 
 def state_overview(m, law):
@@ -1912,7 +1918,7 @@ def page_es():
         ("Precio", "Menor que el de una venta tradicional", "Normalmente más alto, después de reparaciones"),
         ("Comisiones y cargos", "$0", "Comúnmente 5–6% en total, y negociable"),
         ("Reparaciones", "Ninguna. Compramos tal como está.", "Generalmente requeridas después de la inspección"),
-        ("Gastos de cierre", "Los pagamos nosotros", "El vendedor normalmente paga una parte"),
+        ("Gastos de cierre", "Pagamos los gastos de cierre habituales", "El vendedor normalmente paga una parte"),
         ("Visitas y casas abiertas", "Ninguna", "Semanas de visitas y limpieza"),
         ("Tiempo para cerrar", "En tan solo 7 días, o en su fecha", "A menudo 2 a 4 meses desde que se pone en venta"),
         ("Certeza", "Efectivo, sin contingencia de financiamiento", "Las ventas se caen cuando el préstamo falla"),
@@ -1930,9 +1936,9 @@ def page_es():
     plis = "".join("<li>%s<div><b>%s</b><span>%s</span></div></li>" % (icon("check"), esc(a), esc(b)) for a, b in promises)
     faqs = [
         ("¿Cómo sé que esto es legítimo?", "Buena pregunta. Usted nunca nos paga nada y su dinero nunca pasa por nosotros: cada cierre se hace a través de una compañía de títulos o un abogado de cierre con licencia, que guarda los fondos y registra la venta. Puede pedirle a su propio abogado que revise el contrato, y puede retirarse en cualquier momento antes de firmar."),
-        ("¿Me van a ofrecer muy poco?", "Una oferta en efectivo es menor que lo que podría venderse una casa ya reparada, porque nosotros asumimos las reparaciones, los costos de mantenerla y el riesgo de revenderla. Lo que prometemos es que la oferta se basa en números reales que le mostramos: ventas recientes cercanas, las reparaciones que asumiremos y nuestros costos. Si el número no le funciona, perdió un minuto y ganó una segunda opinión gratis sobre lo que vale su casa tal como está."),
+        ("¿Me van a ofrecer muy poco?", "Una oferta en efectivo es menor que lo que podría venderse una casa ya reparada, porque nosotros asumimos las reparaciones, los costos de mantenerla y el riesgo de revenderla. Lo que puede esperar es un número basado en cifras que le mostramos: ventas recientes cercanas, las reparaciones que asumiríamos y nuestros costos. Si no le funciona, habrá invertido unos minutos y tendrá una cifra en efectivo para comparar con sus otras opciones."),
         ("¿Hay algún cargo?", "No. Sin comisiones ni cargos por servicio, y nosotros pagamos los gastos de cierre habituales. Lo que recibe al cierre es el precio acordado menos lo que deba sobre la propiedad, como la hipoteca, gravámenes y su parte de los impuestos y cuotas de la HOA hasta la fecha de cierre."),
-        ("¿En qué condición tiene que estar la casa?", "En cualquiera. Compramos casas con daños por fuego o agua, techos en mal estado, problemas de cimientos, moho, acumulación de objetos y remodelaciones sin terminar. Deje todo lo que no quiera llevarse."),
+        ("¿En qué condición tiene que estar la casa?", "En cualquiera. Compramos casas con daños por fuego o agua, techos en mal estado, problemas de cimientos, moho, remodelaciones sin terminar y casas llenas de pertenencias. Deje todo lo que no quiera llevarse."),
         ("¿Qué tan rápido pueden cerrar?", "En tan solo 7 días una vez que el título esté limpio. Si necesita más tiempo, elija la fecha que le convenga. Cerramos a través de una compañía de títulos o un abogado con licencia, y usted recibe su dinero al cierre."),
         ("Todavía tengo hipoteca. ¿Pueden comprar de todos modos?", "Sí. Cuando el precio de venta la cubre, la hipoteca, junto con cualquier gravamen o impuesto atrasado, se paga con el dinero de la venta al cierre. Si debe casi lo mismo o más de lo que vale la casa, revisaremos los números con usted honestamente: el prestamista puede tener que aprobar la venta, y un consejero de vivienda aprobado por HUD (800-569-4287) puede ayudarle gratis."),
         ("¿Tengo que aceptar la oferta?", "No. Cada oferta es gratis y sin compromiso. Si poner la casa en venta con un agente probablemente le daría más, se lo diremos. Y si la visita a la casa muestra algo que no sabíamos, le explicamos cualquier cambio por escrito antes de firmar nada, y aún puede decir que no."),
@@ -1951,7 +1957,7 @@ def page_es():
     if PHONE:
         contact_lines += '<a href="tel:%s">%s<span><span data-phone>%s</span><small>Llame o envíe un texto. Las llamadas pueden ser en inglés; nuestro chat responde en español.</small></span></a>' % (PHONE_TEL, icon("phone"), esc(PHONE))
     if EMAIL:
-        contact_lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>Respondemos en menos de 24 horas</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
+        contact_lines += '<a href="mailto:%s">%s<span><span data-email>%s</span><small>Normalmente respondemos en menos de 24 horas</small></span></a>' % (esc(EMAIL), icon("mail"), esc(EMAIL))
     body = hero("Compradores directos · Sin comisiones", h1, esc(lede), lang="es") + trust_strip("es") + """
 <section class="section" id="how">
   <div class="wrap">
@@ -2022,7 +2028,7 @@ def page_es():
       <span class="eyebrow">Reciba su oferta en efectivo</span>
       <h2>Cuéntenos sobre la propiedad. Nosotros hacemos el resto.</h2>
       <p class="lede">Toma un minuto. Revisamos cada propiedad nosotros mismos y le llamamos con una oferta en efectivo sin compromiso, normalmente en 24 horas.</p>
-      <ul><li>%(check)s<span>Sin comisiones, cargos ni gastos de cierre</span></li><li>%(check)s<span>Compramos tal como está. Deje lo que no quiera.</span></li><li>%(check)s<span>Cierre en tan solo 7 días, o elija una fecha posterior</span></li><li>%(check)s<span>¿Hipoteca, gravámenes o impuestos atrasados? Se pagan al cierre.</span></li></ul>
+      <ul><li>%(check)s<span>Sin comisiones ni cargos; pagamos los gastos de cierre habituales</span></li><li>%(check)s<span>Compramos tal como está. Deje lo que no quiera.</span></li><li>%(check)s<span>Cierre en tan solo 7 días, o elija una fecha posterior</span></li><li>%(check)s<span>¿Hipoteca, gravámenes o impuestos atrasados? Se pagan al cierre.</span></li></ul>
       %(talk)s
     </div>
     %(card2)s
@@ -2034,7 +2040,7 @@ def page_es():
            card2=lead_card(lang="es", card_id="lead-card-2", details=False))
     title = "Compramos Casas por Efectivo en Arizona, Florida, Tennessee y Carolina del Norte | Prime Acre Capital"
     desc = ("Venda su casa rápido por efectivo. Prime Acre Capital LLC compra casas tal como están en Arizona, Florida, Tennessee, "
-            "Carolina del Norte y en todo el país. Sin comisiones, sin reparaciones, sin compromiso. Oferta en 24 horas. Llame o envíe un texto al %s." % PHONE).strip()
+            "Carolina del Norte y en todo el país. Sin comisiones, sin reparaciones, sin compromiso. Oferta normalmente en 24 horas. Llame o envíe un texto al %s." % PHONE).strip()
     jsonld = graph(org_jsonld(), {"@type": "FAQPage", "inLanguage": "es",
                                    "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faqs]})
     return head(title, desc, "es.html", jsonld, lang="es") + header("es", same_page=True, current="es.html") + body + footer("es") + scripts()
@@ -2281,7 +2287,7 @@ def main():
         if name.endswith(".html") and name not in pages:
             os.remove(os.path.join(SITE, name))
             print("removed stale page %s" % name)
-    public = [p for p in pages if p not in ("privacy.html", "privacidad.html")]
+    public = [p for p, html_ in pages.items() if p not in ("privacy.html", "privacidad.html") and 'name="robots" content="noindex' not in html_]
     with open(os.path.join(SITE, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(sitemap(public, lastmod_dates(pages)))
     with open(os.path.join(SITE, "robots.txt"), "w", encoding="utf-8") as f:

@@ -765,3 +765,4 @@ details.sources ol { margin-top: 0.8rem; }
 /* gold buttons on light backgrounds get a fine dark-gold edge so they read as buttons */
 .section:not(.offer) .btn-cta, .lead-card .btn-cta, .article .btn-cta, .form .btn-cta { box-shadow: 0 6px 18px rgba(179, 138, 59, 0.28), inset 0 0 0 1.5px rgba(122, 92, 20, 0.6), inset 0 1px 0 rgba(255, 246, 214, 0.55); }
 .aside-cta .btn-cta, .market-wide .btn-cta { box-shadow: 0 6px 18px rgba(179, 138, 59, 0.32), inset 0 1px 0 rgba(255, 246, 214, 0.55); }
+.page-note { margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--ink-2); }
