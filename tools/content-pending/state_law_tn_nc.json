@@ -1,0 +1,406 @@
+{
+  "TN": {
+    "name": "Tennessee",
+    "last_verified": "2026-10-27",
+    "intro": [
+      "Selling a house in Tennessee comes with a few state rules worth knowing. Your sale closes through a licensed title agency or a real estate attorney, and the deed is recorded with the Register of Deeds in the county where the house sits. Tennessee's realty transfer tax is 37 cents per $100 of the price or the property's value, whichever is greater, and state law puts it on the buyer.",
+      "If you're behind on payments, a deed of trust usually lets a trustee sell the house without a court case. The first newspaper notice can run as little as 20 days before the auction. If you inherited the house, title generally passes at death to the heirs or the people named in the will, though the estate's personal representative may still have a role. Sellers must disclose known sinkholes, which form where limestone or dolostone dissolves underground. Humid summers and heavy rain wear on roofs, crawl spaces and HVAC systems, and we buy with those problems as they are. If your house is in good shape and you have time to list it, an agent will likely net you more than a cash sale."
+    ],
+    "topics": {
+      "foreclosure": {
+        "summary": "A Tennessee foreclosure under a deed of trust is usually a trustee sale with no court case, and the first newspaper notice can run as little as 20 days before the auction. We buy houses and don't negotiate with lenders or arrange loan modifications or short sales, so call your servicer and a free HUD-approved housing counselor (800-569-4287) early about your other options.",
+        "facts": [
+          {
+            "text": "A Tennessee deed of trust usually includes a power of sale, which lets a trustee sell the house at a public auction without filing a lawsuit. The state Court of Appeals has rejected arguments that this non-judicial process violates the Tennessee Constitution.",
+            "source_name": "CitiMortgage, Inc. v. Drake (Tenn. Ct. App. 2013)",
+            "source_url": "https://www.tncourts.gov/sites/default/files/citimortgagedrake.pdf"
+          },
+          {
+            "text": "Starting July 1, 2025, Tennessee law generally requires a foreclosure sale to be advertised at least twice in a newspaper in the county, with the first notice at least 20 days before the sale. The notice must also be posted online for at least 20 continuous days by an internet posting company registered with the Secretary of State. Your deed of trust may require more notice than the statute does.",
+            "source_name": "Tenn. Code Ann. § 35-5-101 (2025 amendment); Tennessee Secretary of State",
+            "source_url": "https://sos.tn.gov/publications/services/third-party-internet-posting-company-website-address-form"
+          },
+          {
+            "text": "Tennessee law gives a right to redeem (buy back) land for up to two years after some forced sales, but a deed of trust can waive it. A waiver of the \"equity of redemption\" is enough, and standard Tennessee deeds of trust usually include one, so check yours.",
+            "source_name": "Tenn. Code Ann. § 66-8-101; State ex rel. Slatery v. HRC Medical Centers (Tenn. Ct. App. 2022)",
+            "source_url": "https://tncourts.gov/sites/default/files/hrc.medical.centers.opn_.pdf"
+          },
+          {
+            "text": "If the sale brings in less than you owe, the lender can generally sue for the difference (a deficiency). The law presumes the sale price matched the property's value, but you can try to prove the price was materially less than what the property was worth when it sold.",
+            "source_name": "Tenn. Code Ann. § 35-5-118; Greenbank v. Sterling Ventures (Tenn. Ct. App. 2012)",
+            "source_url": "https://tncourts.gov/sites/default/files/greenbank_opn.pdf"
+          }
+        ]
+      },
+      "probate": {
+        "summary": "Tennessee real estate generally passes at death to the heirs or the people named in the will, but the estate's personal representative and creditors can still have a claim on it for a time. Who signs the deed depends on the will and any court orders.",
+        "facts": [
+          {
+            "text": "If someone dies without a will, Tennessee real estate passes to the heirs at the moment of death. With a will, it passes directly to the people named in it unless the will puts the property under the personal representative's control. Either way, the personal representative can use the property to pay estate debts if the other assets fall short.",
+            "source_name": "Tenn. Code Ann. § 31-2-103; In re Estate of Schubert (Tenn. Ct. App. 2020)",
+            "source_url": "https://www.tncourts.gov/sites/default/files/in_re_estate_of_martha_schubert_e2019-02069.pdf"
+          },
+          {
+            "text": "Tennessee's small-estate process is limited to estates with no more than $50,000 in personal property, can't be used for real estate, and generally can't be filed until 45 days after the death.",
+            "source_name": "Tenn. Code Ann. § 30-4-101 et seq.; Sevier County Clerk, Probate",
+            "source_url": "https://seviercountytn.gov/government/county_officials/sevier_county_clerk/probate.php"
+          },
+          {
+            "text": "Creditors who receive notice generally have four months from the first publication of the estate's notice to creditors to file claims, and claims are generally barred 12 months after the date of death.",
+            "source_name": "Tenn. Code Ann. §§ 30-2-307 and 30-2-310, as quoted by the Tennessee Court of Appeals",
+            "source_url": "https://www.tncourts.gov/sites/default/files/OPINIONS/TCA/PDF/001/divinnyjac.pdf"
+          }
+        ]
+      },
+      "closing": {
+        "summary": "When you sell to us in Tennessee, a licensed title agency or a real estate attorney handles the closing, pays off what you owe from the sale proceeds and pays you the rest. The deed is then recorded with your county's Register of Deeds.",
+        "facts": [
+          {
+            "text": "A title insurance agency can't operate in Tennessee without a certificate of authority from the state Commissioner of Commerce and Insurance.",
+            "source_name": "Tennessee Department of Commerce & Insurance, title agency licensing packet",
+            "source_url": "https://www.tn.gov/content/dam/tn/commerce/documents/insurance/agent-licensing/TitleAgencyLicensingPkt_20260406.pdf"
+          },
+          {
+            "text": "After closing, the deed is recorded with the Register of Deeds in the county where the property sits. Unless an exemption applies, the transfer needs an oath of consideration: a sworn statement of the price or the property's value, whichever is greater.",
+            "source_name": "Metro Nashville-Davidson County Register of Deeds, recording services",
+            "source_url": "https://nashville.gov/departments/register-deeds/recording-services"
+          }
+        ]
+      },
+      "transfer_tax": {
+        "summary": "Tennessee charges a realty transfer tax of 37 cents per $100 when a deed is recorded, and state law puts it on the buyer.",
+        "facts": [
+          {
+            "text": "The realty transfer tax is 37 cents per $100, figured on the sale price or the property's value, whichever is greater. On a $200,000 sale, that comes to $740.",
+            "source_name": "Tenn. Code Ann. § 67-4-409(a); Tennessee Department of Revenue, REC-1",
+            "source_url": "https://revenue.support.tn.gov/hc/en-us/articles/360057241552-REC-1-Recordation-Tax-Overview"
+          },
+          {
+            "text": "State law makes the grantee, meaning the buyer, responsible for paying the tax.",
+            "source_name": "University of Tennessee County Technical Assistance Service, Transfer Tax",
+            "source_url": "https://www.ctas.tennessee.edu/eli/transfer-tax"
+          },
+          {
+            "text": "The Register of Deeds collects the tax and must receive it before the deed is recorded.",
+            "source_name": "University of Tennessee County Technical Assistance Service, Payment of Transfer or Mortgage Tax",
+            "source_url": "https://ctas.tennessee.edu/node/785/printable/print"
+          },
+          {
+            "text": "A transfer of real estate under a will is exempt from the transfer tax. When the heirs later sell the house to a buyer, that sale is taxed in the usual way.",
+            "source_name": "Tenn. Code Ann. § 67-4-409(a)(3)(D); Tennessee Department of Revenue, REC-15",
+            "source_url": "https://revenue.support.tn.gov/hc/en-us/articles/360057246652-REC-15-Realty-Transfer-Pursuant-to-Testamentary-Devise-Exempt-from-Transfer-Tax"
+          }
+        ]
+      },
+      "tenants": {
+        "summary": "Selling a rented house generally doesn't end the lease, and the buyer takes over as landlord. Which tenant rules apply depends on your county.",
+        "facts": [
+          {
+            "text": "Tennessee's Uniform Residential Landlord and Tenant Act applies only in counties with more than 75,000 people, which include Davidson, Shelby, Knox and Hamilton. Rentals in smaller counties follow the lease and other state law.",
+            "source_name": "Tenn. Code Ann. § 66-28-102",
+            "source_url": "https://law.justia.com/codes/tennessee/title-66/chapter-28/part-1/section-66-28-102"
+          },
+          {
+            "text": "Removing a tenant generally takes a court case. Tennessee eviction cases use a detainer warrant under Title 29, Chapter 18 of the state code, and the warrant has to be served on the tenant in one of the ways the law allows.",
+            "source_name": "Tennessee courts, residential eviction presentation (Tenn. Code Ann. Title 29, Ch. 18)",
+            "source_url": "https://tncourts.gov/sites/default/files/docs/landlordtenant_-_presentation_0.pdf"
+          }
+        ]
+      },
+      "property_tax": {
+        "summary": "Unpaid property taxes generally stay with the house until they're paid. When the sale price covers them, they're paid from your proceeds at closing.",
+        "facts": [
+          {
+            "text": "Tennessee registers of deeds generally require a deed to list the name and address of the person who will receive the property tax bills, along with the parcel's map and parcel number.",
+            "source_name": "McMinn County Register of Deeds, recording requirements",
+            "source_url": "https://mcminncountytn.gov/new_website/requirements_2_register_docs.pdf"
+          }
+        ]
+      },
+      "divorce": {
+        "summary": "If both spouses are on the deed, both generally need to sign to sell the house, and a divorce court can decide what happens to marital property. Talk to your divorce attorney before you sign a purchase agreement.",
+        "facts": [
+          {
+            "text": "A deed from one spouse to the other is exempt from Tennessee's realty transfer tax.",
+            "source_name": "Tenn. Code Ann. § 67-4-409(a)(3)(A)(i); Tennessee Department of Revenue, REC-18",
+            "source_url": "https://revenue.support.tn.gov/hc/en-us/articles/360057724311-REC-18-Conveyance-from-One-Spouse-to-the-Other-Exempt-from-Transfer-Tax"
+          },
+          {
+            "text": "A transfer of real estate made to divide property in a divorce is also exempt from the transfer tax.",
+            "source_name": "Tennessee Department of Revenue, REC-14",
+            "source_url": "https://revenue.support.tn.gov/hc/en-us/articles/360057246552-REC-14-Realty-Adjustment-Due-to-Divorce-Exempt-from-Transfer-Tax"
+          }
+        ]
+      },
+      "disclosure": {
+        "summary": "Tennessee sellers generally give buyers a property condition disclosure statement, or an as-is disclaimer if the buyer waives the disclosure. Known sinkholes have their own disclosure rule.",
+        "facts": [
+          {
+            "text": "Tennessee law requires sellers to disclose known sinkholes. The statute defines a sinkhole as an underground void left where limestone or dolostone has dissolved, as shown by contour lines on the property's recorded plat map. A 2024 Court of Appeals case arose after a sinkhole opened months after closing on a house whose sellers had answered no to the form's sinkhole question.",
+            "source_name": "Tenn. Code Ann. § 66-5-212; Baker v. Baskin (Tenn. Ct. App. 2024)",
+            "source_url": "https://tncourts.gov/sites/default/files/OpinionsPDFVersion/Majority%20Opinion%20-%202024-12-30T151851.987.pdf"
+          }
+        ]
+      }
+    },
+    "faqs": [
+      {
+        "q": "Who handles the closing when I sell a house in Tennessee?",
+        "a": "A licensed title agency or a real estate attorney. Tennessee requires title agencies to hold a certificate of authority from the Department of Commerce and Insurance. At closing, the closing agent pays off your mortgage and any liens from the sale proceeds and pays you the rest. Your money never passes through us. The deed is then recorded with the Register of Deeds in your county."
+      },
+      {
+        "q": "Who pays the transfer tax on a Tennessee home sale?",
+        "a": "State law puts Tennessee's realty transfer tax on the buyer. The tax is 37 cents per $100 of the price or the property's value, whichever is greater, so a $200,000 sale carries $740 in tax. The settlement statement lists every cost in your sale, and you can review it before you sign."
+      },
+      {
+        "q": "How fast can a Tennessee foreclosure happen?",
+        "a": "It can move quickly. With a deed of trust, the trustee can sell the house at auction without a court case, and the first newspaper notice can run as little as 20 days before the sale. Your deed of trust may give you more notice. We buy houses. We can't pause or cancel a foreclosure, and we don't negotiate with lenders or arrange loan modifications or short sales. Your other options include calling your servicer about catching up or a loan modification, a free HUD-approved housing counselor at 800-569-4287, and a Tennessee attorney. If the price covers what you owe, a sale can pay off the loan at closing. More on [selling a house facing foreclosure](sell-house-facing-foreclosure)."
+      },
+      {
+        "q": "Can I sell a house I inherited in Tennessee before probate is finished?",
+        "a": "Often, but it depends on the estate. Tennessee real estate generally passes at death to the heirs or to the people named in the will. But the personal representative can use it to pay estate debts, and creditors generally have up to 12 months from the death to file claims. Who signs the deed depends on the will and any court orders, so the title agency or the estate's attorney will confirm it before closing. The small-estate process can't be used to transfer real estate. Talk to a Tennessee probate attorney about your situation. More on [selling an inherited house](sell-inherited-house)."
+      },
+      {
+        "q": "Do I have to fill out a disclosure form if I sell my Tennessee house as-is?",
+        "a": "Generally, yes, unless your sale is exempt. A seller usually gives the buyer the state's property condition disclosure statement, or a disclaimer saying the house is sold as-is if the buyer waives the disclosure. Tennessee law also requires you to disclose known sinkholes. Ask your attorney or the closing agent which form fits your sale. More on [selling as-is](sell-house-as-is)."
+      },
+      {
+        "q": "Can I sell a Tennessee rental with tenants living in it?",
+        "a": "Yes. A sale generally doesn't end a lease, so the buyer takes over as landlord. In Davidson, Shelby, Knox, Hamilton and the state's other counties with more than 75,000 people, the Uniform Residential Landlord and Tenant Act sets rules for deposits and notices. Removing a tenant generally takes a court case that starts with a detainer warrant. Tell us about the lease and the deposit up front so both are accounted for at closing. More on [selling with tenants](sell-house-with-tenants)."
+      }
+    ],
+    "legal_note": "This is general information about Tennessee law, not legal advice. Talk to a Tennessee attorney about your situation."
+  },
+  "NC": {
+    "name": "North Carolina",
+    "last_verified": "2026-10-27",
+    "intro": [
+      "North Carolina handles home sales a little differently. Attorneys conduct real estate closings here, because examining title and preparing deeds count as the practice of law. The seller pays the state excise tax on the deed, $1 for every $500 of the price, and seven northeastern counties add a local land transfer tax.",
+      "Foreclosures under a deed of trust go through a hearing before the clerk of superior court, and after the auction there is a 10-day window for higher (upset) bids. If you inherited the house, North Carolina has a two-year rule that can make a sale by the heirs void against the estate's creditors, so expect your closing attorney to ask about the estate. Married sellers should expect both spouses to sign the deed, even when only one is on title. Humid summers are hard on crawl spaces, roofs and HVAC systems, and coastal homes take storm damage. We buy with those problems as they are. If your house is in good shape and you have time to list it, an agent will likely net you more than a cash sale."
+    ],
+    "topics": {
+      "foreclosure": {
+        "summary": "A North Carolina foreclosure under a deed of trust needs a hearing before the clerk of superior court, and after the auction there is a 10-day upset bid period. We buy houses and don't negotiate with lenders or arrange loan modifications or short sales, so call your servicer and a free HUD-approved housing counselor (800-569-4287) early about your other options.",
+        "facts": [
+          {
+            "text": "For a home loan on your primary residence, the servicer must mail you a notice at least 45 days before filing a foreclosure notice of hearing. It lists what is past due and points you to foreclosure alternatives, HUD-approved housing counselors and the state Housing Finance Agency's Home Foreclosure Prevention Project.",
+            "source_name": "N.C. Gen. Stat. § 45-102",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_45/GS_45-102.html"
+          },
+          {
+            "text": "A sale under a deed of trust still requires a hearing before the clerk of superior court. You must be served with notice at least 10 days before the hearing, and the clerk must find a valid debt, a default, a right to foreclose and proper notice before allowing the sale.",
+            "source_name": "N.C. Gen. Stat. § 45-21.16",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_45/GS_45-21.16.html"
+          },
+          {
+            "text": "After the auction, anyone can file an upset bid within 10 days that beats the last bid by at least 5%, with a $750 minimum. Each new upset bid starts a new 10-day period, and the parties' rights become fixed only when a period passes with no new bid.",
+            "source_name": "N.C. Gen. Stat. § 45-21.27",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_45/GS_45-21.27.html"
+          },
+          {
+            "text": "If the debt and the costs of the sale are paid in full before the sale, or before the upset bid period ends after a sale, the foreclosure ends.",
+            "source_name": "N.C. Gen. Stat. § 45-21.20",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_45/GS_45-21.20.html"
+          },
+          {
+            "text": "Sometimes the lender buys the house at its own foreclosure sale and then sues you for the shortfall (a deficiency). In that case, you can defend by showing the property was fairly worth the debt, or that the bid was substantially less than its true value.",
+            "source_name": "N.C. Gen. Stat. § 45-21.36",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_45/GS_45-21.36.html"
+          }
+        ]
+      },
+      "probate": {
+        "summary": "Title to inherited real estate passes to the heirs at death, but North Carolina's two-year rule can make a sale by the heirs void against the estate's creditors. Who signs the deed depends on the will, the estate's notice to creditors and any order from the clerk.",
+        "facts": [
+          {
+            "text": "Title to a decedent's real estate vests in the heirs at the moment of death. If there is a will, title passes to the people named in it once the will is probated, and that transfer relates back to the date of death.",
+            "source_name": "N.C. Gen. Stat. § 28A-15-2",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_28A/GS_28A-15-2.html"
+          },
+          {
+            "text": "If the estate's notice to creditors is first published within two years of the death, a sale by the heirs made before that notice is void against creditors and the personal representative. A sale made after the notice, but before the final account is approved, is void against them unless the personal representative joins in the deed.",
+            "source_name": "N.C. Gen. Stat. § 28A-17-12",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_28A/GS_28A-17-12.html"
+          },
+          {
+            "text": "When the estate needs the property sold to pay debts and claims, the personal representative can petition the clerk of superior court in the county where it is located for an order of sale.",
+            "source_name": "N.C. Gen. Stat. § 28A-17-1",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_28A/GS_28A-17-1.html"
+          },
+          {
+            "text": "The small-estate affidavit covers personal property only, worth up to $20,000, or up to $30,000 when the surviving spouse is the sole heir. It can be used 30 days after the death, and it doesn't transfer the house.",
+            "source_name": "N.C. Gen. Stat. § 28A-25-1",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_28A/GS_28A-25-1.html"
+          },
+          {
+            "text": "The personal representative must publish a notice to creditors once a week for four weeks, setting a deadline for claims at least three months after the first publication.",
+            "source_name": "N.C. Gen. Stat. § 28A-14-1",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_28A/GS_28A-14-1.html"
+          }
+        ]
+      },
+      "closing": {
+        "summary": "North Carolina closings are handled by attorneys, who examine title, handle the closing funds and record the deed. The closing attorney pays off what you owe from the proceeds and pays you the rest.",
+        "facts": [
+          {
+            "text": "North Carolina defines the practice of law to include preparing deeds and mortgages and abstracting or passing upon titles.",
+            "source_name": "N.C. Gen. Stat. § 84-2.1",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_84/GS_84-2.1.html"
+          },
+          {
+            "text": "The North Carolina State Bar's guidance on home closings covers who may do the legal work. Someone who isn't a North Carolina lawyer, and isn't working under one's direct supervision, may not perform the parts of a closing that are the practice of law, such as giving opinions on title.",
+            "source_name": "N.C. State Bar Authorized Practice Advisory Opinion 2002-1 (revised 2012)",
+            "source_url": "https://www.ncbar.gov/for-lawyers/ethics/adopted-opinions/authorized-practice-advisory-opinion-2002-1/"
+          },
+          {
+            "text": "The Good Funds Settlement Act covers sales of one-to-four-family homes. The settlement agent is responsible for recording the deed, and may pay out closing funds only after receiving them as collected funds or in another form the law allows.",
+            "source_name": "N.C. Gen. Stat. Chapter 45A (Good Funds Settlement Act)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/ByChapter/Chapter_45A.html"
+          }
+        ]
+      },
+      "transfer_tax": {
+        "summary": "North Carolina's excise tax on a deed is $1 per $500 of the price, and the seller pays it. Seven northeastern counties add a local land transfer tax.",
+        "facts": [
+          {
+            "text": "The state excise tax on a deed is $1 for each $500, or part of $500, of the price or value. The seller (the transferor) must pay it to the register of deeds in the county where the property is, before the deed is recorded. On a $250,000 sale, the tax is $500.",
+            "source_name": "N.C. Gen. Stat. § 105-228.30",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-228.30.html"
+          },
+          {
+            "text": "Camden, Chowan, Currituck, Dare, Pasquotank, Perquimans and Washington counties also levy a local land transfer tax of $1 per $100 of the price or value, paid to the register of deeds when the deed is recorded.",
+            "source_name": "Perquimans County, Land Transfer Tax",
+            "source_url": "https://perquimanscountync.gov/land-transfer-tax"
+          }
+        ]
+      },
+      "tenants": {
+        "summary": "Selling a rented house generally doesn't end the lease, and the buyer takes over as landlord. North Carolina sets a 30-day deadline for moving the tenant's security deposit to the buyer or returning it.",
+        "facts": [
+          {
+            "text": "When you sell a rental, you have 30 days to deal with the tenant's security deposit. Either transfer what remains to the buyer and mail the tenant a notice with the buyer's name and address, or return it to the tenant.",
+            "source_name": "N.C. Gen. Stat. § 42-54 (Tenant Security Deposit Act)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/ByArticle/Chapter_42/Article_6.html"
+          },
+          {
+            "text": "A lease longer than three years must be recorded in the county where the property is to be effective against a buyer. Leases of three years or less aren't covered by that recording rule.",
+            "source_name": "N.C. Gen. Stat. § 47-18",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_47/GS_47-18.html"
+          },
+          {
+            "text": "Ending a periodic tenancy takes notice before the end of the current rental period: 7 days for month-to-month, 2 days for week-to-week and one month for year-to-year.",
+            "source_name": "N.C. Gen. Stat. § 42-14",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_42/GS_42-14.html"
+          }
+        ]
+      },
+      "property_tax": {
+        "summary": "North Carolina property taxes are due September 1 and can be paid without interest through January 5. If they stay unpaid, the county can advertise the lien and eventually foreclose, and counties don't sell tax lien certificates.",
+        "facts": [
+          {
+            "text": "Property taxes are due September 1 and can be paid without interest before January 6. Payments made from January 6 through January 31 carry 2% interest, and three-fourths of 1% more is added for each month, or part of a month, after that until the taxes are paid.",
+            "source_name": "N.C. Gen. Stat. § 105-360",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-360.html"
+          },
+          {
+            "text": "Each February, the tax collector reports unpaid taxes that are liens on real property, and the county then advertises those tax liens. The owner gets a notice by first-class mail at least 30 days before the advertisement.",
+            "source_name": "N.C. Gen. Stat. § 105-369",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-369.html"
+          },
+          {
+            "text": "If the taxes stay unpaid, the county can foreclose on its tax lien through a mortgage-style lawsuit or a quicker in rem process. In the in rem process, the tax collector dockets a judgment with the clerk of superior court after notifying the owner at least 30 days in advance.",
+            "source_name": "N.C. Gen. Stat. § 105-375",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-375.html"
+          },
+          {
+            "text": "North Carolina counties don't sell tax lien certificates. A tax foreclosure sale stays open for 10 days to upset bids of at least 5% or $750, whichever is greater, and each new bid restarts the 10 days.",
+            "source_name": "Buncombe County, Tax Foreclosure Sales",
+            "source_url": "https://www.buncombenc.gov/622/Tax-Foreclosure-Sales"
+          },
+          {
+            "text": "Until the foreclosure sale is confirmed after the upset bid period, the owner can end the process by paying all taxes, interest, penalties and costs owed, without matching the high bid.",
+            "source_name": "UNC School of Government, Coates' Canons (2010)",
+            "source_url": "https://canons.sog.unc.edu/2010/02/5-myths-about-tax-foreclosures/"
+          }
+        ]
+      },
+      "divorce": {
+        "summary": "North Carolina divides marital property by equitable distribution, starting from an equal split. Both spouses generally sign the deed, and a claim for equitable distribution has to be made before the absolute divorce.",
+        "facts": [
+          {
+            "text": "In a divorce, the court divides the net value of marital and divisible property equally unless it finds an equal split would not be equitable.",
+            "source_name": "N.C. Gen. Stat. § 50-20(c)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_50/GS_50-20.html"
+          },
+          {
+            "text": "An absolute divorce ends a spouse's right to equitable distribution unless the claim is asserted before the divorce judgment is entered, with narrow exceptions.",
+            "source_name": "N.C. Gen. Stat. § 50-11(e)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_50/GS_50-11.html"
+          },
+          {
+            "text": "When spouses own a house as tenants by the entirety, neither spouse can sell or mortgage it without the other's written joinder, with limited exceptions.",
+            "source_name": "N.C. Gen. Stat. § 41-58",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_41/GS_41-58.html"
+          },
+          {
+            "text": "An absolute divorce converts a tenancy by the entirety into a tenancy in common, so each former spouse holds an undivided share.",
+            "source_name": "N.C. Gen. Stat. § 41-63",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_41/GS_41-63.html"
+          },
+          {
+            "text": "Even when the house is titled only in your name, your spouse generally needs to sign the deed to release the spouse's elective life estate rights. Exceptions exist, such as a written release under G.S. 52-10.",
+            "source_name": "N.C. Gen. Stat. § 39-7",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_39/GS_39-7.html"
+          }
+        ]
+      },
+      "disclosure": {
+        "summary": "Unless the sale is exempt, North Carolina sellers give buyers two state forms: a residential property disclosure statement and an owners' association disclosure statement. Item by item, you either disclose what you know or mark No Representation.",
+        "facts": [
+          {
+            "text": "Unless the sale is exempt, a North Carolina seller must give the buyer a residential property disclosure statement. For each item, the owner either discloses what the owner actually knows or states that the owner makes no representation.",
+            "source_name": "N.C. Gen. Stat. § 47E-4(a)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_47E/GS_47E-4.html"
+          },
+          {
+            "text": "Sellers must also give a separate owners' association and mandatory covenants disclosure statement.",
+            "source_name": "N.C. Gen. Stat. § 47E-4(b1)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_47E/GS_47E-4.html"
+          },
+          {
+            "text": "The North Carolina Real Estate Commission writes the standard form. It covers items such as lead-based paint, asbestos, radon, underground storage tanks and other environmental contamination, and it notes which transfers are exempt under G.S. 47E-2.",
+            "source_name": "N.C. Gen. Stat. § 47E-4(b)",
+            "source_url": "https://ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_47E/GS_47E-4.html"
+          }
+        ]
+      }
+    },
+    "faqs": [
+      {
+        "q": "Why does a North Carolina closing need an attorney?",
+        "a": "Examining title and preparing deeds count as the practice of law in North Carolina. The State Bar says the legal parts of a home closing must be done by a North Carolina lawyer or under one's direct supervision. Your closing attorney checks title, prepares or reviews the deed, pays off your mortgage and any liens from the proceeds, pays you the rest and records the deed. Your money never passes through us."
+      },
+      {
+        "q": "Who pays the excise tax when I sell a house in North Carolina?",
+        "a": "The seller. The tax is $1 for each $500 of the price, or about $2 per $1,000, so a $250,000 sale carries $500 in tax. It's paid to the register of deeds before the deed is recorded. In Camden, Chowan, Currituck, Dare, Pasquotank, Perquimans and Washington counties, a local land transfer tax of $1 per $100 applies as well."
+      },
+      {
+        "q": "I inherited a house in North Carolina. Can I sell it right away?",
+        "a": "Sometimes, but the timing rules are strict. Title passes to the heirs at death, or to the people named in a probated will. If the estate's notice to creditors is first published within two years of the death, a sale by the heirs before that notice is void against creditors and the personal representative. A sale after the notice, but before the final account is approved, needs the personal representative to join in the deed. If the will gives the executor power to sell, or the clerk of superior court orders a sale, the personal representative signs. Your closing attorney will confirm whose signatures your sale needs. More on [selling an inherited house](sell-inherited-house)."
+      },
+      {
+        "q": "How does foreclosure work in North Carolina?",
+        "a": "For a home loan on your primary residence, the servicer must mail you a notice at least 45 days before filing for a foreclosure hearing. The hearing is before the clerk of superior court, and you must get notice at least 10 days ahead. After the auction, anyone can raise the bid by at least 5%, with a $750 minimum, within 10 days, and each new bid restarts that clock. Until that period ends, paying the debt and the costs of the sale in full ends the foreclosure. We buy houses. We can't pause or cancel a foreclosure, and we don't negotiate with lenders or arrange loan modifications or short sales. Other options include your servicer, a free HUD-approved housing counselor at 800-569-4287, and a North Carolina attorney. More on [selling a house facing foreclosure](sell-house-facing-foreclosure)."
+      },
+      {
+        "q": "Does my spouse have to sign if the house is only in my name?",
+        "a": "Generally, yes. In North Carolina, a deed from a married owner needs the spouse's signature to release the spouse's elective life estate rights, unless an exception applies, such as a valid written release under G.S. 52-10. If you own the house together as tenants by the entirety, neither of you can sell it without the other's written joinder, and an absolute divorce turns that ownership into a tenancy in common. A claim for equitable distribution generally must be made before the absolute divorce is granted. Talk to a family law attorney before you sign."
+      },
+      {
+        "q": "Do I have to fill out the disclosure statements if I'm selling as-is?",
+        "a": "Generally, yes, unless your sale is exempt. North Carolina sellers give buyers a residential property disclosure statement and a separate owners' association and mandatory covenants disclosure statement. For each item, you either disclose what you actually know or mark No Representation. Marking No Representation means you aren't making a statement about that item. It doesn't tell the buyer the item is fine. More on [selling as-is](sell-house-as-is)."
+      }
+    ],
+    "legal_note": "This is general information about North Carolina law, not legal advice. Talk to a North Carolina attorney about your situation."
+  }
+}

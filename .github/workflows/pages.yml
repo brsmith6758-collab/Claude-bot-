@@ -7,7 +7,7 @@ name: Publish site to GitHub Pages
 on:
   push:
     branches: [main, "claude/**"]
-    paths: ["site/**", ".github/workflows/pages.yml"]
+    paths: ["site/**", "tools/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -32,6 +32,13 @@ jobs:
         run: |
           npm ci
           node --test --import ./test/register-stubs.mjs test/chat-phrases.test.mjs
+      # The researched page content must pass its rules (no guarantees, counts, reviews or unsourced facts),
+      # and the committed pages must match what tools/build.py produces from it.
+      - name: Check page content and the build
+        run: |
+          python3 tools/content_check.py
+          python3 tools/build.py
+          git diff --stat --exit-code -- site/ || (echo "site/ is out of date: run python3 tools/build.py and commit the result" && exit 1)
       - name: Push site/ to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

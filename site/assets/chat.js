@@ -97,16 +97,16 @@
       notGiven: "(not given yet)",
       requested: "requested time",
       faq: [
-        [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. The offer you accept is what you walk away with, minus anything owed on the property."],
+        [/fee|commission|cost|charge|pay (you|anything)/i, "There are no fees or commissions, and we pay the standard closing costs. At closing you receive the agreed price minus anything owed on the property, like a mortgage or liens."],
         [/mortgage|\bowe[ds]?\b|\bliens?\b|back tax|foreclos|auction|behind on|underwater|upside.down|notice of default|sheriff|trustee sale|repossess|lose (my|the) (house|home)|(bank|lender|they)( is| are)? (taking|going to take|trying to take) (my|the) (house|home)/i, "If the sale price covers what you owe, your mortgage, liens, and back taxes are paid off from the sale at closing. If you might owe more than the house is worth, the team will go over the numbers with you honestly. If you're facing foreclosure, timing matters, and a free HUD-approved housing counselor can also help: hud.gov or 800-569-4287."],
         [/how (fast|quick|long|soon)|\bclos(e|ing)\b|\bdays?\b/i, "We can close in as little as 7 days once title is clear, or on a later date you pick."],
         [/condition|repair|as.?is|clean|damage|fix/i, "We buy houses as-is in any condition. No repairs, no cleaning, no showings. Leave behind anything you don't want."],
         [/legit|scam|trust|real|safe/i, "Fair question. You never pay us anything, and every closing goes through a licensed title company or closing attorney, so your money never passes through our hands. You can have your own attorney review the contract."],
-        [/where|state|area|arizona|florida|tennessee|carolina|nationwide/i, "We focus on Arizona, Florida, Tennessee, and North Carolina, and buy nationwide through local buying partners."],
-        [/how (does|do) (it|this) work|process|steps/i, "It's simple: tell us about the house, we review it and send a written, no-obligation cash offer, and you pick the closing date."],
+        [/where|state|area|arizona|florida|tennessee|carolina|nationwide/i, "We focus on Arizona, Florida, Tennessee, and North Carolina. Anywhere else in the US, send the address and we'll tell you honestly whether we can make an offer."],
+        [/how (does|do) (it|this) work|process|steps/i, "It's simple: tell us about the house, we review it and call with a no-obligation cash offer, usually within 24 hours, and you pick the closing date."],
         [/how much|worth|price|value|offer amount/i, "The offer comes after the team reviews the property, so I can't give a number here. A quick call is the fastest way to a real offer."],
-        [/tenant|rent|landlord/i, "Yes, we buy houses with tenants in place and work with the existing lease."],
-        [/inherit|probate|estate/i, "We buy inherited and probate properties all the time, and can work with your attorney on the paperwork."]
+        [/tenant|rent|landlord/i, "Yes, we can buy houses with tenants in place."],
+        [/inherit|probate|estate/i, "We buy inherited and probate properties, and can work with your attorney on the paperwork."]
       ]
     },
     es: {
@@ -184,16 +184,16 @@
       notGiven: "(aún no indicado)",
       requested: "horario solicitado",
       faq: [
-        [/comisi|cobr|costo|cargo|pagar/i, "No hay comisiones ni cargos, y nosotros pagamos los gastos de cierre habituales. La oferta que acepte es lo que recibe, menos lo que deba sobre la propiedad."],
+        [/comisi|cobr|costo|cargo|pagar/i, "No hay comisiones ni cargos, y nosotros pagamos los gastos de cierre habituales. Al cierre recibe el precio acordado menos lo que deba sobre la propiedad, como la hipoteca o gravámenes."],
         [/hipoteca|\bdebo\b|\bdebe\b|gravamen|impuesto|ejecuci|embargo|subasta|atrasad|foreclos|remate|quitar(me)? la casa|perder (la|mi) casa/i, "Si el precio de venta cubre lo que debe, la hipoteca, los gravámenes y los impuestos atrasados se pagan con la venta al cierre. Si podría deber más de lo que vale la casa, el equipo revisará los números con usted honestamente. Si enfrenta una ejecución hipotecaria, el tiempo importa, y un consejero de vivienda aprobado por HUD también puede ayudarle gratis: hud.gov o 800-569-4287."],
         [/rápid|cuánto tiempo|\bcerrar\b|\bcierre\b|\bd[ií]as?\b/i, "Podemos cerrar en tan solo 7 días una vez que el título esté limpio, o en una fecha posterior que usted elija."],
         [/condici|repar|arregl|limpi|daño/i, "Compramos casas tal como están, en cualquier condición. Sin reparaciones, sin limpieza, sin visitas."],
         [/estafa|confi|real|segur|legít/i, "Buena pregunta. Usted nunca nos paga nada, y cada cierre se hace con una compañía de títulos o un abogado con licencia; su dinero nunca pasa por nuestras manos."],
-        [/dónde|donde|estado|arizona|florida|tennessee|carolina/i, "Nos enfocamos en Arizona, Florida, Tennessee y Carolina del Norte, y compramos en todo el país con compradores locales asociados."],
-        [/cómo funciona|como funciona|proceso|pasos/i, "Es sencillo: nos cuenta de la casa, la revisamos y le enviamos una oferta por escrito sin compromiso, y usted elige la fecha de cierre."],
+        [/dónde|donde|estado|arizona|florida|tennessee|carolina/i, "Nos enfocamos en Arizona, Florida, Tennessee y Carolina del Norte. En cualquier otra parte del país, envíenos la dirección y le diremos con honestidad si podemos hacer una oferta."],
+        [/cómo funciona|como funciona|proceso|pasos/i, "Es sencillo: nos cuenta de la casa, la revisamos y le llamamos con una oferta en efectivo sin compromiso, normalmente en 24 horas, y usted elige la fecha de cierre."],
         [/cuánto|cuanto|vale|precio|valor/i, "La oferta llega después de que el equipo revisa la propiedad, así que no puedo darle un número aquí. Una llamada rápida es la forma más fácil de obtener una oferta real."],
-        [/inquilin|renta|arrend/i, "Sí, compramos casas con inquilinos y respetamos el contrato existente."],
-        [/hered|sucesi|testament/i, "Compramos propiedades heredadas y en sucesión con frecuencia, y podemos trabajar con su abogado."]
+        [/inquilin|renta|arrend/i, "Sí, podemos comprar casas con inquilinos adentro."],
+        [/hered|sucesi|testament/i, "Compramos propiedades heredadas y en sucesión, y podemos trabajar con su abogado."]
       ]
     }
   }[LANG];

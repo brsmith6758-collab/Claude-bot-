@@ -1,0 +1,489 @@
+{
+  "AZ": {
+    "name": "Arizona",
+    "last_verified": "2026-10-27",
+    "intro": [
+      "Arizona home sales close in escrow. A licensed escrow agent holds the buyer's money and the signed papers, pays off any loans and liens from the proceeds, pays you, and records the deed with the county recorder. Arizona doesn't charge a percentage-based transfer tax on home sales, and the state constitution bars new ones. As of September 12, 2026, the notary who notarizes your deed also takes your thumbprint for the notary journal, part of a 2026 law aimed at deed fraud.",
+      "A few other Arizona rules shape a sale. A lender holding a deed of trust can sell a home at a trustee's sale without a lawsuit, as early as the 91st day after the notice of sale is recorded. Arizona is a community property state, so both spouses usually sign. A house may pass to heirs through a beneficiary deed the owner recorded or, when the real estate is worth $300,000 or less after liens, through an affidavit filed with the court once six months have passed since the death. And desert heat and summer monsoon storms are hard on roofs, air conditioning and pool equipment."
+    ],
+    "topics": {
+      "foreclosure": {
+        "summary": "An Arizona lender holding a deed of trust can sell a home at a trustee's sale without going to court, about three months after recording a notice of sale. We buy houses and don't negotiate with lenders or arrange loan modifications or short sales; a free HUD-approved housing counselor (800-569-4287) can walk you through every option.",
+        "facts": [
+          {
+            "text": "A trustee's sale can't be held before the 91st day after the notice of sale is recorded with the county recorder.",
+            "source_name": "A.R.S. § 33-807",
+            "source_url": "https://www.azleg.gov/ars/33/00807.htm"
+          },
+          {
+            "text": "The trustee must also mail the notice, post it on the property at least 20 days before the sale, and publish it once a week for four weeks in a row, with the last publication at least 10 days before the sale.",
+            "source_name": "A.R.S. § 33-808",
+            "source_url": "https://www.azleg.gov/ars/33/00808.htm"
+          },
+          {
+            "text": "You can generally reinstate the loan by paying only the amount then due, plus allowed costs and fees, until 5 p.m. Arizona time on the last business day before the sale. On written request, the trustee must give you the reinstatement figure within five business days.",
+            "source_name": "A.R.S. § 33-813",
+            "source_url": "https://www.azleg.gov/ars/33/00813.htm"
+          },
+          {
+            "text": "A lender that wants to collect a shortfall after a trustee's sale generally has to sue within 90 days. It can't sue at all when the property is 2.5 acres or less and is limited to and used as a one- or two-family dwelling, with some exceptions.",
+            "source_name": "A.R.S. § 33-814",
+            "source_url": "https://www.azleg.gov/ars/33/00814.htm"
+          },
+          {
+            "text": "If the sale brings in more than the debt and costs, the extra goes to junior lienholders in order of priority and then to the former owner. If the trustee deposits it with the county treasurer, claims are made through the superior court.",
+            "source_name": "A.R.S. § 33-812",
+            "source_url": "https://www.azleg.gov/ars/33/00812.htm"
+          }
+        ]
+      },
+      "probate": {
+        "summary": "Some Arizona houses can pass to heirs without a full probate, through a beneficiary deed or, for smaller estates, an affidavit filed with the court. Otherwise a personal representative is appointed, and that person can generally sell the house without a separate court order.",
+        "facts": [
+          {
+            "text": "A beneficiary deed names who receives the house at the owner's death. It works only if it was signed and recorded with the county recorder before the owner died, and if more than one was recorded, the last one recorded before death controls.",
+            "source_name": "A.R.S. § 33-405",
+            "source_url": "https://www.azleg.gov/ars/33/00405.htm"
+          },
+          {
+            "text": "When the decedent's Arizona real estate is worth $300,000 or less after liens, using the assessor's full cash value for the year of death, a successor can file an affidavit of succession to real property, but not until six months after the death. The cap was $100,000 before a 2025 change.",
+            "source_name": "A.R.S. § 14-3971",
+            "source_url": "https://azleg.gov/ars/14/03971.htm"
+          },
+          {
+            "text": "A personal representative can generally sell estate real estate, at a public or private sale, without a court order, unless the will or a court order restricts that power.",
+            "source_name": "A.R.S. § 14-3715",
+            "source_url": "https://www.azleg.gov/ars/14/03715.htm"
+          },
+          {
+            "text": "In an informal probate, a personal representative can't be appointed until at least 120 hours after the death.",
+            "source_name": "A.R.S. § 14-3307",
+            "source_url": "https://www.azleg.gov/ars/14/03307.htm"
+          },
+          {
+            "text": "Once notice to creditors is published, claims generally must be presented within four months of the first publication. Known creditors who are mailed notice get the later of that date or 60 days after the mailing.",
+            "source_name": "A.R.S. § 14-3801",
+            "source_url": "https://www.azleg.gov/ars/14/03801.htm"
+          }
+        ]
+      },
+      "closing": {
+        "summary": "Arizona sales close in escrow: a licensed escrow agent holds the money and documents, pays off loans and liens from the proceeds, pays you, and records the deed. You sign the deed in front of a notary, and your proceeds are paid by the escrow agent, not handed over by the buyer.",
+        "facts": [
+          {
+            "text": "Escrow agents that handle real estate are licensed by the Arizona Department of Insurance and Financial Institutions, must post a surety bond, and must also hold a title agent license.",
+            "source_name": "Arizona DIFI, Escrow Agent Application Requirements",
+            "source_url": "https://difi.az.gov/sites/default/files/Escrow%20Agent%20Application%20Requirements.pdf"
+          },
+          {
+            "text": "Every deed must be signed by the seller and acknowledged before a notary or other authorized officer.",
+            "source_name": "A.R.S. § 33-401",
+            "source_url": "https://www.azleg.gov/ars/33/00401.htm"
+          },
+          {
+            "text": "As of September 12, 2026, a notary who notarizes a deed must take the signer's right thumbprint in the notary journal. Qualifying remote online notarizations are exempt.",
+            "source_name": "Ariz. SB 1479 (Laws 2026, ch. 31), summary as signed",
+            "source_url": "https://www.azleg.gov/legtext/57leg/2R/summary/H.SB1479_041426_SIGNED.pdf"
+          },
+          {
+            "text": "The Arizona Department of Real Estate's free, voluntary Early Real Estate Sales Alert System lets you register a property and get an alert when an escrow officer enters a pending sale on it, a check against deed fraud.",
+            "source_name": "Arizona Department of Real Estate, Early Real Estate Sales Alert System",
+            "source_url": "https://earlyalert.azre.gov/"
+          }
+        ]
+      },
+      "transfer_tax": {
+        "summary": "Arizona has no percentage-based real estate transfer tax, so neither side pays the state or county a share of the price. What remains are escrow, title and recording charges, and the purchase contract says who pays each one.",
+        "facts": [
+          {
+            "text": "Arizona's constitution bars the state, counties, cities and other taxing districts from imposing any new tax, fee or stamp requirement on selling or transferring real property. Voters added the ban in 2008, and charges that existed on December 31, 2007 were left in place.",
+            "source_name": "Ariz. Const. art. IX, § 24",
+            "source_url": "https://azleg.gov/const/9/24.htm"
+          },
+          {
+            "text": "A deed is recorded only with a completed Affidavit of Property Value or a statutory exemption code on its face. Maricopa County charges a flat recording fee per document, not a percentage of the price.",
+            "source_name": "Maricopa County Recorder, FAQs",
+            "source_url": "https://recorder.maricopa.gov/information/faqs.html"
+          }
+        ]
+      },
+      "tenants": {
+        "summary": "A sale generally doesn't end a lease in Arizona; the buyer takes over as landlord. Your part is to give the tenant written notice of the sale, account for the security deposit, and follow the notice rules for entering the home.",
+        "facts": [
+          {
+            "text": "A landlord who sells in good faith is released from the lease for events after the tenant gets written notice of the sale, but stays liable for the deposit and other money the tenant is owed under the deposit statute.",
+            "source_name": "A.R.S. § 33-1325",
+            "source_url": "https://www.azleg.gov/ars/33/01325.htm"
+          },
+          {
+            "text": "Whoever holds the landlord's interest when the tenancy ends is bound by Arizona's deposit rules, so the deposit needs to be accounted for in the sale.",
+            "source_name": "A.R.S. § 33-1321",
+            "source_url": "https://www.azleg.gov/ars/33/01321.htm"
+          },
+          {
+            "text": "Except in an emergency, a landlord must give the tenant at least two days' notice before entering, and enter only at reasonable times.",
+            "source_name": "A.R.S. § 33-1343",
+            "source_url": "https://www.azleg.gov/ars/33/01343.htm"
+          },
+          {
+            "text": "Ending a month-to-month tenancy takes written notice given at least 30 days before the rent date named in the notice.",
+            "source_name": "A.R.S. § 33-1375",
+            "source_url": "https://www.azleg.gov/ars/33/01375.htm"
+          },
+          {
+            "text": "If you receive a notice of trustee's sale on a rental, you must give your tenant a written foreclosure notice in the statute's wording within five business days. Buildings with four or more connected units are excluded.",
+            "source_name": "A.R.S. § 33-1331",
+            "source_url": "https://www.azleg.gov/ars/33/01331.htm"
+          }
+        ]
+      },
+      "property_tax": {
+        "summary": "Arizona property taxes are billed in two halves, and late taxes earn 16% simple interest. If they stay unpaid, the county sells a tax lien, and three years later the lienholder can go to court to foreclose your right to pay it off.",
+        "facts": [
+          {
+            "text": "The first half is due October 1 and becomes delinquent after 5 p.m. on November 1. The second half is due March 1 and becomes delinquent after 5 p.m. on May 1.",
+            "source_name": "A.R.S. § 42-18052",
+            "source_url": "https://www.azleg.gov/ars/42/18052.htm"
+          },
+          {
+            "text": "Delinquent taxes accrue interest at 16% a year, simple, from the delinquency date until paid.",
+            "source_name": "A.R.S. § 42-18053",
+            "source_url": "https://www.azleg.gov/ars/42/18053.htm"
+          },
+          {
+            "text": "At the county's tax lien sale, the lien goes to the bidder who pays the delinquent amount and accepts the lowest interest rate, no higher than the 16% statutory rate.",
+            "source_name": "A.R.S. § 42-18114",
+            "source_url": "https://www.azleg.gov/ars/42/18114.htm"
+          },
+          {
+            "text": "Starting three years after the lien sale, the lienholder can sue in superior court to foreclose the owner's right to redeem.",
+            "source_name": "A.R.S. § 42-18201",
+            "source_url": "https://www.azleg.gov/ars/42/18201.htm"
+          },
+          {
+            "text": "Under a 2024 law, the lienholder must mail notice before filing that explains how an owner can ask the court for a sale to recover excess proceeds. If the price is likely to beat the amounts owed by more than $2,500, the court orders a sale and the remaining proceeds go to the former owner.",
+            "source_name": "Laws 2024, ch. 176 (SB 1431)",
+            "source_url": "https://www.azleg.gov/legtext/56leg/2r/laws/0176.htm"
+          }
+        ]
+      },
+      "divorce": {
+        "summary": "Arizona is a community property state. A house bought during the marriage is generally community property, both spouses must sign to sell it, and in a divorce the court divides it equitably unless you agree on a sale.",
+        "facts": [
+          {
+            "text": "Either spouse can manage community property, but both must join in buying, selling or mortgaging real estate, apart from leases under a year and unpatented mining claims.",
+            "source_name": "A.R.S. § 25-214",
+            "source_url": "https://www.azleg.gov/ars/25/00214.htm"
+          },
+          {
+            "text": "In a divorce, the court assigns each spouse's separate property to that spouse and divides community and jointly held property equitably, though not necessarily in kind. Property the decree doesn't address is then held as tenants in common, each owning half.",
+            "source_name": "A.R.S. § 25-318",
+            "source_url": "https://www.azleg.gov/ars/25/00318.htm"
+          },
+          {
+            "text": "Arizona's homestead exemption shields up to $400,000 of your interest in your home from attachment and forced sale by most creditors, adjusted for inflation each January starting in 2024. A married couple can hold only one, and after a sale the protection carries over to the proceeds for up to 18 months or until they go into a new homestead.",
+            "source_name": "A.R.S. § 33-1101",
+            "source_url": "https://www.azleg.gov/ars/33/01101.htm"
+          }
+        ]
+      },
+      "disclosure": {
+        "summary": "Arizona sellers generally must tell a buyer about known facts that materially affect the home's value and that the buyer doesn't know. Some facts, like a death on the property, are excluded by statute, and land in unincorporated areas and HOA homes come with required disclosures of their own.",
+        "facts": [
+          {
+            "text": "Arizona courts hold that a seller who knows of facts materially affecting the property's value, and knows the buyer doesn't know them, has a legal duty to disclose them.",
+            "source_name": "Hill v. Jones, 151 Ariz. 81 (App. 1986), as cited by the Arizona Supreme Court (No. CV-99-0316-PR)",
+            "source_url": "https://www.azcourts.gov/Portals/0/23/pdf2000/CV-99-0316-PR.pdf"
+          },
+          {
+            "text": "No legal action can be brought against a seller for not disclosing that a property was the site of a natural death, suicide, homicide or other felony.",
+            "source_name": "A.R.S. § 32-2156",
+            "source_url": "https://www.azleg.gov/ars/32/02156.htm"
+          },
+          {
+            "text": "A seller of five or fewer parcels of unsubdivided land in an unincorporated area must give the buyer a recorded affidavit of disclosure at least seven days before the transfer. It covers items like legal access, flood zones, the water source (including hauled water) and leased solar equipment, and the buyer can rescind within five days of receiving it.",
+            "source_name": "A.R.S. § 33-422",
+            "source_url": "https://www.azleg.gov/ars/33/00422.htm"
+          },
+          {
+            "text": "In a planned community, the HOA disclosure package must reach the buyer within 10 days: the association sends it after your written notice in communities of 50 or more properties, and you send it in smaller ones. The association's fee is capped by statute and can't be collected before close of escrow.",
+            "source_name": "A.R.S. § 33-1806",
+            "source_url": "https://www.azleg.gov/ars/33/01806.htm"
+          }
+        ]
+      }
+    },
+    "faqs": [
+      {
+        "q": "How much time do I have after an Arizona notice of trustee's sale?",
+        "a": "The sale date is on the notice, and it can't be earlier than the 91st day after the notice was recorded. Until 5 p.m. on the last business day before the sale, you can generally reinstate by paying the past-due amount plus allowed costs. If you believe the sale is improper, Arizona generally requires a court order against the sale by that same deadline, or your objections are waived ([A.R.S. § 33-811](https://www.azleg.gov/ars/33/00811.htm)), so talk to an attorney early. A cash sale that closes before the sale date pays off the loan when the price covers what you owe, and we'll tell you plainly if the timing or the numbers don't work. We buy houses; we don't negotiate with lenders or arrange loan modifications or short sales. Your other options include a repayment plan or modification from your servicer, a short sale through your lender, an attorney, or a free HUD-approved housing counselor at 800-569-4287. More on [selling a house facing foreclosure](sell-house-facing-foreclosure)."
+      },
+      {
+        "q": "We inherited a house in Arizona. Do we have to go through probate to sell it?",
+        "a": "Not always. If the owner recorded a beneficiary deed before death, the house passes to the beneficiary it names. If the Arizona real estate is worth $300,000 or less after liens, based on the assessor's full cash value for the year of death, a successor can file an affidavit with the superior court once six months have passed, then record a certified copy with the county recorder ([how Maricopa County handles it](https://superiorcourt.maricopa.gov/llrc/prob_pbse1/)). Otherwise, a personal representative is appointed through probate and can generally sign the sale. We can make an offer while that's in progress and set closing for after someone has authority to sign. If the house shows well and the estate has time, listing with an agent will likely bring a higher price. A probate attorney can tell you which path fits. More on [selling an inherited house](sell-inherited-house)."
+      },
+      {
+        "q": "Is there a transfer tax when I sell a house in Arizona?",
+        "a": "No. Arizona voters amended the state constitution in 2008 to bar new taxes and fees on real estate sales, so no percentage of your price goes to the state or county. You'll still see escrow, title and recording charges, and an Affidavit of Property Value goes with the deed. The purchase contract says who pays each charge, so read that section before you sign, ours included."
+      },
+      {
+        "q": "My spouse and I are divorcing. Can one of us sell the house?",
+        "a": "Usually not alone. If the house is community property, Arizona requires both spouses to join in the sale, even during a divorce. If the decree doesn't divide the house, you each own half as tenants in common afterward, and you'd both still sign. A cash sale can give you one number to split and a closing date set around the decree. Each of you should have your own attorney review the terms."
+      },
+      {
+        "q": "I'm selling a rental with a tenant in place. What do I owe the tenant?",
+        "a": "The lease generally continues after the sale, with the buyer as the new landlord. Give the tenant written notice of the sale, and account for the security deposit, since whoever owns the property when the tenancy ends answers for it. For a walkthrough, give at least two days' notice unless there's an emergency. We buy rentals with tenants in place and work with the lease. More on [selling a house with tenants](sell-house-with-tenants)."
+      },
+      {
+        "q": "How does closing work in Arizona, and how do I get paid?",
+        "a": "Your sale closes in escrow. A licensed escrow agent holds the buyer's funds and the signed documents, pays off your loan and any liens from the proceeds, records the deed and pays the rest to you. Your money never passes through us. As of September 12, 2026, the notary will also take your thumbprint when you sign the deed. You can register your property with the Arizona Department of Real Estate's free [sales alert system](https://earlyalert.azre.gov/) to be told when an escrow officer enters a pending sale on it."
+      }
+    ]
+  },
+  "FL": {
+    "name": "Florida",
+    "last_verified": "2026-10-27",
+    "intro": [
+      "Florida does several things its own way. Foreclosures go through the circuit court, so a lender has to win a judgment before the clerk can sell a house at public sale. Deeds need two witnesses, and the state charges documentary stamp tax on deeds: 70 cents per $100 of the price in every county but Miami-Dade, which has its own rate. Closings are run by a licensed title agency or a Florida attorney, and you can often sign remotely with a Florida online notary.",
+      "Homestead rules matter when you sell. A married owner can't sell a homestead without the spouse joining, and an inherited homestead passes under its own rules, often confirmed by a court order before a sale. Sellers give buyers a flood disclosure and a property tax summary, and condo sellers hand over the association's inspection and reserve study documents. Salt air, humidity and storm season are hard on roofs, windows and air conditioning."
+    ],
+    "topics": {
+      "foreclosure": {
+        "summary": "Florida foreclosures go through the circuit court, so the lender has to sue and win a judgment before the clerk sells the house at a public sale. We buy houses and don't negotiate with lenders or arrange loan modifications or short sales; a free HUD-approved housing counselor (800-569-4287) can walk you through every option.",
+        "facts": [
+          {
+            "text": "Florida law requires every mortgage to be foreclosed in equity, through a court case. If the foreclosure claim goes to trial, a judge decides it without a jury.",
+            "source_name": "Fla. Stat. § 702.01",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/Chapter702/All"
+          },
+          {
+            "text": "The final judgment sets the sale date, generally 20 to 35 days after the judgment, and the clerk holds the sale after public notice.",
+            "source_name": "Fla. Stat. § 45.031",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/45.031"
+          },
+          {
+            "text": "You can redeem by paying the amount set in the judgment until the clerk files the certificate of sale, or until a later time if the judgment sets one. After that, there's no right of redemption.",
+            "source_name": "Fla. Stat. § 45.0315",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2024/0045.0315"
+          },
+          {
+            "text": "A court may enter a deficiency judgment for any shortfall. For owner-occupied homes, it can't exceed the judgment amount minus the property's value on the sale date.",
+            "source_name": "Fla. Stat. § 702.06",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/0702.06"
+          },
+          {
+            "text": "If the sale brings more than what's owed, the owner of record can claim the surplus through the court, and junior lienholders can claim it too. Surplus still unclaimed a year after the sale is reported as unclaimed property.",
+            "source_name": "Fla. Stat. § 45.032",
+            "source_url": "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0000-0099%2F0045%2FSections%2F0045.032.html"
+          }
+        ]
+      },
+      "probate": {
+        "summary": "Florida offers summary administration for smaller estates, and a house that was the owner's homestead follows special rules about who inherits it. A personal representative can sell estate real estate, but needs court approval unless the will gives a power of sale.",
+        "facts": [
+          {
+            "text": "Summary administration is available when the Florida estate subject to administration, minus property exempt from creditors' claims, is worth $150,000 or less, or when the owner died more than two years ago. The limit rose from $75,000 on July 1, 2026.",
+            "source_name": "Fla. Stat. § 735.201",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/735.201"
+          },
+          {
+            "text": "A personal representative can sell real property without court approval when the will gives a power of sale. Otherwise, the sale needs the court's authorization or confirmation.",
+            "source_name": "Fla. Stat. § 733.613",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/733.613"
+          },
+          {
+            "text": "When a homestead owner dies leaving a spouse and descendants, and the home wasn't validly left by will, the spouse generally takes a life estate and the descendants take the remainder. The spouse can instead elect, within six months of the death, to take a half interest as a tenant in common.",
+            "source_name": "Fla. Stat. § 732.401",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/732.401"
+          },
+          {
+            "text": "Probate courts confirm a protected homestead, and who received it, through a petition to determine homestead status.",
+            "source_name": "Fifteenth Judicial Circuit of Florida, Determination of Homestead checklist (June 2026)",
+            "source_url": "https://www.15thcircuit.com/sites/default/files/court-admin/probate-division/Checklist-DETERMINATION-OF-HOMESTEAD-FORMAL-%26-SUMMARY-ADMINISTRATION-updated-June-24-2026.pdf"
+          },
+          {
+            "text": "Creditors generally must file claims within three months after the first publication of the notice to creditors, or 30 days after being served with it, whichever is later.",
+            "source_name": "Fla. Stat. § 733.702",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/733.702"
+          }
+        ]
+      },
+      "closing": {
+        "summary": "Florida closings are handled by a licensed title agency or a Florida attorney, who holds the funds, pays everyone and records the deed with the county clerk. Deeds need two witnesses, and you can often sign remotely through a Florida online notary.",
+        "facts": [
+          {
+            "text": "Florida requires title insurance agents to be licensed and exempts attorneys in good standing with The Florida Bar, so your closing may be handled by a title agency or a law office.",
+            "source_name": "Fla. Stat. § 626.8417",
+            "source_url": "https://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&Search_String=&URL=0600-0699%2F0626%2FSections%2F0626.8417.html"
+          },
+          {
+            "text": "A deed must be signed in front of two subscribing witnesses. The witnesses can also take part by audio-video communication technology under Florida's online notary law.",
+            "source_name": "Fla. Stat. § 689.01",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/689.01"
+          },
+          {
+            "text": "For the clerk to record a deed, each witness's name must be printed under the signature, with the witness's post office address on the deed.",
+            "source_name": "Fla. Stat. § 695.26",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/Chapter695/All"
+          },
+          {
+            "text": "Florida allows remote online notarization: you appear before a Florida online notary by live audio-video, your identity is checked remotely, and the session is recorded.",
+            "source_name": "Fla. Stat. ch. 117, part II",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/Chapter117/All"
+          },
+          {
+            "text": "Title insurance premiums are set by state rule and apply statewide, so the premium for a given policy generally doesn't depend on which title company issues it.",
+            "source_name": "Fla. Stat. § 627.782",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2024/627.782"
+          }
+        ]
+      },
+      "transfer_tax": {
+        "summary": "Florida charges documentary stamp tax on deeds, based on the price. Every party to the deed is liable for it, and the purchase contract says who actually pays.",
+        "facts": [
+          {
+            "text": "The deed tax is 70 cents per $100 of consideration, or part of $100, in every county except Miami-Dade. Consideration includes any mortgage or lien on the property, whether or not the buyer assumes it.",
+            "source_name": "Florida Department of Revenue, Documentary Stamp Tax",
+            "source_url": "https://floridarevenue.com/taxes/taxesfees/Pages/doc_stamp.aspx"
+          },
+          {
+            "text": "In Miami-Dade County the rate is 60 cents per $100, plus a 45-cent surtax when the property isn't a single-family residence.",
+            "source_name": "Florida Department of Revenue, Form GT-800014",
+            "source_url": "https://floridarevenue.com/Forms_library/current/gt800014.pdf"
+          },
+          {
+            "text": "All parties to the deed are liable for the tax, regardless of which one agrees to pay it, and if one party is exempt, the other must pay.",
+            "source_name": "Florida Department of Revenue, Documentary Stamp Tax",
+            "source_url": "https://floridarevenue.com/taxes/taxesfees/Pages/doc_stamp.aspx"
+          }
+        ]
+      },
+      "tenants": {
+        "summary": "A sale generally doesn't end a lease in Florida; the buyer takes over as landlord, and the deposit and any advance rent move to the new owner. Entering to show or repair the home has its own notice rules.",
+        "facts": [
+          {
+            "text": "When a rental is sold, the landlord must transfer security deposits and advance rent, with any earned interest and an accounting for each tenant, to the new owner. Once the funds are transferred and a written receipt is provided, the seller is released from holding them.",
+            "source_name": "Fla. Stat. § 83.49",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/0083.49"
+          },
+          {
+            "text": "A tenant may not unreasonably withhold consent for the landlord to show the home to buyers. Entry for repairs needs at least 24 hours' notice and must be between 7:30 a.m. and 8 p.m.",
+            "source_name": "Fla. Stat. § 83.53",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/83.53"
+          },
+          {
+            "text": "Ending a month-to-month tenancy takes at least 30 days' written notice before the end of a monthly rental period.",
+            "source_name": "Fla. Stat. § 83.57",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/83.57"
+          }
+        ]
+      },
+      "property_tax": {
+        "summary": "Florida property taxes are due November 1 and become delinquent April 1. If they stay unpaid, the tax collector sells a tax certificate on the property, and if it isn't redeemed, the holder can apply for a tax deed two years later.",
+        "facts": [
+          {
+            "text": "Taxes are due November 1, or once the certified tax roll reaches the tax collector, and become delinquent April 1 of the next year or 60 days after the tax notice was mailed, whichever is later.",
+            "source_name": "Fla. Stat. § 197.333",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/0197.333"
+          },
+          {
+            "text": "Unpaid taxes are sold as tax certificates. A certificate earns up to 18% a year, set by bidding at the sale (18% if the county holds it), and is void seven years after it's issued.",
+            "source_name": "Florida Department of Revenue, Form DR-509",
+            "source_url": "https://floridarevenue.com/property/Documents/dr509.pdf"
+          },
+          {
+            "text": "If the certificate isn't redeemed, the holder can apply for a tax deed once two years have passed from April 1 of the year it was issued.",
+            "source_name": "Fla. Stat. § 197.502",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2023/0197.502"
+          },
+          {
+            "text": "You can redeem a tax certificate any time before a tax deed is issued, unless full payment for the tax deed has already been made to the clerk, by paying the face amount plus interest, costs and charges.",
+            "source_name": "Fla. Stat. § 197.472",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2023/0197.472"
+          },
+          {
+            "text": "Moving to another Florida homestead? You can generally carry over, or port, up to $500,000 of your Save Our Homes assessment benefit from the home you sell, within the time limit the statute sets.",
+            "source_name": "Fla. Stat. § 193.155",
+            "source_url": "https://www.flsenate.gov/laws/statutes/2022/193.155"
+          }
+        ]
+      },
+      "divorce": {
+        "summary": "Florida divides marital property by equitable distribution, starting from an equal split. A married owner's homestead can't be sold without the spouse joining, even if only one spouse is on the deed.",
+        "facts": [
+          {
+            "text": "In a divorce, the court starts from the premise that marital property should be split equally, and departs from that only with a justification based on the statute's factors. Property the spouses hold as tenants by the entireties is presumed marital.",
+            "source_name": "Fla. Stat. § 61.075",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2025/61.075"
+          },
+          {
+            "text": "When spouses who own property as tenants by the entireties divorce, they become tenants in common.",
+            "source_name": "Fla. Stat. § 689.15",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/689.15"
+          },
+          {
+            "text": "Florida's constitution lets an owner sell, mortgage or give away homestead real estate only with the spouse joining, if married.",
+            "source_name": "Fla. Const. art. X, § 4(c)",
+            "source_url": "https://www.flsenate.gov/laws/constitution"
+          }
+        ]
+      },
+      "disclosure": {
+        "summary": "Florida sellers must disclose known facts that materially affect a home's value and aren't readily observable to the buyer, even in an as-is sale. Florida also requires specific disclosures about flood history and property taxes, and condo sellers must provide the association's documents.",
+        "facts": [
+          {
+            "text": "Under Johnson v. Davis (Fla. 1985), a home seller who knows of facts that materially affect value, aren't readily observable and aren't known to the buyer must disclose them. Legislative staff note the duty applies even when the buyer agrees to buy as-is.",
+            "source_name": "Florida Senate staff analysis of SB 484 (2024), discussing Johnson v. Davis",
+            "source_url": "https://www.flsenate.gov/Session/Bill/2024/484/Analyses/2024s00484.pre.ju.PDF"
+          },
+          {
+            "text": "At or before signing the contract, a seller of residential property must give the buyer a flood disclosure stating whether the seller has filed a flood damage claim with an insurer, including the National Flood Insurance Program, and whether the seller received federal flood aid such as FEMA assistance.",
+            "source_name": "Fla. Stat. § 689.302",
+            "source_url": "https://www.flsenate.gov/laws/statutes/2024/689.302"
+          },
+          {
+            "text": "A buyer of residential property must get a property tax disclosure summary no later than contract signing, warning them not to rely on the seller's current taxes. The seller supplies it if the contract doesn't include it.",
+            "source_name": "Fla. Stat. § 689.261",
+            "source_url": "https://www.flsenate.gov/laws/statutes/2024/689.261"
+          },
+          {
+            "text": "A condo seller must give the buyer, at the seller's expense, the current governing documents, the milestone inspection summary if one applies, and the latest structural integrity reserve study or a statement that none was done. The buyer can cancel within 7 days, not counting weekends and legal holidays, after signing the contract and receiving the documents.",
+            "source_name": "Fla. Stat. § 718.503",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2026/0718.503"
+          },
+          {
+            "text": "A seller has no duty to disclose that a property was, or was suspected to be, the site of a homicide, suicide or death.",
+            "source_name": "Fla. Stat. § 689.25",
+            "source_url": "https://www.flsenate.gov/Laws/Statutes/2023/689.25"
+          }
+        ]
+      }
+    },
+    "faqs": [
+      {
+        "q": "I've been served with a Florida foreclosure lawsuit. What happens next, and can I still sell?",
+        "a": "Florida foreclosures run through the circuit court, so respond to the complaint by the deadline on your summons and consider talking to a foreclosure defense attorney. If the lender wins, the judgment sets a sale date, generally 20 to 35 days out, and you can redeem by paying the judgment amount until the clerk files the certificate of sale (or a later time the judgment sets). You can still sell before then. When the price covers the payoff, the loan is paid at closing, and we'll tell you plainly if the timing or the numbers don't work. We buy houses; we don't negotiate with lenders or arrange loan modifications or short sales. Your other options include a modification or repayment plan from your servicer, a short sale through your lender, or a free HUD-approved housing counselor at 800-569-4287. If a foreclosure sale leaves a shortfall on a one- to four-family home, the lender generally has one year after the certificate of title to sue for it ([Fla. Stat. § 95.11](https://www.flsenate.gov/Laws/Statutes/2026/0095.11)). More on [selling a house facing foreclosure](sell-house-facing-foreclosure)."
+      },
+      {
+        "q": "Who pays documentary stamp tax when I sell my Florida house?",
+        "a": "Florida makes every party to the deed liable for it, and the purchase contract decides who actually pays. The rate is 70 cents per $100 of the price everywhere but Miami-Dade, where it's 60 cents per $100 plus a 45-cent surtax for property other than a single-family residence. On a $300,000 sale outside Miami-Dade, that's $2,100. Read that line in any contract before you sign, ours included."
+      },
+      {
+        "q": "We inherited a Florida house that was our parent's homestead. Can we sell it?",
+        "a": "Usually, once it's clear who owns it. A protected homestead passes under Florida's homestead rules, and the probate court can confirm who received it with an order determining homestead status. If the owner left a spouse and descendants, the spouse generally holds a life estate or, by election, a half interest, so everyone with an interest signs the deed. For other estate property, summary administration is available when the estate, not counting creditor-exempt property, is worth $150,000 or less. A probate attorney can tell you which steps apply. If the house is in good shape and the family has time, listing with an agent will likely bring a higher price; a cash sale trades some of that for speed and no repairs. More on [selling an inherited house](sell-inherited-house)."
+      },
+      {
+        "q": "Do I still have to make disclosures if I'm selling my Florida house as-is?",
+        "a": "Yes. Florida's duty to disclose known facts that materially affect value and aren't readily observable applies even when the buyer agrees to buy as-is. You'll also give the buyer the flood disclosure and the property tax disclosure summary, and condo sellers provide the association's governing documents, any milestone inspection summary and the reserve study. We buy as-is, so you don't fix anything, but tell us what you know. It keeps the offer accurate. More on [selling a house as-is](sell-house-as-is)."
+      },
+      {
+        "q": "Can I sell my Florida house from another state?",
+        "a": "Yes. Florida allows remote online notarization, so you can often sign closing documents over a live audio-video session with a Florida online notary, and the two deed witnesses can take part the same way. The title agency or attorney handling the closing holds the funds and pays your proceeds. Your money never passes through us."
+      },
+      {
+        "q": "My spouse isn't on the deed. Do they need to sign?",
+        "a": "If the house is your Florida homestead, generally yes. Florida's constitution lets a married owner sell or mortgage a homestead only with the spouse joining, even when only one name is on the deed. In a divorce, a house held as tenants by the entireties becomes a tenancy in common, and the decree and your attorneys will shape how the sale is signed."
+      }
+    ]
+  }
+}

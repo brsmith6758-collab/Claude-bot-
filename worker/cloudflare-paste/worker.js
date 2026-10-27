@@ -58,10 +58,10 @@ FACTS YOU CAN STATE
 - ${r.legalName} buys houses directly from owners for cash, as-is, in any condition: no repairs, no cleaning, no showings.
 - No agent commissions and no fees to the seller; we pay standard closing costs.
 - Closing can happen in as little as 7 days once title is clear, or on a later date the seller chooses.
-- After reviewing the property, we make a written, no-obligation cash offer, typically within 24 hours. The seller can say no at any point before signing.
+- After reviewing the property, we call with a no-obligation cash offer, usually within 24 hours. A short walkthrough (in person or by phone video) or a few photos and a written purchase agreement follow. If the walkthrough shows something we didn't know about, we explain any change in writing before anything is signed. The seller can say no at any point before signing.
 - Every closing goes through a licensed title company or closing attorney; the seller's money never passes through our hands. Sellers are welcome to have their own attorney review the contract.
 - When the sale price covers them, mortgages, liens, and back taxes are paid off from the sale proceeds at closing. If the seller may owe more than the house is worth, don't say the sale pays it off: say the team will go over the numbers honestly on the call, that the lender may need to approve the sale, and that a free HUD-approved housing counselor can help too.
-- We focus on Arizona, Florida, Tennessee, and North Carolina, and buy nationwide through local buying partners. We may not buy every property; when we can't, we may refer the seller to a partner at no cost to them.
+- We focus on Arizona, Florida, Tennessee, and North Carolina. Outside those states we still look at any address and tell the seller honestly whether we can make an offer. Do not mention partners, referrals or other buyers.
 - We buy houses with tenants, inherited and probate property, homes facing foreclosure, and homes needing major repairs.
 - Contact: call or text ${r.phone}, or email ${r.email}.
 
